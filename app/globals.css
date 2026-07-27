@@ -1,0 +1,363 @@
+/* ==========================================================================
+   GB ASSET — shared design tokens + shared-component CSS
+   Ported verbatim from index.html's <style> block. This file backs ONLY the
+   shared components (StorefrontHeader, MinimalHeader, FullFooter,
+   MinimalFooter) plus the truly cross-page primitives (.wrap, reveal
+   animations, scroll-progress, ripple, focus/selection). Everything else
+   (hero, dashboard, cart layout, checkout layout, auth forms, privacy-policy
+   copy, etc.) stays in each route's own page-specific CSS file.
+
+   NOT included here (see final report for why):
+   - body::after (ambient vault-grain texture): present byte-identical on
+     index.html/cart.html/checkout.html/login.html but ABSENT on
+     privacy-policy.html, so it is not truly universal. Each of the four
+     pages that use it must add it to their own page CSS file.
+   - .eyebrow, .hairline, .hairline-dot: not referenced by header/footer
+     markup itself (only by page body content such as hero/section heads/
+     login's auth-head), so left for page-specific CSS.
+   ========================================================================== */
+
+:root {
+  /* Maison palette — obsidian, gold foil, screw-head crimson */
+  --emerald: #8A6A2A;        /* secondary bronze-gold accent */
+  --emerald-deep: #060607;   /* near-black obsidian */
+  --emerald-mid: #141416;    /* gunmetal charcoal surface */
+  --ivory: #F6F1E4;          /* soft white */
+  --cream: #222222;
+  --white: #FFFFFF;
+  --gold: #D4AF37;           /* rich gold */
+  --gold-light: #F0CD6B;     /* metallic gold highlight */
+  --gold-pale: #F9EBBE;      /* champagne gold */
+  --gold-deep: #8B6914;      /* deep antique gold */
+  --charcoal: #141416;
+  --gray: #9C9384;
+  --gray-soft: #D3C9AF;
+
+  /* Maison signature accent — Cartier-red screw-head, used sparingly */
+  --maison-red: #7A0C1E;
+  --maison-red-bright: #B01829;
+
+  --display: 'Playfair Display', serif;
+  --serif-accent: 'Cormorant Garamond', serif;
+  --body: 'Inter', sans-serif;
+  --label: 'Manrope', sans-serif;
+
+  --ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+/* ============ BASE RESET ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+html, body { overflow-x: hidden; }
+
+body {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212, 175, 55, .1), transparent 60%),
+    radial-gradient(circle at 12% 8%, rgba(122, 12, 30, .10), transparent 40%),
+    repeating-radial-gradient(circle at 50% 0%, rgba(212, 175, 55, .025) 0px, rgba(212, 175, 55, .025) 1px, transparent 1px, transparent 68px),
+    linear-gradient(180deg, var(--emerald-deep), var(--emerald-mid) 50%, var(--emerald-deep));
+  color: var(--ivory);
+  font-family: var(--body);
+  line-height: 1.6;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+ul { list-style: none; }
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: .2px;
+}
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+::selection { background: var(--gold-pale); color: var(--emerald-deep); }
+
+/* ============ REVEAL ANIMATIONS ============ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .9s var(--ease), transform .9s var(--ease);
+}
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > * { opacity: 1; transform: translateY(0); }
+.reveal-stagger > * {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity .8s var(--ease), transform .8s var(--ease);
+}
+.reveal-stagger > *:nth-child(1) { transition-delay: .05s; }
+.reveal-stagger > *:nth-child(2) { transition-delay: .15s; }
+.reveal-stagger > *:nth-child(3) { transition-delay: .25s; }
+.reveal-stagger > *:nth-child(4) { transition-delay: .35s; }
+.reveal-stagger > *:nth-child(5) { transition-delay: .45s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal, .reveal-stagger > * { opacity: 1 !important; transform: none !important; transition: none !important; }
+  * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+/* Gold scroll progress indicator */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%; z-index: 200;
+  background: linear-gradient(90deg, var(--maison-red), var(--gold-light), var(--gold));
+  box-shadow: 0 0 10px rgba(212, 175, 55, .65);
+}
+
+/* ============ BUTTON RIPPLE ============ */
+.ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(255, 255, 255, .5);
+  transform: scale(0);
+  animation: rippleAnim .65s var(--ease);
+  pointer-events: none;
+}
+@keyframes rippleAnim { to { transform: scale(3.6); opacity: 0; } }
+
+/* ============ NAV / HEADER ============ */
+header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 26px 0;
+  transition: background .5s var(--ease), padding .5s var(--ease), box-shadow .5s var(--ease), border-color .5s var(--ease);
+  border-bottom: 1px solid transparent;
+}
+header.scrolled {
+  background: rgba(11, 11, 11, .72);
+  -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+  padding: 16px 0;
+  box-shadow: 0 12px 30px -18px rgba(0, 0, 0, .7);
+  border-bottom: 1px solid rgba(212, 175, 55, .18);
+}
+.nav-inner {
+  max-width: 1240px; margin: 0 auto; padding: 0 40px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px;
+}
+.logo { display: flex; align-items: center; gap: 12px; justify-self: start; }
+.logo-mark {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  padding: 4px;
+  background:
+    repeating-conic-gradient(from 0deg,
+      rgba(212, 175, 55, .85) 0deg 2.2deg,
+      transparent 2.2deg 9deg),
+    radial-gradient(circle, var(--emerald-mid) 62%, transparent 63%);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, .25), 0 6px 18px -8px rgba(0, 0, 0, .7);
+}
+.logo-mark::after {
+  content: ''; position: absolute; inset: 4px; border-radius: 50%;
+  border: 1px solid rgba(122, 12, 30, .55);
+  pointer-events: none;
+}
+.logo-mark .brand-emblem { border-radius: 50%; }
+
+/* ============ 3D LOGO EMBLEM ============ */
+.brand-emblem {
+  width: 100%; height: 100%; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: #111;
+  transition: transform .6s var(--ease);
+}
+.brand-emblem::after {
+  content: ''; position: absolute; top: -60%; left: -70%; width: 45%; height: 220%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, .3), transparent);
+  transform: rotate(20deg);
+  animation: emblemSweep 5.5s ease-in-out infinite;
+}
+.logo:hover .brand-emblem, .footer-logo:hover .brand-emblem { transform: scale(1.08) rotate(-3deg); }
+.brand-emblem-img {
+  position: relative; z-index: 2;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+@keyframes emblemSweep {
+  0%, 100% { transform: translateX(-130%) rotate(20deg); }
+  45%, 55% { transform: translateX(230%) rotate(20deg); }
+}
+
+.logo-text { font-family: var(--display); font-size: 19px; letter-spacing: 3px; color: var(--ivory); font-weight: 600; }
+.logo-text span { display: block; font-family: var(--label); font-size: 9px; font-weight: 600; letter-spacing: 5px; color: var(--gold-light); margin-top: 2px; }
+
+nav.nav-links { display: flex; gap: 38px; justify-self: center; }
+nav.nav-links a {
+  font-family: var(--label); font-size: 11.5px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--gray-soft);
+  position: relative; padding-bottom: 6px;
+  transition: color .35s var(--ease), text-shadow .35s var(--ease);
+}
+nav.nav-links a::after {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px;
+  background: var(--gold-light);
+  box-shadow: 0 0 0 rgba(212, 175, 55, 0);
+  transform: scaleX(0); transform-origin: right;
+  transition: transform .45s var(--ease), box-shadow .45s var(--ease);
+}
+nav.nav-links a:hover, nav.nav-links a.active { color: var(--ivory); text-shadow: 0 0 14px rgba(212, 175, 55, .5); }
+nav.nav-links a:hover::after, nav.nav-links a.active::after { transform: scaleX(1); transform-origin: left; box-shadow: 0 0 10px rgba(212, 175, 55, .75); }
+
+.login-btn {
+  justify-self: end;
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--gold);
+  padding: 11px 20px; border-radius: 2px;
+  white-space: nowrap;
+  font-family: var(--label); font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+  color: var(--gold-light);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, .12);
+  transition: background .4s var(--ease), color .4s var(--ease), box-shadow .4s var(--ease);
+}
+.login-btn:hover { background: linear-gradient(120deg, var(--gold-light), var(--gold) 60%, var(--gold-deep)); color: var(--emerald-deep); box-shadow: 0 10px 26px -12px rgba(212, 175, 55, .6); }
+
+/* Minimal-header "back to site" link (login/privacy-policy) — same visual
+   treatment as .login-btn, distinct class because it's not an auth action. */
+.back-link {
+  justify-self: end;
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--gold);
+  padding: 11px 20px; border-radius: 2px;
+  white-space: nowrap;
+  font-family: var(--label); font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+  color: var(--gold-light);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, .12);
+  transition: background .4s var(--ease), color .4s var(--ease), box-shadow .4s var(--ease);
+}
+.back-link:hover { background: linear-gradient(120deg, var(--gold-light), var(--gold) 60%, var(--gold-deep)); color: var(--emerald-deep); box-shadow: 0 10px 26px -12px rgba(212, 175, 55, .6); }
+.back-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ============ HEADER CART ICON ============ */
+.nav-right { display: flex; align-items: center; gap: 18px; justify-self: end; }
+.nav-right .login-btn { justify-self: auto; }
+.cart-link {
+  position: relative; width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid rgba(212, 175, 55, .35);
+  display: flex; align-items: center; justify-content: center; color: var(--gold-light);
+  transition: border-color .35s var(--ease), background .35s var(--ease), transform .35s var(--ease);
+}
+.cart-link:hover { border-color: var(--gold-light); background: rgba(212, 175, 55, .08); transform: translateY(-2px); }
+.cart-link svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.cart-badge {
+  position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 9px;
+  background: linear-gradient(120deg, var(--gold-light), var(--gold));
+  color: var(--emerald-deep); font-family: var(--label); font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, .7);
+}
+
+/* ============ MOBILE NAV MENU ============ */
+/* Hidden on desktop; nav.nav-links itself is hidden below 900px (see media
+   query below), so this button + drawer is the only way to reach the nav
+   links on phones/small tablets. */
+.mobile-menu-btn {
+  display: none;
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid rgba(212, 175, 55, .35);
+  align-items: center; justify-content: center; color: var(--gold-light);
+  transition: border-color .35s var(--ease), background .35s var(--ease);
+}
+.mobile-menu-btn:hover { border-color: var(--gold-light); background: rgba(212, 175, 55, .08); }
+.mobile-menu-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+
+.mobile-nav-drawer {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 99;
+  max-height: 0; overflow: hidden;
+  background: rgba(11, 11, 11, .97);
+  -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%);
+  border-bottom: 1px solid rgba(212, 175, 55, .18);
+  transition: max-height .4s var(--ease);
+}
+.mobile-nav-drawer.open { max-height: 520px; }
+.mobile-nav-drawer nav {
+  display: flex; flex-direction: column;
+  padding: 88px 22px 24px;
+}
+.mobile-nav-drawer nav a {
+  font-family: var(--label); font-size: 13px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--gray-soft);
+  padding: 16px 4px; border-bottom: 1px solid rgba(212, 175, 55, .12);
+  min-height: 44px; display: flex; align-items: center;
+  transition: color .3s var(--ease);
+}
+.mobile-nav-drawer nav a:last-child { border-bottom: none; }
+.mobile-nav-drawer nav a:hover, .mobile-nav-drawer nav a.active { color: var(--gold-light); }
+.mobile-nav-drawer .drawer-auth-link {
+  margin-top: 6px; padding-top: 20px; border-top: 1px solid rgba(212, 175, 55, .22);
+  color: var(--gold-light);
+}
+
+@media (max-width: 900px) {
+  .nav-right { gap: 12px; }
+  .nav-inner { grid-template-columns: auto 1fr auto; }
+  nav.nav-links { display: none; }
+  .mobile-menu-btn { display: flex; }
+  /* "Login / Register" (or "Hi, <name> · Sign Out") doesn't reliably fit
+     next to the cart icon + hamburger on narrow phones — moved into the
+     drawer below instead (see .drawer-auth-link) so it's never clipped. */
+  .nav-right .login-btn { display: none; }
+}
+@media (min-width: 901px) {
+  .mobile-nav-drawer { display: none; }
+}
+@media (max-width: 640px) { .logo-text span { display: none; } }
+@media (max-width: 640px) {
+  .wrap { padding: 0 22px; }
+  .nav-inner { padding: 0 22px; }
+  .footer-bottom { padding: 28px 22px; }
+}
+
+/* ============ FOOTER (FullFooter — index/cart/checkout) ============ */
+footer { background: var(--emerald-deep); padding: 90px 0 0; }
+.footer-grid {
+  display: grid; grid-template-columns: 1.6fr 1fr 1.2fr; gap: 60px;
+  padding-bottom: 60px; border-bottom: 1px solid rgba(212, 175, 55, .22);
+}
+.footer-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.footer-grid p { font-size: 13.5px; color: var(--gray-soft); max-width: 280px; font-weight: 300; }
+.footer-grid h4 { font-family: var(--label); font-size: 11px; letter-spacing: 2px; color: var(--gold-light); text-transform: uppercase; margin-bottom: 22px; }
+.footer-grid ul li { margin-bottom: 13px; font-size: 13.5px; color: var(--gray-soft); }
+.footer-grid ul li a { transition: color .3s var(--ease); }
+.footer-grid ul li a:hover { color: var(--gold-light); }
+.contact-line { display: flex; gap: 10px; font-size: 13.5px; color: var(--gray-soft); margin-bottom: 14px; }
+.contact-line .ic { color: var(--gold-light); flex-shrink: 0; }
+.socials { display: flex; gap: 12px; margin-top: 22px; }
+.socials a {
+  width: 36px; height: 36px; min-width: 36px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(212, 175, 55, .4);
+  display: flex; align-items: center; justify-content: center; color: var(--gold-light);
+  transition: background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
+}
+.socials a svg { width: 16px; height: 16px; display: block; overflow: visible; fill: currentColor; stroke: none; }
+.socials a:nth-child(2) svg { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.socials a:hover { background: var(--gold); color: var(--emerald-deep); border-color: var(--gold); }
+.footer-bottom {
+  max-width: 1240px; margin: 0 auto; padding: 28px 40px;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  font-size: 12px; color: var(--gray-soft);
+}
+.footer-bottom a { margin-left: 20px; transition: color .3s var(--ease); }
+.footer-bottom a:hover { color: var(--gold-light); }
+
+@media (max-width: 700px) { .footer-grid { grid-template-columns: 1fr; } }
+
+/* ============ MINIMAL FOOTER (login/privacy-policy) ============ */
+/* Scoped to a class (not a bare `footer` tag) so it can't collide with the
+   FullFooter rules above — both a bare `footer{}` selector would otherwise
+   fight for the same element across different routes in one global sheet. */
+footer.minimal-footer {
+  text-align: center; padding: 24px;
+  font-size: 11.5px; color: var(--gray);
+  background: none;
+}

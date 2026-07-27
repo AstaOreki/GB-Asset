@@ -1,0 +1,104 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+    // Keep this list in sync with ADMIN_EMAILS in js/firebase-config.js.
+    // (Firestore rules can't read your JS file, so the admin list has to be
+    // duplicated here — this is what actually enforces admin-only access;
+    // the ADMIN_EMAILS array in the JS is only a UI-level gate.)
+    function adminEmails() {
+      return [
+        "astaoreki@gmail.com"
+      ];
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email != null &&
+        request.auth.token.email.lower() in adminEmails();
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // -------------------------------------------------------------- users
+    // Each signed-in user can create/read/update only their own doc
+    // (this is also where their cart lives, as a field on the doc).
+    // No one can delete a user doc from the client.
+    match /users/{uid} {
+      allow read:   if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------- orders
+    // Placing an order requires being signed in — but only the fields the
+    // storefront actually sets, and it must be marked "pending" and stamped
+    // with a real server timestamp so no one can fabricate a "paid"/
+    // "shipped" order or backdate one.
+    // Only admins can read the order list, change status, or delete.
+    match /orders/{orderId} {
+      allow create: if isSignedIn() &&
+                       request.resource.data.status == "pending" &&
+                       request.resource.data.createdAt == request.time &&
+                       request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------- consultations
+    // Anyone can submit a consultation/contact request ("guest checkout"
+    // style lead), always starting as a fresh, unassigned "new" lead.
+    // Only admins can read, update (status/assignment), or delete leads.
+    match /consultations/{leadId} {
+      allow create: if request.resource.data.status == "new" &&
+                       request.resource.data.assignedTo == "" &&
+                       request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------ products
+    // Public storefront needs to read live prices; only admins can write.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------- announcements
+    // Public site displays these; only admins can publish/delete.
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----------------------------------------------------------- settings
+    // Storefront reads system-wide flags (e.g. maintenance mode); only
+    // admins can change them.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------- logs
+    // Admin-only activity log — never readable or writable by the public,
+    // only by a signed-in admin from the dashboard.
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------ default
+    // Everything else is locked down by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

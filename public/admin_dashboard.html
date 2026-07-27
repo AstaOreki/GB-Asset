@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GB Asset | Institutional Vault Dashboard</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#353534",
+                    "secondary-container": "#5d4202",
+                    "on-error": "#690005",
+                    "inverse-surface": "#e5e2e1",
+                    "on-primary-fixed": "#241a00",
+                    "charcoal": "#1A1A1A",
+                    "secondary-fixed-dim": "#e9c178",
+                    "on-tertiary-container": "#574200",
+                    "on-surface-variant": "#d0c5af",
+                    "on-secondary-fixed-variant": "#5d4202",
+                    "primary-fixed": "#ffe088",
+                    "secondary": "#e9c178",
+                    "surface-bright": "#3a3939",
+                    "on-background": "#e5e2e1",
+                    "on-surface": "#e5e2e1",
+                    "gold-deep": "#A67C27",
+                    "tertiary-container": "#d1af55",
+                    "surface-container": "#201f1f",
+                    "on-secondary-fixed": "#271900",
+                    "error": "#ffb4ab",
+                    "surface-dim": "#131313",
+                    "on-tertiary-fixed": "#241a00",
+                    "inverse-primary": "#735c00",
+                    "primary-container": "#d4af37",
+                    "on-error-container": "#ffdad6",
+                    "ivory": "#F5F1E6",
+                    "surface-tint": "#e9c349",
+                    "tertiary": "#efca6e",
+                    "gold-pale": "#F7E7B4",
+                    "gray-muted": "#A79E8C",
+                    "outline": "#99907c",
+                    "surface-variant": "#353534",
+                    "gold-light": "#E8C468",
+                    "on-secondary": "#412d00",
+                    "primary-fixed-dim": "#e9c349",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "surface-container-lowest": "#0e0e0e",
+                    "error-container": "#93000a",
+                    "on-primary-fixed-variant": "#574500",
+                    "tertiary-fixed-dim": "#e6c367",
+                    "surface-container-low": "#1c1b1b",
+                    "inverse-on-surface": "#313030",
+                    "surface": "#131313",
+                    "tertiary-fixed": "#ffdf93",
+                    "on-primary-container": "#554300",
+                    "primary": "#f2ca50",
+                    "gray-soft": "#CFC7B0",
+                    "background": "#131313",
+                    "secondary-fixed": "#ffdea6",
+                    "on-secondary-container": "#d6af68",
+                    "surface-container-high": "#2a2a2a",
+                    "on-primary": "#3c2f00",
+                    "on-tertiary": "#3e2e00",
+                    "outline-variant": "#4d4635"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "section-v": "130px",
+                    "container-max": "1240px",
+                    "stack-sm": "8px",
+                    "gutter": "24px",
+                    "stack-md": "16px",
+                    "margin-page": "40px",
+                    "margin-component": "64px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-sm": ["Playfair Display"],
+                    "headline-md": ["Playfair Display"],
+                    "nav-link": ["Manrope"],
+                    "label-caps": ["Manrope"],
+                    "ui-data": ["Manrope"],
+                    "display-lg": ["Playfair Display"]
+            },
+            "fontSize": {
+                    "body-sm": ["13.5px", {"lineHeight": "1.6", "fontWeight": "300"}],
+                    "body-lg": ["15.5px", {"lineHeight": "1.6", "fontWeight": "300"}],
+                    "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-md": ["42px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "nav-link": ["11.5px", {"lineHeight": "1.0", "letterSpacing": "2px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "1.0", "letterSpacing": "3.5px", "fontWeight": "600"}],
+                    "ui-data": ["10px", {"lineHeight": "1.0", "letterSpacing": "1.5px", "fontWeight": "700"}],
+                    "display-lg": ["74px", {"lineHeight": "1.15", "letterSpacing": "-0.02em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+</script>
+<style>
+
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24; font-size: 20px; }
+    body { background-color: #131313; color: #e5e2e1; -webkit-font-smoothing: antialiased; }
+    .glass-panel { background: rgba(20, 19, 19, 0.72); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(166, 124, 39, 0.15); }
+    .hairline-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(166, 124, 39, 0.35), transparent); }
+    .shine-effect { position: relative; overflow: hidden; }
+    .shine-effect::after { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.12), transparent); transform: rotate(45deg); transition: 0.5s; }
+    .shine-effect:hover::after { left: 100%; top: 100%; }
+    .gold-glow:hover { box-shadow: 0 0 20px rgba(212, 175, 55, 0.12); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #131313; }
+    ::-webkit-scrollbar-thumb { background: #A67C27; border-radius: 10px; }
+    .fade-in { animation: fadeIn .35s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform: translateY(0);} }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.7; } }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all .3s ease; max-width: 320px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .nav-link.is-active { color: #f2ca50; background: #5d4202; border-left: 4px solid #f2ca50; transform: translateX(4px); font-weight: 700; }
+    input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+
+    /* Mobile off-canvas sidebar. Below md (768px) the sidebar was
+       previously just `hidden` with no way to open it — this makes it a
+       slide-in drawer instead, toggled by #sidebar-toggle in the topbar. */
+    #sidebar { transition: transform .3s ease; }
+    @media (max-width: 767px) {
+      #sidebar { position: fixed; inset-block: 0; left: 0; z-index: 50; transform: translateX(-100%); }
+      #sidebar.sidebar-open { transform: translateX(0); }
+    }
+
+</style>
+</head>
+<body>
+
+<div class="flex h-screen overflow-hidden">
+<!-- Mobile sidebar backdrop -->
+<div class="hidden fixed inset-0 bg-black/60 z-40" id="sidebar-backdrop"></div>
+<!-- SideNavBar -->
+<aside class="md:flex flex-col h-full py-8 px-4 gap-stack-md bg-surface-container-lowest border-r border-outline-variant w-64 shrink-0" id="sidebar">
+<div class="flex flex-col items-center gap-3 mb-8 px-2">
+<div class="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border border-gold-deep/30">
+<img alt="GB Asset Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcYG8dNuU9Clu2ePHfM94yE26B1YRH0yjMbpqLABwDF3Np1f8MgdF2x-KmJUnBwd2i5IpO8q-fpU9KSHgAlEHUvHn8dYfHasLfYuOGa6MfgZpDzoYb5f3uKSsndATyT2NwH3kNH_twIxnW90EZZ0OFk1kGCvLjHRGyAVt6O5iP6mzVga6D1LPjNgYkbC8gG8TQqiyOkyWpuy4F1psuw43JsHyP_AK6OwqfDMjwe3Q64BYpnbaADnPZ2iUqeftjJBUjuApKD3_QPt9O"/>
+</div>
+<div class="text-center">
+<h2 class="font-headline-sm text-[20px] text-primary font-bold tracking-tight">GB ASSET</h2>
+<p class="font-body-sm text-[10px] text-gray-muted tracking-widest uppercase">Institutional Vault</p>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="overview">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-nav-link text-nav-link uppercase">Overview</span>
+</button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="orders">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-nav-link text-nav-link uppercase">Orders</span>
+</button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="consultations">
+<span class="material-symbols-outlined">diversity_3</span>
+<span class="font-nav-link text-nav-link uppercase">Consultations</span>
+</button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="logs">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-nav-link text-nav-link uppercase">System Logs</span>
+</button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="announcements">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-nav-link text-nav-link uppercase">Announcements</span>
+</button>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/30">
+<button class="w-full gold-shine shine-effect flex items-center justify-center gap-2 py-3 px-4 bg-primary text-on-primary font-label-caps rounded-sm mb-4 uppercase tracking-widest font-bold" id="export-btn">
+<span class="material-symbols-outlined text-[18px]">ios_share</span> Export Report
+      </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-error transition-all rounded-lg" id="logout-btn">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-nav-link text-nav-link uppercase">Logout</span>
+</button>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col overflow-hidden bg-surface">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-margin-page py-4 border-b border-outline-variant bg-surface sticky top-0 z-40 shrink-0">
+<div class="flex items-center gap-gutter">
+<button aria-label="Toggle menu" class="md:hidden material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors mr-1" id="sidebar-toggle" type="button">menu</button>
+<div class="md:hidden w-10 h-10 rounded-full overflow-hidden border border-gold-deep/30 mr-2">
+<img alt="GB Asset Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcYG8dNuU9Clu2ePHfM94yE26B1YRH0yjMbpqLABwDF3Np1f8MgdF2x-KmJUnBwd2i5IpO8q-fpU9KSHgAlEHUvHn8dYfHasLfYuOGa6MfgZpDzoYb5f3uKSsndATyT2NwH3kNH_twIxnW90EZZ0OFk1kGCvLjHRGyAVt6O5iP6mzVga6D1LPjNgYkbC8gG8TQqiyOkyWpuy4F1psuw43JsHyP_AK6OwqfDMjwe3Q64BYpnbaADnPZ2iUqeftjJBUjuApKD3_QPt9O"/>
+</div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary" id="view-title">Overview</h1>
+<div class="hidden lg:flex items-center bg-surface-container px-4 py-2 rounded-full border border-outline-variant/30 ml-4">
+<span class="material-symbols-outlined text-gray-muted mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-64 text-on-surface" id="global-search" placeholder="Search this section..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" id="topbar-settings-btn" title="Settings &amp; maintenance" aria-label="Settings &amp; maintenance" type="button">settings</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="font-label-caps text-[10px] text-primary">ADMINISTRATOR</p>
+<p class="font-body-sm text-[12px] font-medium" id="admin-name-label">Julian Sterling</p>
+</div>
+<div class="w-10 h-10 rounded-full border border-primary/40 bg-surface-container-high flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-gold-light">person_apron</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-margin-page">
+<div class="max-w-container-max mx-auto w-full space-y-margin-component">
+<!-- ================= OVERVIEW ================= -->
+<section class="view-section active space-y-margin-component" id="view-overview">
+<div class="space-y-stack-md">
+<div class="flex justify-between items-end">
+<h3 class="font-label-caps text-gold-light">Live Bullion Exchange</h3>
+<div class="flex items-center gap-2 text-ui-data text-gray-muted">
+<div class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></div>
+                MARKETS OPEN • LAST SYNC: <span id="market-sync-time">--:--:--</span>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-gutter">
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 1KG</span>
+<img alt="1kg Gold Bar" class="w-16 h-12 object-contain" src="image/gold_1kg.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-1kg">RM 537,893.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 100G</span>
+<img alt="100g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_100g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-100g">RM 53,832.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 50G</span>
+<img alt="50g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_50g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-50g">RM 26,929.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 10G</span>
+<img alt="10g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_10g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-10g">RM 5,579.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 1G</span>
+<img alt="1g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_1g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-1g">RM 559.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+</div>
+</div>
+<section class="grid grid-cols-1 lg:grid-cols-4 gap-gutter">
+<div class="lg:col-span-2 glass-panel rounded-lg p-8 relative overflow-hidden flex flex-col justify-between h-64">
+<div class="relative z-10">
+<h4 class="font-label-caps text-gold-pale mb-2">Total Managed Volume (RM)</h4>
+<div class="font-display-lg text-display-lg text-primary leading-tight" id="stat-total-volume">14.82M</div>
+</div>
+<div class="relative z-10 flex items-center justify-between mt-4">
+<div class="text-ui-data text-gray-muted">FISCAL YEAR 2024 PERFORMANCE</div>
+<div class="h-2 w-32 bg-surface-container-highest rounded-full overflow-hidden"><div class="h-full bg-primary w-3/4"></div></div>
+</div>
+</div>
+<div class="glass-panel rounded-lg p-8 flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-primary mb-4 block">diversity_3</span>
+<h4 class="font-label-caps text-gray-muted mb-2">Pending Consultations</h4>
+<div class="font-headline-md text-headline-md text-on-surface" id="stat-pending-consults">0</div>
+</div>
+<div class="text-ui-data text-gold-light mt-4 flex items-center gap-2" id="stat-high-priority"><span class="material-symbols-outlined text-sm">schedule</span> 0 NEW</div>
+</div>
+<div class="glass-panel rounded-lg p-8 flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-primary mb-4 block">shopping_cart</span>
+<h4 class="font-label-caps text-gray-muted mb-2">Active Vault Orders</h4>
+<div class="font-headline-md text-headline-md text-on-surface" id="stat-active-orders">0</div>
+</div>
+<div class="text-ui-data text-green-500 mt-4 flex items-center gap-2" id="stat-in-transit"><span class="material-symbols-outlined text-sm">local_shipping</span> 0 IN TRANSIT</div>
+</div>
+</section>
+<section class="glass-panel rounded-lg overflow-hidden">
+<div class="px-8 py-6 border-b border-outline-variant/30 flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-primary">Recent Institutional Orders</h3>
+<button class="font-label-caps text-gray-muted hover:text-primary transition-colors" data-view-link="orders">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-ui-data text-gray-muted border-b border-outline-variant/20">
+<th class="px-8 py-4 font-normal">ORDER ID</th>
+<th class="px-8 py-4 font-normal">CLIENT</th>
+<th class="px-8 py-4 font-normal">ASSET</th>
+<th class="px-8 py-4 font-normal text-right">VALUE (RM)</th>
+<th class="px-8 py-4 font-normal">STATUS</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-[13px]" id="overview-recent-orders"></tbody>
+</table>
+</div>
+</section>
+<section class="glass-panel rounded-lg overflow-hidden">
+<div class="px-8 py-6 border-b border-outline-variant/30 flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-primary">Product Pricing</h3>
+<a class="font-label-caps text-gray-muted hover:text-primary transition-colors flex items-center gap-1" href="https://www.mkspamp.com.my/pricing" rel="noopener" target="_blank">MKS PAMP Reference <span class="material-symbols-outlined text-[16px]">open_in_new</span></a>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-ui-data text-gray-muted border-b border-outline-variant/20">
+<th class="px-8 py-4 font-normal">PRODUCT</th>
+<th class="px-8 py-4 font-normal">PURITY</th>
+<th class="px-8 py-4 font-normal text-right">PRICE (RM)</th>
+<th class="px-8 py-4 font-normal text-right">ACTION</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-[13px]" id="pricing-table-body"></tbody>
+</table>
+</div>
+</section>
+</section>
+<!-- ================= ORDERS ================= -->
+<section class="view-section space-y-gutter" id="view-orders">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<span class="font-label-caps text-label-caps text-gold-deep mb-2 block uppercase">Institutional Procurement</span>
+<h2 class="font-display-lg text-headline-md text-primary tracking-tight">Order Management</h2>
+</div>
+<div class="flex flex-wrap items-center gap-4">
+<button class="flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-lg font-nav-link text-nav-link shine-effect transition-all uppercase font-bold" id="new-order-btn">
+<span class="material-symbols-outlined text-[18px]">add</span> New Order
+              </button>
+<button class="flex items-center gap-2 bg-charcoal border border-gold-deep/30 px-6 py-2.5 rounded-lg text-primary font-nav-link text-nav-link hover:bg-gold-deep/10 transition-all shine-effect uppercase" id="export-orders-btn">
+<span class="material-symbols-outlined text-[18px]">download</span> Export Data
+              </button>
+</div>
+</div>
+<!-- New Order Form (hidden by default) -->
+<div class="hidden glass-panel rounded-xl p-6 space-y-4" id="new-order-form">
+<h4 class="font-headline-sm text-headline-sm text-gold-light">New Order</h4>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="order-customer" placeholder="Customer name"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="order-product" placeholder="Product (e.g. 1kg Bullion Bar)"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="order-amount" placeholder="Amount (RM)" type="number"/>
+</div>
+<p class="text-body-sm text-gray-muted">New orders start as <span class="text-gold-light font-medium">Processing</span> — change status from the table below once created.</p>
+<p class="hidden text-error text-body-sm" id="order-form-error"></p>
+<div class="flex gap-3">
+<button class="bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link px-6 py-3 rounded-lg uppercase shine-effect" id="order-submit-btn">Create Order</button>
+<button class="border border-outline-variant px-6 py-3 rounded-lg font-nav-link text-nav-link text-gray-muted hover:text-on-surface uppercase" id="order-cancel-btn">Cancel</button>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-6 flex flex-wrap items-center gap-gutter">
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">Filter by Status</label>
+<select class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface focus:ring-1 focus:ring-primary" id="filter-order-status">
+<option value="All">All Statuses</option>
+<option value="shipped">Shipped</option>
+<option value="pending">Pending</option>
+<option value="cancelled">Cancelled</option>
+<option value="in_transit">In Transit</option>
+</select>
+</div>
+<div class="flex items-end h-[68px]">
+<button class="h-10 px-6 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors font-label-caps text-[10px]" id="reset-order-filters">RESET FILTERS</button>
+</div>
+</div>
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 border-b border-outline-variant">
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">ORDER ID</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">CUSTOMER</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">PRODUCT</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">AMOUNT (RM)</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-center">STATUS</th>
+<th class="px-6 py-5 w-10"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30" id="orders-table-body"></tbody>
+</table>
+</div>
+<div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
+<span class="font-body-sm text-[11px] text-gray-muted uppercase tracking-widest" id="orders-count-label">Showing 0 results</span>
+</div>
+</div>
+</section>
+<!-- ================= CONSULTATIONS ================= -->
+<section class="view-section space-y-gutter" id="view-consultations">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-4">
+<span class="font-label-caps text-label-caps text-gold-light uppercase">Inbound Pipeline</span>
+<h2 class="font-display-lg text-display-lg leading-tight">Consultation Requests</h2>
+<div class="hairline-divider w-32"></div>
+</div>
+<div class="flex gap-4">
+<div class="glass-panel px-6 py-4 rounded-xl flex items-center gap-4">
+<span class="material-symbols-outlined text-primary text-3xl">pending_actions</span>
+<div><p class="font-ui-data text-ui-data text-gray-muted uppercase">Pending</p><p class="font-headline-sm text-headline-sm text-primary" id="consults-pending-count">0 Leads</p></div>
+</div>
+<button class="glass-panel px-6 py-4 rounded-xl flex items-center gap-3 hover:border-gold-light/40 transition-colors" id="new-lead-btn">
+<span class="material-symbols-outlined text-primary text-3xl">person_add</span>
+<span class="font-nav-link text-nav-link text-primary uppercase">New Lead</span>
+</button>
+</div>
+</div>
+<!-- New Lead Form (hidden by default) -->
+<div class="hidden glass-panel rounded-xl p-6 space-y-4" id="new-lead-form">
+<h4 class="font-headline-sm text-headline-sm text-gold-light">New Consultation Lead</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="lead-name" placeholder="Full name"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="lead-org" placeholder="Organization / role"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="lead-phone" placeholder="Phone"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="lead-email" placeholder="Email"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="lead-location" placeholder="Location"/>
+<input class="bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 px-2 outline-none" id="lead-message" placeholder="Message / interest"/>
+</div>
+<p class="hidden text-error text-body-sm" id="lead-form-error"></p>
+<div class="flex gap-3">
+<button class="bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link px-6 py-3 rounded-lg uppercase shine-effect" id="lead-submit-btn">Add Lead</button>
+<button class="border border-outline-variant px-6 py-3 rounded-lg font-nav-link text-nav-link text-gray-muted hover:text-on-surface uppercase" id="lead-cancel-btn">Cancel</button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="consultations-grid"></div>
+</section>
+<!-- ================= SYSTEM LOGS ================= -->
+<section class="view-section space-y-gutter" id="view-logs">
+<div>
+<span class="font-label-caps text-label-caps text-gold-light uppercase block mb-2">Internal Administration</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">System Integrity &amp; Logs</h2>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<div class="col-span-12 lg:col-span-4 grid gap-6">
+<div class="glass-panel rounded-lg p-6 flex flex-col justify-between shine-effect min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-gray-muted uppercase">Mainnet Connectivity</span>
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">dns</span>
+</div>
+<div>
+<div class="text-3xl font-display-lg text-primary tracking-tighter mb-1">99.98%</div>
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary pulse-dot"></span><span class="font-body-sm text-body-sm text-gray-soft">Optimal Performance</span></div>
+</div>
+</div>
+<div class="glass-panel rounded-lg p-6 border-gold-deep/20">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-nav-link text-nav-link text-primary uppercase">Maintenance Controls</h3>
+<span class="material-symbols-outlined text-primary">security</span>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div><p class="font-body-lg text-body-lg text-on-surface">System Mode</p><p class="font-body-sm text-body-sm text-gray-muted">Restrict public vault access</p></div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="toggle-system-mode" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-muted after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-deep peer-checked:after:bg-ivory"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<div><p class="font-body-lg text-body-lg text-on-surface">Market Liquidity Link</p><p class="font-body-sm text-body-sm text-gray-muted">Live wholesale bridge</p></div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" id="toggle-market-link" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-muted after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-deep peer-checked:after:bg-ivory"></div>
+</label>
+</div>
+<button class="w-full mt-4 border border-outline-variant py-3 font-nav-link text-nav-link text-gray-soft uppercase tracking-widest hover:border-gold-light hover:text-gold-light transition-all" id="force-logoff-btn">Force Global Logoff</button>
+</div>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-8 glass-panel rounded-lg overflow-hidden flex flex-col">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Real-Time Audit Trail</h3>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant rounded hover:bg-surface-container transition-colors" id="logs-filter-btn" title="Show blocked/errors only"><span class="material-symbols-outlined text-[18px]">filter_list</span></button>
+<button class="p-2 border border-outline-variant rounded hover:bg-surface-container transition-colors" id="logs-refresh-btn" title="Refresh"><span class="material-symbols-outlined text-[18px]">refresh</span></button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-4 font-label-caps text-label-caps text-gray-muted border-b border-outline-variant">Timestamp</th>
+<th class="px-6 py-4 font-label-caps text-label-caps text-gray-muted border-b border-outline-variant">Actor</th>
+<th class="px-6 py-4 font-label-caps text-label-caps text-gray-muted border-b border-outline-variant">Action Entity</th>
+<th class="px-6 py-4 font-label-caps text-label-caps text-gray-muted border-b border-outline-variant">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30" id="logs-table-body"></tbody>
+</table>
+</div>
+<div class="p-4 border-t border-outline-variant bg-surface-container-low flex justify-between items-center mt-auto">
+<span class="font-body-sm text-body-sm text-gray-muted" id="logs-count-label">Showing 0 logs</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= ANNOUNCEMENTS ================= -->
+<section class="view-section" id="view-announcements">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-5 space-y-8">
+<section class="glass-panel border border-outline-variant p-8 rounded-lg shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-gold-deep/5 blur-[60px] rounded-full -mr-16 -mt-16"></div>
+<div class="mb-6">
+<h2 class="font-headline-sm text-headline-sm text-gold-light mb-2">Create Announcement</h2>
+<p class="font-body-sm text-body-sm text-gray-muted">Draft messages for the institutional network.</p>
+</div>
+<form class="space-y-6" id="announcement-form">
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Title</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 transition-all outline-none" id="field-title" placeholder="e.g., Gold Reserve Update Q4" required="" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Content</label>
+<textarea class="w-full bg-charcoal border border-outline/30 focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted p-4 rounded-lg transition-all outline-none resize-none" id="field-content" placeholder="Detailed bulletin content..." required="" rows="4"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Expiry Date</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-3 px-2 outline-none" id="field-expiry" type="date"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Priority</label>
+<select class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-3 px-2 outline-none appearance-none" id="field-priority">
+<option value="Standard">Standard</option>
+<option value="Institutional (High)">Institutional (High)</option>
+<option value="Critical">Critical Alert</option>
+</select>
+</div>
+</div>
+<button class="w-full bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link py-4 rounded-lg shine-effect transition-transform active:scale-[0.98] uppercase disabled:opacity-50" id="publish-btn" type="submit">Publish Announcement</button>
+<p class="hidden font-body-sm text-body-sm text-error" id="form-error"></p>
+</form>
+</section>
+<div class="bg-surface-container-high p-8 rounded-lg border border-outline-variant/30 flex items-center justify-between">
+<div><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Live Bulletins</p><p class="font-headline-sm text-headline-sm text-primary" id="stat-live-count">0</p></div>
+<div class="h-12 w-12 rounded-full border border-gold-deep/30 flex items-center justify-center"><span class="material-symbols-outlined text-gold-light" style="font-variation-settings: 'FILL' 1;">campaign</span></div>
+</div>
+</div>
+<div class="lg:col-span-7 space-y-8">
+<div class="flex items-center justify-between mb-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Active Bulletin Board</h2>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant hover:bg-surface-container-highest transition-colors rounded" id="ann-filter-btn" title="Show critical only"><span class="material-symbols-outlined">filter_list</span></button>
+<button class="p-2 border border-outline-variant hover:bg-surface-container-highest transition-colors rounded" id="ann-sort-btn" title="Toggle sort order"><span class="material-symbols-outlined">sort</span></button>
+</div>
+</div>
+<div class="space-y-4" id="announcement-list"></div>
+<div class="mt-12">
+<p class="font-label-caps text-label-caps text-gray-muted uppercase mb-4 tracking-widest text-center">Public Landing Page Preview</p>
+<div class="hairline-divider mb-8"></div>
+<div class="relative bg-[#050505] p-12 rounded-xl border border-gold-deep/20 overflow-hidden">
+<div class="relative z-10 max-w-xl mx-auto text-center">
+<div class="flex justify-center mb-6"><span class="material-symbols-outlined text-gold-deep text-4xl">campaign</span></div>
+<h2 class="font-headline-md text-headline-md text-ivory mb-6 italic">Institutional Bulletins</h2>
+<div class="bg-charcoal/60 backdrop-blur-md p-8 border border-gold-deep/10 rounded-lg text-left shadow-2xl" id="preview-card">
+<p class="font-body-sm text-body-sm text-gray-muted text-center">No announcements published yet.</p>
+</div>
+<div class="mt-12 flex justify-center gap-12">
+<div class="text-center"><p class="font-display-lg text-headline-sm text-ivory">4.8B</p><p class="font-ui-data text-ui-data text-gray-muted uppercase">Assets Managed</p></div>
+<div class="text-center"><p class="font-display-lg text-headline-sm text-ivory">24/7</p><p class="font-ui-data text-ui-data text-gray-muted uppercase">Market Access</p></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="flex flex-col md:flex-row justify-between items-center w-full py-8 border-t border-outline-variant/30 gap-4">
+<p class="font-body-sm text-body-sm text-gray-muted">© 2024 GB Asset Management | Institutional Gold Wholesaler</p>
+<div class="flex gap-8">
+<a class="font-body-sm text-body-sm text-gray-muted hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-gray-muted hover:text-primary transition-colors" href="#">Terms of Service</a>
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> System Status
+            </div>
+</div>
+</footer>
+</div>
+</div>
+</main>
+</div>
+<div class="toast bg-surface-container-highest border border-gold-deep/40 text-on-surface px-5 py-3 rounded-lg font-body-sm text-body-sm shadow-2xl" id="toast"></div>
+
+<!-- Shared destructive-action confirmation modal -->
+<div class="hidden fixed inset-0 bg-black/70 z-[200] items-center justify-center p-6" id="confirm-modal-backdrop">
+<div class="glass-panel rounded-lg p-8 max-w-sm w-full">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Are you sure?</h3>
+<p class="font-body-sm text-body-sm text-gray-muted mb-6" id="confirm-modal-message"></p>
+<div class="flex justify-end gap-3">
+<button class="px-5 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface font-nav-link text-nav-link uppercase transition-colors" id="confirm-modal-cancel" type="button">Cancel</button>
+<button class="px-5 py-2.5 rounded-lg bg-error-container text-on-error-container font-nav-link text-nav-link uppercase font-bold hover:brightness-110 transition-all" id="confirm-modal-confirm" type="button">Delete</button>
+</div>
+</div>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/gba-firebase.js"></script>
+<script>
+(function () {
+    let state = {
+        orders: [],
+        consultations: [],
+        announcements: [],
+        logs: [],
+        settings: { systemMode: false, marketLink: true },
+        products: {},
+        loaded: { orders: false, consultations: false, announcements: false, logs: false },
+    };
+    let ui = {
+        orderFilters: { status: 'All' },
+        annFilterCritical: false,
+        annSortNewest: true,
+        logsFilterBlocked: false,
+    };
+    let adminActor = 'Admin';
+    // Tracks which announcement docIds we've already toasted about; null
+    // until the first snapshot arrives, so existing announcements don't all
+    // trigger a toast at once on page load — only genuinely new ones do.
+    let seenAnnouncementIds = null;
+
+    const toastEl = document.getElementById('toast');
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(() => toastEl.classList.remove('show'), 2200);
+    }
+
+    // Shared confirmation step before destructive actions (delete order/lead/
+    // announcement) — these used to fire immediately with no undo.
+    function confirmAction(message, onConfirm) {
+        const backdrop = document.getElementById('confirm-modal-backdrop');
+        const messageEl = document.getElementById('confirm-modal-message');
+        const confirmBtn = document.getElementById('confirm-modal-confirm');
+        const cancelBtn = document.getElementById('confirm-modal-cancel');
+        messageEl.textContent = message;
+        backdrop.classList.remove('hidden');
+        backdrop.classList.add('flex');
+        function cleanup() {
+            backdrop.classList.add('hidden');
+            backdrop.classList.remove('flex');
+            confirmBtn.removeEventListener('click', onConfirmClick);
+            cancelBtn.removeEventListener('click', onCancelClick);
+            backdrop.removeEventListener('click', onBackdropClick);
+        }
+        function onConfirmClick() { cleanup(); onConfirm(); }
+        function onCancelClick() { cleanup(); }
+        function onBackdropClick(e) { if (e.target === backdrop) cleanup(); }
+        confirmBtn.addEventListener('click', onConfirmClick);
+        cancelBtn.addEventListener('click', onCancelClick);
+        backdrop.addEventListener('click', onBackdropClick);
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    function toDate(ts) {
+        // Firestore Timestamp, JS Date, ISO string, or null (still pending server write)
+        if (!ts) return new Date();
+        if (typeof ts.toDate === 'function') return ts.toDate();
+        return new Date(ts);
+    }
+
+    function formatDateShort(ts) {
+        const d = toDate(ts);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+    }
+
+    function formatTimestamp(ts) {
+        const d = toDate(ts);
+        return d.toISOString().slice(0, 10) + ' | ' + d.toTimeString().slice(0, 8);
+    }
+
+    function initials(name) {
+        return (name || '?').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    }
+
+    function addLog(actor, action, detail, status) {
+        // Writes straight to Firestore; the logs listener below re-renders automatically.
+        GBA.logs.add(actor, action, detail, status).catch(() => {});
+    }
+
+    // ---------- AUTH GUARD ----------
+    if (!window.GBA) {
+        document.body.innerHTML = '<div style="padding:60px;text-align:center;color:#e5e2e1;font-family:sans-serif;">'
+            + '<h2>Firebase is not configured</h2><p>Add your project keys to js/firebase-config.js to enable the dashboard.</p></div>';
+        return;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        GBA.logout().then(() => { window.location.href = '/admin-login'; });
+    });
+
+    GBA.onAuthChange(function (user) {
+        if (!user) {
+            window.location.href = '/admin-login';
+            return;
+        }
+        if (!GBA.isAdmin(user)) {
+            document.body.innerHTML = '<div style="padding:60px;text-align:center;color:#e5e2e1;font-family:sans-serif;">'
+                + '<h2>Access Denied</h2><p>This account (' + escapeHtml(user.email) + ') is not authorized for the admin dashboard.'
+                + ' Add its email to ADMIN_EMAILS in js/firebase-config.js.</p>'
+                + '<a href="/" style="color:#f2ca50;">&larr; Return to site</a></div>';
+            return;
+        }
+        adminActor = user.displayName || user.email;
+        const nameLabel = document.getElementById('admin-name-label');
+        if (nameLabel) nameLabel.textContent = adminActor;
+        initDashboard();
+    });
+
+    function initDashboard() {
+        GBA.orders.listen(orders => { state.orders = orders; state.loaded.orders = true; renderOverview(); renderOrders(); });
+        GBA.consultations.listen(consultations => { state.consultations = consultations; state.loaded.consultations = true; renderOverview(); renderConsultations(); });
+        GBA.announcements.listen(announcements => {
+            if (seenAnnouncementIds === null) {
+                seenAnnouncementIds = new Set(announcements.map(a => a.docId));
+            } else {
+                announcements.forEach(a => {
+                    if (!seenAnnouncementIds.has(a.docId)) {
+                        seenAnnouncementIds.add(a.docId);
+                        showToast('📢 New announcement: ' + a.title);
+                    }
+                });
+            }
+            state.announcements = announcements;
+            state.loaded.announcements = true;
+            renderAnnouncements();
+        });
+        GBA.logs.listen(logs => { state.logs = logs; state.loaded.logs = true; renderLogs(); });
+        GBA.settings.listen(settings => { state.settings = settings; renderLogs(); });
+        loadProducts();
+    }
+
+    function loadProducts() {
+        GBA.getProducts().then(products => {
+            state.products = products;
+            const tiles = { 'price-1kg': 'bar-1kg', 'price-100g': 'bar-100g', 'price-50g': 'bar-50g', 'price-10g': 'bar-10g', 'price-1g': 'bar-1g' };
+            Object.keys(tiles).forEach(elId => {
+                const p = products[tiles[elId]];
+                const el = document.getElementById(elId);
+                if (p && el) el.textContent = 'RM ' + Number(p.price).toLocaleString('en-MY', { minimumFractionDigits: 2 });
+            });
+            renderPricing();
+        });
+    }
+
+    function renderPricing() {
+        const products = state.products || {};
+        document.getElementById('pricing-table-body').innerHTML = Object.keys(products).map(id => {
+            const p = products[id];
+            return `
+            <tr class="group hover:bg-surface-container-high/40 transition-all">
+                <td class="px-8 py-5 font-body-sm text-on-surface">${escapeHtml(p.name)}</td>
+                <td class="px-8 py-5 font-body-sm text-gray-muted">${escapeHtml(p.purity)}</td>
+                <td class="px-8 py-5 text-right">
+                    <input class="w-32 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-price-input="${id}" type="number" min="0" step="0.01" value="${Number(p.price)}"/>
+                </td>
+                <td class="px-8 py-5 text-right">
+                    <button class="font-label-caps text-gold-light hover:text-primary transition-colors" data-save-price="${id}">Save</button>
+                </td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="4" class="px-8 py-10 text-center text-gray-muted">No products found.</td></tr>`;
+
+        document.querySelectorAll('[data-save-price]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-save-price');
+                const input = document.querySelector(`[data-price-input="${id}"]`);
+                const price = parseFloat(input.value);
+                if (!(price > 0)) { showToast('Enter a valid price first.'); return; }
+                btn.disabled = true;
+                try {
+                    await GBA.updateProductPrice(id, price);
+                    addLog(adminActor, 'Product Price Updated', `${products[id].name} → RM ${price.toLocaleString('en-MY', { minimumFractionDigits: 2 })}`, 'SUCCESS');
+                    showToast('Price updated.');
+                    loadProducts();
+                } catch (err) {
+                    showToast('Could not update price: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+    }
+
+    // ---------- MOBILE SIDEBAR ----------
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    function openSidebar() {
+        sidebar.classList.add('sidebar-open');
+        sidebarBackdrop.classList.remove('hidden');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('sidebar-open');
+        sidebarBackdrop.classList.add('hidden');
+    }
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.contains('sidebar-open') ? closeSidebar() : openSidebar();
+    });
+    sidebarBackdrop.addEventListener('click', closeSidebar);
+    document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', closeSidebar));
+
+    // ---------- NAVIGATION ----------
+    const viewTitles = { overview: 'Overview', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements' };
+    function setView(view) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('view-' + view).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(btn => btn.classList.toggle('is-active', btn.getAttribute('data-view') === view));
+        document.getElementById('view-title').textContent = viewTitles[view];
+        document.getElementById('global-search').value = '';
+    }
+    document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', () => setView(btn.getAttribute('data-view'))));
+    document.querySelectorAll('[data-view-link]').forEach(btn => btn.addEventListener('click', () => setView(btn.getAttribute('data-view-link'))));
+    document.getElementById('export-btn').addEventListener('click', () => { addLog(adminActor, 'Report Exported', 'Full institutional report generated', 'SUCCESS'); showToast('Report export queued.'); });
+    document.getElementById('topbar-settings-btn').addEventListener('click', () => setView('logs'));
+
+    // ---------- OVERVIEW ----------
+    function statusBadge(status) {
+        const map = {
+            shipped: { label: 'Shipped', cls: 'bg-green-900/30 text-green-500' },
+            pending: { label: 'Processing', cls: 'bg-secondary-container text-secondary' },
+            in_transit: { label: 'In Transit', cls: 'bg-blue-900/30 text-blue-400' },
+            cancelled: { label: 'Cancelled', cls: 'bg-red-900/30 text-red-400' },
+        };
+        const m = map[status] || map.pending;
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] ${m.cls} font-bold uppercase tracking-wider">${m.label}</span>`;
+    }
+
+    function renderOverview() {
+        const totalVolume = state.orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + Number(o.amount || 0), 0);
+        document.getElementById('stat-total-volume').textContent = (totalVolume / 1000000).toFixed(2) + 'M';
+
+        const pending = state.consultations.filter(c => c.status === 'new');
+        document.getElementById('stat-pending-consults').textContent = pending.length;
+        document.getElementById('stat-high-priority').innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span> ${pending.length} NEW`;
+
+        const activeOrders = state.orders.filter(o => o.status !== 'cancelled');
+        document.getElementById('stat-active-orders').textContent = activeOrders.length;
+        const inTransit = state.orders.filter(o => o.status === 'in_transit').length;
+        document.getElementById('stat-in-transit').innerHTML = `<span class="material-symbols-outlined text-sm">local_shipping</span> ${inTransit} IN TRANSIT`;
+
+        const recent = state.orders.slice().sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt)).slice(0, 4);
+        document.getElementById('overview-recent-orders').innerHTML = recent.map(o => `
+            <tr class="hover:bg-primary/5 transition-colors">
+                <td class="px-8 py-5 text-on-surface font-medium border-b border-outline-variant/10">#${escapeHtml(o.id)}</td>
+                <td class="px-8 py-5 border-b border-outline-variant/10">${escapeHtml(o.customer)}</td>
+                <td class="px-8 py-5 border-b border-outline-variant/10">${escapeHtml(o.product)}</td>
+                <td class="px-8 py-5 text-right font-medium border-b border-outline-variant/10">${Number(o.amount).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</td>
+                <td class="px-8 py-5 border-b border-outline-variant/10">${statusBadge(o.status)}</td>
+            </tr>`).join('') || `<tr><td colspan="5" class="px-8 py-8 text-center text-gray-muted">${state.loaded.orders ? 'No orders yet.' : 'Loading orders…'}</td></tr>`;
+    }
+
+    // ---------- ORDERS ----------
+    function renderOrders() {
+        let list = state.orders.slice();
+        if (ui.orderFilters.status !== 'All') list = list.filter(o => o.status === ui.orderFilters.status);
+        list.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+        document.getElementById('orders-table-body').innerHTML = list.map(o => `
+            <tr class="group hover:bg-surface-container-high/40 transition-all duration-300 fade-in">
+                <td class="px-6 py-5 font-ui-data text-on-surface">${escapeHtml(o.id)}</td>
+                <td class="px-6 py-5 font-body-sm text-on-surface-variant">${formatDateShort(o.createdAt)}</td>
+                <td class="px-6 py-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold text-[10px]">${escapeHtml(initials(o.customer))}</div>
+                        <span class="font-body-sm text-on-surface">${escapeHtml(o.customer)}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-5"><span class="px-3 py-1 rounded bg-charcoal border border-gold-deep/20 text-gold-light text-[11px] font-medium">${escapeHtml(o.product)}</span></td>
+                <td class="px-6 py-5 font-ui-data text-right text-primary">${Number(o.amount).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</td>
+                <td class="px-6 py-5"><div class="flex justify-center">
+                    <select data-order-status="${o.id}" class="bg-charcoal border border-outline-variant rounded text-[10px] font-bold uppercase tracking-wider py-1 px-2 outline-none focus:border-gold-light">
+                        <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Processing</option>
+                        <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="in_transit" ${o.status === 'in_transit' ? 'selected' : ''}>In Transit</option>
+                        <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </div></td>
+                <td class="px-6 py-5"><button data-delete-order="${o.id}" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-error" title="Delete"><span class="material-symbols-outlined">delete</span></button></td>
+            </tr>`).join('') || `<tr><td colspan="7" class="px-6 py-10 text-center text-gray-muted">${state.loaded.orders ? 'No orders match this filter.' : 'Loading orders…'}</td></tr>`;
+
+        document.getElementById('orders-count-label').textContent = `Showing ${list.length} of ${state.orders.length} results`;
+
+        document.querySelectorAll('[data-order-status]').forEach(sel => {
+            sel.addEventListener('change', async () => {
+                const id = sel.getAttribute('data-order-status');
+                const order = state.orders.find(o => o.id === id);
+                await GBA.orders.updateStatus(id, sel.value);
+                addLog(adminActor, 'Order Status Updated', order ? `#${order.id} — ${order.customer} → ${sel.value}` : id, 'SUCCESS');
+                showToast('Order status updated.');
+            });
+        });
+
+        document.querySelectorAll('[data-delete-order]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-delete-order');
+                const order = state.orders.find(o => o.id === id);
+                confirmAction(`Delete order #${id}${order ? ' — ' + order.customer : ''}? This cannot be undone.`, async () => {
+                    await GBA.orders.remove(id);
+                    addLog(adminActor, 'Order Deleted', order ? `#${order.id} — ${order.customer}` : id, 'SUCCESS');
+                    showToast('Order removed.');
+                });
+            });
+        });
+    }
+
+    document.getElementById('filter-order-status').addEventListener('change', (e) => { ui.orderFilters.status = e.target.value; renderOrders(); });
+    document.getElementById('reset-order-filters').addEventListener('click', () => { ui.orderFilters.status = 'All'; document.getElementById('filter-order-status').value = 'All'; renderOrders(); });
+    document.getElementById('export-orders-btn').addEventListener('click', () => showToast('Order data export queued.'));
+
+    document.getElementById('new-order-btn').addEventListener('click', () => document.getElementById('new-order-form').classList.toggle('hidden'));
+    document.getElementById('order-cancel-btn').addEventListener('click', () => document.getElementById('new-order-form').classList.add('hidden'));
+    document.getElementById('order-submit-btn').addEventListener('click', async () => {
+        const customer = document.getElementById('order-customer').value.trim();
+        const product = document.getElementById('order-product').value.trim();
+        const amount = parseFloat(document.getElementById('order-amount').value);
+        const errorEl = document.getElementById('order-form-error');
+        if (!customer || !product || !amount || amount <= 0) {
+            errorEl.textContent = 'Customer, product, and a valid amount are required.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        errorEl.classList.add('hidden');
+        try {
+            const id = await GBA.orders.create({ customer, product, amount, status: 'pending', items: [], subtotal: amount });
+            addLog(adminActor, 'New Order Created', `#${id} — ${customer} (RM ${amount.toLocaleString()})`, 'SUCCESS');
+            document.getElementById('order-customer').value = '';
+            document.getElementById('order-product').value = '';
+            document.getElementById('order-amount').value = '';
+            document.getElementById('new-order-form').classList.add('hidden');
+            showToast('Order created.');
+        } catch (err) {
+            errorEl.textContent = 'Could not create order: ' + err.message;
+            errorEl.classList.remove('hidden');
+        }
+    });
+
+    // ---------- CONSULTATIONS ----------
+    function statusPill(status) {
+        if (status === 'new') return `<span class="bg-primary/10 text-primary font-ui-data text-ui-data px-3 py-1 rounded-full border border-primary/20">NEW REQUEST</span>`;
+        if (status === 'scheduled') return `<span class="bg-blue-500/10 text-blue-400 font-ui-data text-ui-data px-3 py-1 rounded-full border border-blue-500/20 uppercase">Call Scheduled</span>`;
+        return `<span class="bg-secondary/10 text-secondary font-ui-data text-ui-data px-3 py-1 rounded-full border border-secondary/20 uppercase">Contacted</span>`;
+    }
+
+    function renderConsultations() {
+        const pending = state.consultations.filter(c => c.status === 'new');
+        document.getElementById('consults-pending-count').textContent = pending.length + ' Leads';
+
+        const list = state.consultations.slice().sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+        document.getElementById('consultations-grid').innerHTML = list.map(c => `
+            <div class="glass-panel p-8 rounded-xl flex flex-col gap-6 relative group overflow-hidden gold-glow transition-all duration-500 fade-in">
+                <div class="absolute top-0 right-0 p-4">${statusPill(c.status)}</div>
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-3xl">person</span>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-headline-sm text-headline-sm">${escapeHtml(c.name)}</h3>
+                        <p class="font-body-sm text-body-sm text-gray-muted">${escapeHtml(c.org)}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-y-4 gap-x-8 border-y border-outline-variant/30 py-6">
+                    <div class="space-y-1"><p class="font-ui-data text-ui-data text-gray-muted uppercase">Phone</p><p class="font-body-lg text-body-lg">${escapeHtml(c.phone) || '—'}</p></div>
+                    <div class="space-y-1 text-right"><p class="font-ui-data text-ui-data text-gray-muted uppercase">Location</p><p class="font-body-lg text-body-lg">${escapeHtml(c.location) || '—'}</p></div>
+                    <div class="space-y-1"><p class="font-ui-data text-ui-data text-gray-muted uppercase">Email</p><p class="font-body-lg text-body-lg">${escapeHtml(c.email) || '—'}</p></div>
+                    <div class="space-y-1 text-right"><p class="font-ui-data text-ui-data text-gray-muted uppercase">Assigned To</p><p class="font-body-lg text-body-lg">${escapeHtml(c.assignedTo) || 'Unassigned'}</p></div>
+                </div>
+                <div class="space-y-2"><p class="font-ui-data text-ui-data text-gray-muted uppercase">Message</p><p class="font-body-lg text-body-lg leading-relaxed italic">"${escapeHtml(c.message) || 'No message provided.'}"</p></div>
+                <div class="flex flex-wrap items-center gap-3 mt-2">
+                    <button data-schedule="${c.docId}" class="flex-1 min-w-[140px] bg-primary text-on-primary font-label-caps text-label-caps py-3 rounded-lg shine-effect uppercase font-bold text-center">Schedule Call</button>
+                    <button data-contacted="${c.docId}" class="flex-1 min-w-[140px] border border-primary/40 text-primary font-label-caps text-label-caps py-3 rounded-lg hover:bg-primary/5 transition-colors uppercase font-bold text-center">Mark Contacted</button>
+                    <button data-assign="${c.docId}" class="px-4 py-3 border border-outline-variant text-on-surface-variant hover:text-primary font-label-caps text-label-caps rounded-lg uppercase">Assign</button>
+                    <button data-delete-lead="${c.docId}" class="p-3 border border-outline-variant rounded-lg text-on-surface-variant hover:text-error transition-colors" title="Delete lead" aria-label="Delete lead"><span class="material-symbols-outlined">delete</span></button>
+                </div>
+            </div>`).join('') || `<p class="lg:col-span-2 text-center text-gray-muted py-12">${state.loaded.consultations ? 'No consultation leads yet.' : 'Loading consultations…'}</p>`;
+
+        document.querySelectorAll('[data-schedule]').forEach(btn => btn.addEventListener('click', async () => {
+            const docId = btn.getAttribute('data-schedule');
+            const c = state.consultations.find(x => x.docId === docId);
+            if (!c) return;
+            await GBA.consultations.update(docId, { status: 'scheduled' });
+            addLog(adminActor, 'Consultation Scheduled', c.name, 'SUCCESS');
+            showToast('Call scheduled.');
+        }));
+        document.querySelectorAll('[data-contacted]').forEach(btn => btn.addEventListener('click', async () => {
+            const docId = btn.getAttribute('data-contacted');
+            const c = state.consultations.find(x => x.docId === docId);
+            if (!c) return;
+            await GBA.consultations.update(docId, { status: 'contacted' });
+            addLog(adminActor, 'Lead Marked Contacted', c.name, 'SUCCESS');
+            showToast('Marked as contacted.');
+        }));
+        document.querySelectorAll('[data-assign]').forEach(btn => btn.addEventListener('click', async () => {
+            const docId = btn.getAttribute('data-assign');
+            const c = state.consultations.find(x => x.docId === docId);
+            if (!c) return;
+            const name = prompt('Assign this lead to:', c.assignedTo || '');
+            if (name === null) return;
+            await GBA.consultations.update(docId, { assignedTo: name.trim() });
+            addLog(adminActor, 'Lead Assigned', `${c.name} → ${name.trim() || 'Unassigned'}`, 'SUCCESS');
+            showToast('Lead assignment updated.');
+        }));
+        document.querySelectorAll('[data-delete-lead]').forEach(btn => btn.addEventListener('click', () => {
+            const docId = btn.getAttribute('data-delete-lead');
+            const c = state.consultations.find(x => x.docId === docId);
+            confirmAction(`Delete the lead from ${c ? c.name : 'this contact'}? This cannot be undone.`, async () => {
+                await GBA.consultations.remove(docId);
+                addLog(adminActor, 'Lead Removed', c ? c.name : docId, 'SUCCESS');
+                showToast('Lead removed.');
+            });
+        }));
+    }
+
+    document.getElementById('new-lead-btn').addEventListener('click', () => document.getElementById('new-lead-form').classList.toggle('hidden'));
+    document.getElementById('lead-cancel-btn').addEventListener('click', () => document.getElementById('new-lead-form').classList.add('hidden'));
+    document.getElementById('lead-submit-btn').addEventListener('click', async () => {
+        const name = document.getElementById('lead-name').value.trim();
+        const org = document.getElementById('lead-org').value.trim();
+        const phone = document.getElementById('lead-phone').value.trim();
+        const email = document.getElementById('lead-email').value.trim();
+        const location = document.getElementById('lead-location').value.trim();
+        const message = document.getElementById('lead-message').value.trim();
+        const errorEl = document.getElementById('lead-form-error');
+        if (!name) {
+            errorEl.textContent = 'Name is required.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        errorEl.classList.add('hidden');
+        await GBA.consultations.submit({ name, org, phone, email, location, message });
+        addLog(adminActor, 'New Consultation Lead Added', name, 'SUCCESS');
+        ['lead-name', 'lead-org', 'lead-phone', 'lead-email', 'lead-location', 'lead-message'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('new-lead-form').classList.add('hidden');
+        showToast('Lead added.');
+    });
+
+    // ---------- SYSTEM LOGS ----------
+    function renderLogs() {
+        let list = state.logs.slice();
+        if (ui.logsFilterBlocked) list = list.filter(l => l.status === 'BLOCKED');
+        document.getElementById('logs-table-body').innerHTML = list.map(l => `
+            <tr class="group hover:bg-surface-container-low transition-all">
+                <td class="px-6 py-5 ${l.status === 'BLOCKED' ? 'border-l-2 border-error' : ''}"><div class="font-ui-data text-ui-data ${l.status === 'BLOCKED' ? 'text-error' : 'text-on-surface'}">${formatTimestamp(l.ts)}</div></td>
+                <td class="px-6 py-5"><div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full ${l.status === 'BLOCKED' ? 'bg-error-container text-error' : 'bg-secondary-container text-primary'} flex items-center justify-center text-[10px] font-bold">${escapeHtml(initials(l.actor))}</div>
+                    <span class="font-body-sm text-body-sm text-on-surface">${escapeHtml(l.actor)}</span>
+                </div></td>
+                <td class="px-6 py-5">
+                    <div class="font-body-sm text-body-sm ${l.status === 'BLOCKED' ? 'text-error' : 'text-ivory'}">${escapeHtml(l.action)}</div>
+                    <div class="text-[11px] text-gray-muted mt-1">${escapeHtml(l.detail)}</div>
+                </td>
+                <td class="px-6 py-5">${l.status === 'BLOCKED'
+                    ? `<span class="px-2 py-1 rounded-sm bg-error-container/30 text-error font-ui-data text-ui-data border border-error/20">BLOCKED</span>`
+                    : `<span class="px-2 py-1 rounded-sm bg-secondary-container/30 text-primary font-ui-data text-ui-data border border-primary/20">SUCCESS</span>`}</td>
+            </tr>`).join('') || `<tr><td colspan="4" class="px-6 py-10 text-center text-gray-muted">${state.loaded.logs ? 'No log entries.' : 'Loading logs…'}</td></tr>`;
+        document.getElementById('logs-count-label').textContent = `Showing ${list.length} of ${state.logs.length} logs`;
+
+        document.getElementById('toggle-system-mode').checked = !!state.settings.systemMode;
+        document.getElementById('toggle-market-link').checked = !!state.settings.marketLink;
+    }
+
+    document.getElementById('logs-filter-btn').addEventListener('click', () => {
+        ui.logsFilterBlocked = !ui.logsFilterBlocked;
+        document.getElementById('logs-filter-btn').classList.toggle('text-gold-light', ui.logsFilterBlocked);
+        renderLogs();
+    });
+    document.getElementById('logs-refresh-btn').addEventListener('click', () => { renderLogs(); showToast('Log refreshed.'); });
+    document.getElementById('toggle-system-mode').addEventListener('change', async (e) => {
+        await GBA.settings.update({ systemMode: e.target.checked });
+        addLog(adminActor, 'System Mode Toggled', e.target.checked ? 'Public vault access restricted' : 'Public vault access restored', 'SUCCESS');
+    });
+    document.getElementById('toggle-market-link').addEventListener('change', async (e) => {
+        await GBA.settings.update({ marketLink: e.target.checked });
+        addLog(adminActor, 'Market Liquidity Link Toggled', e.target.checked ? 'Live wholesale bridge enabled' : 'Live wholesale bridge disabled', 'SUCCESS');
+    });
+    document.getElementById('force-logoff-btn').addEventListener('click', async () => {
+        addLog(adminActor, 'Force Global Logoff Triggered', 'All active sessions terminated', 'BLOCKED');
+        showToast('Global logoff triggered.');
+    });
+
+    // ---------- ANNOUNCEMENTS ----------
+    function priorityMeta(priority) {
+        if (priority === 'Critical') return { label: 'Critical', badgeClass: 'bg-gold-deep/10 text-gold-light border-gold-deep/20', cardClass: 'group glass-panel border-l-4 border-l-gold-deep border-r border-t border-b border-outline-variant/30 gold-glow' };
+        if (priority === 'Institutional (High)') return { label: 'Institutional', badgeClass: 'bg-tertiary/10 text-tertiary border-tertiary/20', cardClass: 'group bg-surface-container border-l-4 border-l-tertiary border-r border-t border-b border-outline-variant/30' };
+        return { label: 'Standard', badgeClass: 'bg-charcoal text-gray-soft border-outline-variant/40', cardClass: 'group bg-surface-container border border-outline-variant/30 hover:border-gold-light/40' };
+    }
+    function isExpired(b) {
+        if (!b.expiry) return false;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        return new Date(b.expiry) < today;
+    }
+
+    function renderAnnouncements() {
+        const liveOnes = state.announcements.filter(b => !isExpired(b));
+        document.getElementById('stat-live-count').textContent = liveOnes.length;
+
+        let toShow = state.announcements.slice();
+        if (ui.annFilterCritical) toShow = toShow.filter(b => b.priority === 'Critical');
+        toShow.sort((a, b) => ui.annSortNewest ? toDate(b.createdAt) - toDate(a.createdAt) : toDate(a.createdAt) - toDate(b.createdAt));
+
+        const listEl = document.getElementById('announcement-list');
+        if (toShow.length === 0) {
+            listEl.innerHTML = state.loaded.announcements
+                ? '<p class="font-body-sm text-body-sm text-gray-muted text-center py-8 border border-dashed border-outline-variant/40 rounded-lg">No bulletins to show. Publish one to populate the board.</p>'
+                : '<p class="font-body-sm text-body-sm text-gray-muted text-center py-8">Loading announcements…</p>';
+        } else {
+            listEl.innerHTML = toShow.map(b => {
+                const meta = priorityMeta(b.priority);
+                const expired = isExpired(b);
+                return `
+                <div class="${meta.cardClass} p-6 rounded-r-lg transition-all duration-500 fade-in ${expired ? 'opacity-50' : ''}">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-1 ${meta.badgeClass} font-ui-data text-ui-data border rounded uppercase">${meta.label}${expired ? ' · Expired' : ''}</span>
+                        <span class="font-ui-data text-ui-data text-gray-muted">${formatDateShort(b.createdAt)}</span>
+                    </div>
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 group-hover:text-primary transition-colors">${escapeHtml(b.title)}</h3>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant mb-4">${escapeHtml(b.content)}</p>
+                    <div class="flex items-center gap-6 border-t border-outline-variant/20 pt-4">
+                        <div class="flex items-center gap-2 text-gray-muted font-ui-data text-ui-data"><span class="material-symbols-outlined">visibility</span> ${b.views} Views</div>
+                        ${b.expiry ? `<div class="flex items-center gap-2 text-gray-muted font-ui-data text-ui-data"><span class="material-symbols-outlined">event</span> Expires ${formatDateShort(b.expiry)}</div>` : ''}
+                        <button data-delete-ann="${b.docId}" class="ml-auto text-on-surface-variant hover:text-error font-nav-link text-nav-link flex items-center gap-1 transition-colors">Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
+            document.querySelectorAll('[data-delete-ann]').forEach(btn => btn.addEventListener('click', () => {
+                const docId = btn.getAttribute('data-delete-ann');
+                const b = state.announcements.find(x => x.docId === docId);
+                confirmAction(`Delete the announcement "${b ? b.title : ''}"? This cannot be undone.`, async () => {
+                    await GBA.announcements.remove(docId);
+                    addLog(adminActor, 'Announcement Removed', b ? b.title : docId, 'SUCCESS');
+                    showToast('Bulletin removed.');
+                });
+            }));
+        }
+
+        const active = state.announcements.filter(b => !isExpired(b));
+        const featured = active.find(b => b.priority === 'Critical') || active.slice().sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt))[0];
+        const previewEl = document.getElementById('preview-card');
+        if (!featured) {
+            previewEl.innerHTML = '<p class="font-body-sm text-body-sm text-gray-muted text-center">No announcements published yet.</p>';
+        } else {
+            previewEl.innerHTML = `
+                <div class="flex items-center gap-4 mb-4"><div class="h-1 w-12 bg-gold-deep"></div><p class="font-ui-data text-ui-data text-gold-light uppercase tracking-[4px]">Latest Update</p></div>
+                <h4 class="font-headline-sm text-headline-sm text-on-surface mb-3">${escapeHtml(featured.title)}</h4>
+                <p class="font-body-lg text-body-lg text-gray-soft">${escapeHtml(featured.content)}</p>
+                <button class="mt-6 font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:text-gold-light transition-colors">READ OFFICIAL RELEASE</button>`;
+        }
+    }
+
+    document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errorEl = document.getElementById('form-error');
+        errorEl.classList.add('hidden');
+        const title = document.getElementById('field-title').value.trim();
+        const content = document.getElementById('field-content').value.trim();
+        const expiry = document.getElementById('field-expiry').value;
+        const priority = document.getElementById('field-priority').value;
+        if (!title || !content) {
+            errorEl.textContent = 'Title and content are required.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        const btn = document.getElementById('publish-btn');
+        btn.disabled = true; btn.textContent = 'Publishing…';
+        try {
+            await GBA.announcements.publish({ title, content, expiry: expiry || null, priority });
+            addLog(adminActor, 'Announcement Published', title, 'SUCCESS');
+            document.getElementById('announcement-form').reset();
+            showToast('Announcement published.');
+        } catch (err) {
+            errorEl.textContent = 'Could not publish — please try again.';
+            errorEl.classList.remove('hidden');
+        }
+        btn.disabled = false; btn.textContent = 'Publish Announcement';
+    });
+    document.getElementById('ann-filter-btn').addEventListener('click', () => {
+        ui.annFilterCritical = !ui.annFilterCritical;
+        document.getElementById('ann-filter-btn').classList.toggle('text-gold-light', ui.annFilterCritical);
+        renderAnnouncements();
+    });
+    document.getElementById('ann-sort-btn').addEventListener('click', () => { ui.annSortNewest = !ui.annSortNewest; renderAnnouncements(); });
+
+    // ---------- GLOBAL SEARCH (simple client-side filter per view) ----------
+    document.getElementById('global-search').addEventListener('input', (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        const activeView = document.querySelector('.view-section.active').id;
+        if (activeView === 'view-orders') {
+            document.querySelectorAll('#orders-table-body tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        } else if (activeView === 'view-consultations') {
+            document.querySelectorAll('#consultations-grid > div').forEach(card => { card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        } else if (activeView === 'view-logs') {
+            document.querySelectorAll('#logs-table-body tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        } else if (activeView === 'view-announcements') {
+            document.querySelectorAll('#announcement-list > div').forEach(card => { card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        }
+    });
+
+    // ---------- Focus micro-interaction ----------
+    document.addEventListener('focusin', (e) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+            e.target.parentElement && e.target.parentElement.querySelector('label')?.classList.add('text-primary');
+        }
+    });
+    document.addEventListener('focusout', (e) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+            e.target.parentElement && e.target.parentElement.querySelector('label')?.classList.remove('text-primary');
+        }
+    });
+
+    // ---------- Live market sync time ----------
+    function tickMarket() {
+        const marketTimeEl = document.getElementById('market-sync-time');
+        if (marketTimeEl) {
+            marketTimeEl.textContent = new Date().toTimeString().slice(0, 8);
+        }
+    }
+    setInterval(tickMarket, 5000);
+    tickMarket();
+
+    function renderAll() {
+        renderOverview();
+        renderOrders();
+        renderConsultations();
+        renderLogs();
+        renderAnnouncements();
+    }
+
+    renderAll();
+})();
+</script>
+</body>
+</html>
