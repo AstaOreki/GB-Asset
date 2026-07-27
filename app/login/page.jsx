@@ -112,6 +112,24 @@ function AuthPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gba]);
 
+  // Completes the mobile signInWithRedirect Google flow (see gba-firebase.js
+  // — mobile browsers block signInWithPopup, so that path navigates away to
+  // Google and back here instead). No-ops if there's no pending redirect.
+  useEffect(() => {
+    if (!gba) return;
+    gba
+      .checkGoogleRedirectResult()
+      .then((user) => {
+        if (user) window.location.href = redirectTarget();
+      })
+      .catch((err) => {
+        if (err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request")) return;
+        setLoginStatus(friendlyAuthError(err));
+        setLoginStatusShown(true);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gba]);
+
   // Magnetic hover on this page's submit buttons (matches index.html's
   // effect, scoped locally since there's no shared useMagneticHover hook).
   useEffect(() => {

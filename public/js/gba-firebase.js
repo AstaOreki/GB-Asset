@@ -67,22 +67,53 @@
     }).then(function (cred) { return cred.user; });
   }
 
+  // Mobile browsers (iOS Safari, in-app browsers, many Android browsers)
+  // routinely block window.open()-based popups once any async gap (like
+  // setPersistence's promise) separates the click from the popup call —
+  // this is what caused "Your browser blocked the sign-in popup" on
+  // phones. Redirect-based sign-in sidesteps popups entirely and is what
+  // Firebase recommends for mobile.
+  function isLikelyToBlockPopups() {
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  }
+
+  function finishGoogleSignIn(user) {
+    var ref = db.collection("users").doc(user.uid);
+    return ref.get().then(function (doc) {
+      if (doc.exists) return user;
+      return ref.set({
+        name: user.displayName || "",
+        email: user.email || "",
+        phone: "",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).then(function () { return user; });
+    });
+  }
+
   function loginWithGoogle() {
     var provider = new firebase.auth.GoogleAuthProvider();
     return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
-      return auth.signInWithPopup(provider);
-    }).then(function (cred) {
-      var user = cred.user;
-      var ref = db.collection("users").doc(user.uid);
-      return ref.get().then(function (doc) {
-        if (doc.exists) return user;
-        return ref.set({
-          name: user.displayName || "",
-          email: user.email || "",
-          phone: "",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(function () { return user; });
+      if (isLikelyToBlockPopups()) {
+        // Navigates the whole page to Google and back — the caller never
+        // sees this promise resolve. The page that receives the redirect
+        // back must call GBA.checkGoogleRedirectResult() on mount instead.
+        return auth.signInWithRedirect(provider);
+      }
+      return auth.signInWithPopup(provider).then(function (cred) {
+        return finishGoogleSignIn(cred.user);
       });
+    });
+  }
+
+  // Call on mount of any page that offers Google sign-in, so the mobile
+  // signInWithRedirect flow above has somewhere to land. Resolves to the
+  // signed-in user if the page was just reached via a redirect-based
+  // Google sign-in, or null if there's no pending redirect (the normal
+  // case for every other page load).
+  function checkGoogleRedirectResult() {
+    return auth.getRedirectResult().then(function (result) {
+      if (!result || !result.user) return null;
+      return finishGoogleSignIn(result.user);
     });
   }
 
@@ -315,6 +346,7 @@
     register: register,
     login: login,
     loginWithGoogle: loginWithGoogle,
+    checkGoogleRedirectResult: checkGoogleRedirectResult,
     logout: logout,
     resetPassword: resetPassword,
     getProducts: getProducts,

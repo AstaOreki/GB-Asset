@@ -38,10 +38,31 @@ export default function RootLayout({ children }) {
           src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"
           strategy="beforeInteractive"
         />
+        {/* Firebase config comes from env vars (not a hardcoded file) for
+            the Next.js app. These values aren't secret — Firebase expects
+            them to be visible in the browser, Firestore rules are what
+            actually secure the data — but they're centralized here so
+            there's one place to rotate them. public/js/firebase-config.js
+            keeps its own copy for admin_dashboard.html, a plain static file
+            outside the Next.js build that can't read these env vars. */}
         <Script
           id="firebase-config"
-          src="/js/firebase-config.js"
           strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              const firebaseConfig = {
+                apiKey: "${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}",
+                authDomain: "${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}",
+                projectId: "${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}",
+                storageBucket: "${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}",
+                messagingSenderId: "${process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}",
+                appId: "${process.env.NEXT_PUBLIC_FIREBASE_APP_ID}"
+              };
+              const ADMIN_EMAILS = ${JSON.stringify(
+                (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map((s) => s.trim()).filter(Boolean)
+              )};
+            `,
+          }}
         />
         <Script
           id="gba-firebase"
