@@ -12,7 +12,8 @@ service cloud.firestore {
     // the ADMIN_EMAILS array in the JS is only a UI-level gate.)
     function adminEmails() {
       return [
-        "astaoreki@gmail.com"
+        "astaoreki@gmail.com",
+        "ezurazz@gmail.com"
       ];
     }
 

@@ -26,5 +26,6 @@ const firebaseConfig = {
 // (For real production security also lock this down with Firestore rules —
 // see firestore.rules — since this array alone is only a UI-level gate.)
 const ADMIN_EMAILS = [
-"astaoreki@gmail.com"
+"astaoreki@gmail.com",
+"ezurazz@gmail.com"
 ];
