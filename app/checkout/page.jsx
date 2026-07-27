@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import StorefrontHeader from "../../components/StorefrontHeader";
 import FullFooter from "../../components/FullFooter";
@@ -58,7 +58,7 @@ export default function CheckoutPage() {
     });
   }, [gba]);
 
-  useEffect(() => {
+  const loadCart = useCallback(() => {
     if (!gba || !products) return;
     gba.cart.read().then((rawCart) => {
       const filtered = rawCart.filter((l) => l && products[l.id] && l.qty > 0);
@@ -66,6 +66,24 @@ export default function CheckoutPage() {
       setCartLoaded(true);
     });
   }, [gba, products]);
+
+  useEffect(() => {
+    loadCart();
+  }, [loadCart]);
+
+  // Re-read on auth changes too (mirrors cart.html/cart/page.jsx): a guest
+  // cart that gets merged into a freshly-registered/logged-in account
+  // needs to be picked up here even if this effect already ran once before
+  // auth resolved.
+  useEffect(() => {
+    if (!gba) return;
+    const unsubscribe = gba.onAuthChange(() => {
+      loadCart();
+    });
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [gba, loadCart]);
 
   // Auth-aware prefill: if a signed-in user's name/email fields are empty,
   // fill them from their account (matches original wireAuthNav behavior).
@@ -390,8 +408,8 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <button className="submit-btn" data-ripple="" type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Placing Order…" : "Place Order"}
+                  <button className="submit-btn" data-ripple="" type="submit" disabled={isSubmitting || !products || !cartLoaded}>
+                    {isSubmitting ? "Placing Order…" : !products || !cartLoaded ? "Loading…" : "Place Order"}
                   </button>
                   <div className="submit-sub">By placing your order you agree to our Terms &amp; Conditions.</div>
                 </form>

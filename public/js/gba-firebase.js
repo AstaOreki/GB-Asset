@@ -27,13 +27,40 @@
 
   var currentUser = null;
   var productsCache = null;
+  // Tracks an in-flight guest-cart merge (see migrateGuestCartToUser) so
+  // readCart() can wait for it — currentUser is set synchronously below,
+  // before the merge's Firestore write finishes, so any cart read that
+  // fires right after sign-in (e.g. checkout's product-load effect) needs
+  // this to avoid reading the doc before the merge has landed.
+  var pendingCartMigration = null;
 
   // ------------------------------------------------------------------ auth
+  // A single internal listener drives currentUser + the guest-cart merge
+  // exactly once per real sign-in. onAuthChange(cb) below is called by
+  // several independent components (header, checkout, etc.) — each used to
+  // register its own auth.onAuthStateChanged listener that ALSO kicked off
+  // its own migrateGuestCartToUser call, so one sign-in fired 2-3 redundant
+  // concurrent migrations (each its own Firestore read+write round trip),
+  // which was slow enough that pages reading the cart right after sign-in
+  // would see it still empty. Migration now only ever runs here, once.
+  auth.onAuthStateChanged(function (user) {
+    currentUser = user;
+    if (user) {
+      pendingCartMigration = migrateGuestCartToUser(user.uid).then(function () {
+        pendingCartMigration = null;
+      });
+    } else {
+      pendingCartMigration = null;
+    }
+  });
+
   function onAuthChange(cb) {
     return auth.onAuthStateChanged(function (user) {
-      currentUser = user;
-      if (user) migrateGuestCartToUser(user.uid);
-      cb(user);
+      if (user) {
+        Promise.resolve(pendingCartMigration).then(function () { cb(user); });
+      } else {
+        cb(user);
+      }
     });
   }
 
@@ -161,7 +188,9 @@
 
   function readCart() {
     if (!currentUser) return Promise.resolve(readGuestCart());
-    return db.collection("users").doc(currentUser.uid).get().then(function (doc) {
+    return Promise.resolve(pendingCartMigration).then(function () {
+      return db.collection("users").doc(currentUser.uid).get();
+    }).then(function (doc) {
       var data = doc.data();
       return (data && Array.isArray(data.cart)) ? data.cart : [];
     }).catch(function () { return readGuestCart(); });

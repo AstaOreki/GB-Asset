@@ -98,35 +98,40 @@ function AuthPanel() {
     return "/";
   }
 
-  // Redirect-if-already-authenticated: subscribe once GBA is ready.
+  // Redirect-if-already-authenticated. Waits for any pending mobile
+  // signInWithRedirect Google flow (see gba-firebase.js — mobile browsers
+  // block signInWithPopup, so that path navigates away to Google and back
+  // here instead) to fully finish — including its Firestore profile-doc
+  // write — BEFORE subscribing to onAuthChange. Without this ordering, the
+  // two ran as a race: onAuthChange typically fires (and redirects away)
+  // before the redirect-completion's Firestore write had a chance to run,
+  // so a brand-new Google user on mobile could lose their profile doc.
   useEffect(() => {
     if (!gba) return;
-    const unsubscribe = gba.onAuthChange(function (user) {
-      if (user) {
-        window.location.href = redirectTarget();
-      }
-    });
-    return () => {
-      if (typeof unsubscribe === "function") unsubscribe();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gba]);
+    let unsubscribe;
+    let cancelled = false;
 
-  // Completes the mobile signInWithRedirect Google flow (see gba-firebase.js
-  // — mobile browsers block signInWithPopup, so that path navigates away to
-  // Google and back here instead). No-ops if there's no pending redirect.
-  useEffect(() => {
-    if (!gba) return;
     gba
       .checkGoogleRedirectResult()
-      .then((user) => {
-        if (user) window.location.href = redirectTarget();
-      })
       .catch((err) => {
-        if (err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request")) return;
+        if (err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request")) return null;
         setLoginStatus(friendlyAuthError(err));
         setLoginStatusShown(true);
+        return null;
+      })
+      .then(() => {
+        if (cancelled) return;
+        unsubscribe = gba.onAuthChange(function (user) {
+          if (user) {
+            window.location.href = redirectTarget();
+          }
+        });
       });
+
+    return () => {
+      cancelled = true;
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gba]);
 
