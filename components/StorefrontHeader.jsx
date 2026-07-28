@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAuthAwareNav } from "../hooks/useAuthAwareNav";
 import { useCartBadge } from "../hooks/useCartBadge";
-import { useGBA } from "../hooks/useGBA";
 import { useScrollProgress } from "../hooks/useScrollProgress";
 
 const NAV_ITEMS = [
@@ -36,23 +35,12 @@ export default function StorefrontHeader({ variant }) {
   const { scrolled, progress } = useScrollProgress();
   const { count } = useCartBadge();
   const { isAuthed, user } = useAuthAwareNav();
-  const gba = useGBA();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function handleAuthClick(e) {
-    if (!isAuthed) return; // let the <a> navigate to /login normally
-    e.preventDefault();
-    if (gba) {
-      gba.logout().then(() => {
-        window.location.reload();
-      });
-    }
-  }
-
   const authLabel = isAuthed
-    ? `Hi, ${user?.displayName || (user?.email ? user.email.split("@")[0] : "")} · Sign Out`
+    ? `Hi, ${user?.displayName || (user?.email ? user.email.split("@")[0] : "")}`
     : "Login / Register";
-  const authHref = isAuthed ? "#" : "/login";
+  const authHref = isAuthed ? "/profile" : "/login";
 
   return (
     <>
@@ -98,7 +86,7 @@ export default function StorefrontHeader({ variant }) {
                 {count}
               </span>
             </Link>
-            <a className="login-btn" id="authNavBtn" href={authHref} onClick={handleAuthClick}>
+            <a className="login-btn" id="authNavBtn" href={authHref}>
               {authLabel}
             </a>
             <button
@@ -134,7 +122,7 @@ export default function StorefrontHeader({ variant }) {
               </Link>
             )
           )}
-          <a className="drawer-auth-link" href={authHref} onClick={handleAuthClick}>
+          <a className="drawer-auth-link" href={authHref}>
             {authLabel}
           </a>
         </nav>

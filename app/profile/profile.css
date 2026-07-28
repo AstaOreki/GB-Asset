@@ -1,0 +1,156 @@
+/* ==========================================================================
+   PROFILE PAGE — page-specific CSS. Design tokens, base reset, reveal
+   animations, scroll-progress, ripple, and header/footer/nav CSS all live
+   in app/globals.css already and are NOT repeated here (same convention as
+   checkout.css/login.css). This file carries the page-hero, panel/field/
+   submit-btn/status-msg patterns (matching checkout.css's look) plus the
+   address-card and sign-out styling unique to this page.
+   ========================================================================== */
+
+/* ============ EYEBROW / PAGE HERO (same treatment as checkout/cart) ============ */
+.eyebrow {
+  font-family: var(--label);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.eyebrow::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, .12), inset 0 0 0 1px rgba(0, 0, 0, .25);
+  flex-shrink: 0;
+}
+.page-hero {
+  position: relative; padding: 158px 0 68px; text-align: center; overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(212, 175, 55, .16), transparent 60%),
+    radial-gradient(circle at 85% 92%, rgba(122, 12, 30, .13), transparent 45%),
+    linear-gradient(180deg, var(--emerald-deep) 0%, var(--emerald-mid) 100%);
+}
+.page-hero .eyebrow { justify-content: center; position: relative; z-index: 1; }
+.page-hero h1 { margin-top: 16px; font-size: clamp(32px, 5vw, 54px); color: var(--ivory); position: relative; z-index: 1; }
+
+/* ============ SECTION / PANEL ============ */
+.profile-section { padding: 70px 0 130px; background: var(--emerald-deep); position: relative; }
+.profile-wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+.panel {
+  background: linear-gradient(160deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .014));
+  border: 1px solid rgba(212, 175, 55, .18); border-radius: 4px; overflow: hidden;
+}
+.profile-block { padding: 36px 40px; }
+.profile-block h3 {
+  font-family: var(--label); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold-light);
+  display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+}
+.profile-block h3 .num {
+  width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--gold); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: var(--gold-light);
+}
+.profile-note { font-size: 13.5px; color: var(--gray-soft); line-height: 1.6; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.field-row.three { grid-template-columns: 1.3fr 1fr 1fr; }
+@media (max-width: 560px) { .field-row, .field-row.three { grid-template-columns: 1fr; } }
+
+/* ============ FORM FIELDS / FLOATING LABELS (matches checkout.css) ============ */
+.field { position: relative; margin-top: 26px; }
+.field:first-child { margin-top: 0; }
+.field input, .field select {
+  width: 100%; background: transparent;
+  border: none; border-bottom: 1px solid rgba(212, 175, 55, .4);
+  padding: 14px 2px 10px;
+  color: var(--ivory); font-family: var(--body); font-size: 14.5px; font-weight: 300;
+  transition: border-color .35s var(--ease);
+}
+.field input:disabled { color: var(--gray-soft); }
+.field select option { color: var(--charcoal); }
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--gold-light);
+  box-shadow: 0 6px 16px -10px rgba(212, 175, 55, .55);
+}
+.field label {
+  position: absolute; left: 2px; top: 14px;
+  font-family: var(--label); font-size: 13px; color: var(--gray-soft);
+  pointer-events: none; transition: all .3s var(--ease);
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label,
+.field select:focus + label,
+.field select:not([data-empty="true"]) + label {
+  top: -12px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light);
+}
+
+.submit-btn {
+  margin-top: 30px; padding: 15px 30px;
+  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27);
+  color: var(--emerald-deep); font-family: var(--label); font-weight: 700; font-size: 11.5px;
+  letter-spacing: 2px; text-transform: uppercase; border-radius: 3px;
+  position: relative; overflow: hidden;
+  transition: transform .35s var(--ease), box-shadow .4s var(--ease);
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -18px rgba(212, 175, 55, .65); }
+.submit-btn:disabled { opacity: .7; cursor: default; transform: none; }
+.submit-btn.small { padding: 13px 26px; font-size: 11px; }
+.submit-btn::before {
+  content: ''; position: absolute; top: 0; left: -60%; width: 35%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, .6), transparent);
+  transform: skewX(-20deg);
+  animation: btnShine 4.5s ease-in-out infinite;
+}
+@keyframes btnShine { 0%, 88%, 100% { left: -60%; } 48% { left: 130%; } }
+
+.status-msg {
+  display: none; margin-top: 16px; padding: 12px 14px; border-radius: 4px;
+  font-size: 12.5px; line-height: 1.5;
+  border: 1px solid rgba(212, 175, 55, .35);
+  background: rgba(212, 175, 55, .08); color: var(--gold-pale);
+}
+.status-msg.show { display: block; }
+.status-msg.error { border-color: rgba(176, 24, 41, .5); background: rgba(176, 24, 41, .1); color: #e08a6a; }
+
+/* ============ SAVED ADDRESSES ============ */
+.address-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+.address-card {
+  position: relative; border: 1px solid rgba(212, 175, 55, .22); border-radius: 4px;
+  padding: 16px 90px 16px 18px;
+}
+.address-card-label {
+  font-family: var(--label); font-size: 10.5px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--gold-light); margin-bottom: 6px;
+}
+.address-card-body { font-size: 13px; color: var(--gray-soft); line-height: 1.6; }
+.address-card-body b { color: var(--ivory); font-weight: 500; }
+.address-remove {
+  position: absolute; top: 16px; right: 16px;
+  font-family: var(--label); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gray-soft); border-bottom: 1px solid transparent; transition: color .3s var(--ease), border-color .3s var(--ease);
+}
+.address-remove:hover { color: #e08a6a; border-color: #e08a6a; }
+
+.add-address-btn {
+  font-family: var(--label); font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold-light); border: 1px dashed rgba(212, 175, 55, .4); border-radius: 4px;
+  padding: 14px; width: 100%; text-align: center; transition: all .3s var(--ease);
+}
+.add-address-btn:hover { border-color: var(--gold-light); background: rgba(212, 175, 55, .06); }
+
+.address-form { margin-top: 22px; padding-top: 22px; border-top: 1px solid rgba(212, 175, 55, .14); }
+.address-form-actions { margin-top: 6px; display: flex; align-items: center; gap: 20px; }
+.address-cancel {
+  font-family: var(--label); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gray-soft); transition: color .3s var(--ease);
+}
+.address-cancel:hover { color: var(--gold-light); }
+
+/* ============ SIGN OUT ============ */
+.signout-btn {
+  align-self: center; padding: 14px 40px;
+  font-family: var(--label); font-size: 11.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold-light); border: 1px solid rgba(212, 175, 55, .4); border-radius: 3px;
+  transition: all .3s var(--ease);
+}
+.signout-btn:hover { border-color: var(--gold-light); background: rgba(212, 175, 55, .07); }

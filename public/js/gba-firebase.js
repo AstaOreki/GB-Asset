@@ -34,6 +34,24 @@
   // this to avoid reading the doc before the merge has landed.
   var pendingCartMigration = null;
 
+  // Tracks an in-flight registration/Google-first-sign-in profile write
+  // (displayName + the users/{uid} doc). auth.onAuthStateChanged fires the
+  // instant the account is created/authenticated — well before
+  // register()'s updateProfile()+Firestore .set() finish — so any page
+  // subscribed via onAuthChange (e.g. /login's "already signed in, redirect
+  // away" effect) could navigate away and abort that write before it lands,
+  // leaving the new user with no profile doc at all. onAuthChange() below
+  // waits for this, same as it already does for pendingCartMigration.
+  var pendingProfileSetup = null;
+
+  function trackProfileSetup(promise) {
+    var tracked = promise.catch(function () {}).then(function () {
+      if (pendingProfileSetup === tracked) pendingProfileSetup = null;
+    });
+    pendingProfileSetup = tracked;
+    return promise;
+  }
+
   // ------------------------------------------------------------------ auth
   // A single internal listener drives currentUser + the guest-cart merge
   // exactly once per real sign-in. onAuthChange(cb) below is called by
@@ -57,7 +75,9 @@
   function onAuthChange(cb) {
     return auth.onAuthStateChanged(function (user) {
       if (user) {
-        Promise.resolve(pendingCartMigration).then(function () { cb(user); });
+        Promise.resolve(pendingCartMigration)
+          .then(function () { return Promise.resolve(pendingProfileSetup); })
+          .then(function () { cb(user); });
       } else {
         cb(user);
       }
@@ -72,17 +92,19 @@
   }
 
   function register(data) {
-    return auth.createUserWithEmailAndPassword(data.email, data.password)
-      .then(function (cred) {
-        return cred.user.updateProfile({ displayName: data.name }).then(function () {
-          return db.collection("users").doc(cred.user.uid).set({
-            name: data.name,
-            email: data.email,
-            phone: data.phone || "",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }).then(function () { return cred.user; });
-      });
+    return trackProfileSetup(
+      auth.createUserWithEmailAndPassword(data.email, data.password)
+        .then(function (cred) {
+          return cred.user.updateProfile({ displayName: data.name }).then(function () {
+            return db.collection("users").doc(cred.user.uid).set({
+              name: data.name,
+              email: data.email,
+              phone: data.phone || "",
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }).then(function () { return cred.user; });
+        })
+    );
   }
 
   function login(data) {
@@ -106,15 +128,17 @@
 
   function finishGoogleSignIn(user) {
     var ref = db.collection("users").doc(user.uid);
-    return ref.get().then(function (doc) {
-      if (doc.exists) return user;
-      return ref.set({
-        name: user.displayName || "",
-        email: user.email || "",
-        phone: "",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).then(function () { return user; });
-    });
+    return trackProfileSetup(
+      ref.get().then(function (doc) {
+        if (doc.exists) return user;
+        return ref.set({
+          name: user.displayName || "",
+          email: user.email || "",
+          phone: "",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(function () { return user; });
+      })
+    );
   }
 
   function loginWithGoogle() {
@@ -147,6 +171,73 @@
   function logout() { return auth.signOut(); }
 
   function resetPassword(email) { return auth.sendPasswordResetEmail(email); }
+
+  // --------------------------------------------------------------- profile
+  function hasPasswordProvider() {
+    return !!(currentUser && currentUser.providerData.some(function (p) { return p.providerId === "password"; }));
+  }
+
+  function getProfile() {
+    if (!currentUser) return Promise.resolve(null);
+    return db.collection("users").doc(currentUser.uid).get().then(function (doc) {
+      var data = doc.data() || {};
+      return {
+        name: currentUser.displayName || data.name || "",
+        email: currentUser.email || data.email || "",
+        phone: data.phone || "",
+        addresses: Array.isArray(data.addresses) ? data.addresses : []
+      };
+    });
+  }
+
+  function updateProfileName(name) {
+    if (!currentUser) return Promise.reject(new Error("Not signed in."));
+    return currentUser.updateProfile({ displayName: name }).then(function () {
+      return db.collection("users").doc(currentUser.uid).set({ name: name }, { merge: true });
+    });
+  }
+
+  // Re-authentication is required by Firebase before a sensitive op like
+  // updatePassword() — without it, updatePassword fails with
+  // auth/requires-recent-login unless the user signed in within the last
+  // few minutes.
+  function changePassword(currentPassword, newPassword) {
+    if (!currentUser || !currentUser.email) return Promise.reject(new Error("Not signed in."));
+    var cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, currentPassword);
+    return currentUser.reauthenticateWithCredential(cred).then(function () {
+      return currentUser.updatePassword(newPassword);
+    });
+  }
+
+  function listAddresses() {
+    if (!currentUser) return Promise.resolve([]);
+    return db.collection("users").doc(currentUser.uid).get().then(function (doc) {
+      var data = doc.data();
+      return (data && Array.isArray(data.addresses)) ? data.addresses : [];
+    });
+  }
+
+  function addAddress(addr) {
+    if (!currentUser) return Promise.reject(new Error("Not signed in."));
+    var ref = db.collection("users").doc(currentUser.uid);
+    return ref.get().then(function (doc) {
+      var data = doc.data() || {};
+      var addresses = Array.isArray(data.addresses) ? data.addresses.slice() : [];
+      var entry = Object.assign({ id: "addr_" + Date.now() }, addr);
+      addresses.push(entry);
+      return ref.set({ addresses: addresses }, { merge: true }).then(function () { return entry; });
+    });
+  }
+
+  function removeAddress(id) {
+    if (!currentUser) return Promise.reject(new Error("Not signed in."));
+    var ref = db.collection("users").doc(currentUser.uid);
+    return ref.get().then(function (doc) {
+      var data = doc.data() || {};
+      var addresses = (Array.isArray(data.addresses) ? data.addresses : []).filter(function (a) { return a.id !== id; });
+      return ref.set({ addresses: addresses }, { merge: true });
+    });
+  }
 
   // ------------------------------------------------------------- products
   function getProducts() {
@@ -378,6 +469,17 @@
     checkGoogleRedirectResult: checkGoogleRedirectResult,
     logout: logout,
     resetPassword: resetPassword,
+    profile: {
+      get: getProfile,
+      updateName: updateProfileName,
+      changePassword: changePassword,
+      hasPasswordProvider: hasPasswordProvider,
+      addresses: {
+        list: listAddresses,
+        add: addAddress,
+        remove: removeAddress
+      }
+    },
     getProducts: getProducts,
     updateProductPrice: updateProductPrice,
     fmtRM: fmtRM,

@@ -95,6 +95,7 @@ function AuthPanel() {
     const r = searchParams.get("redirect");
     if (r === "admin") return "/admin_dashboard.html";
     if (r === "checkout") return "/checkout";
+    if (r === "profile") return "/profile";
     return "/";
   }
 

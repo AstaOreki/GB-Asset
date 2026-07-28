@@ -39,6 +39,13 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
 
+  // Saved addresses (profile page): if the signed-in user has any, default
+  // to picking one instead of retyping — same pattern as Grab/FoodPanda.
+  // Falls back to the existing manual fields untouched when there are none.
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [addressMode, setAddressMode] = useState("manual"); // 'saved' | 'manual'
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+
   const formRef = useRef(null);
   const paymentBlockRef = useRef(null);
   const nameRef = useRef(null);
@@ -84,6 +91,18 @@ export default function CheckoutPage() {
       if (typeof unsubscribe === "function") unsubscribe();
     };
   }, [gba, loadCart]);
+
+  // Load saved addresses for the signed-in user and default to picking one.
+  useEffect(() => {
+    if (!gba || !user) return;
+    gba.profile.addresses.list().then((list) => {
+      setSavedAddresses(list);
+      if (list.length > 0) {
+        setAddressMode("saved");
+        setSelectedAddressId(list[0].id);
+      }
+    });
+  }, [gba, user]);
 
   // Auth-aware prefill: if a signed-in user's name/email fields are empty,
   // fill them from their account (matches original wireAuthNav behavior).
@@ -144,18 +163,29 @@ export default function CheckoutPage() {
       return { id: line.id, name: p.name, qty: line.qty, price: p.price, lineTotal: p.price * line.qty };
     });
 
+    const selectedSavedAddress =
+      addressMode === "saved" ? savedAddresses.find((a) => a.id === selectedAddressId) : null;
+    const address = selectedSavedAddress
+      ? {
+          line: selectedSavedAddress.line || "",
+          city: selectedSavedAddress.city || "",
+          state: selectedSavedAddress.state || "",
+          postcode: selectedSavedAddress.postcode || "",
+        }
+      : {
+          line: addressRef.current.value.trim(),
+          city: cityRef.current.value.trim(),
+          state: coStateValue,
+          postcode: postcodeRef.current.value.trim(),
+        };
+
     const orderData = {
       customer: name,
       phone: phone,
       email: email,
       deliveryMethod: delivery,
       deliveryFee: fee,
-      address: {
-        line: addressRef.current.value.trim(),
-        city: cityRef.current.value.trim(),
-        state: coStateValue,
-        postcode: postcodeRef.current.value.trim(),
-      },
+      address: address,
       paymentMethod: paymentChecked.value,
       notes: notesRef.current.value.trim(),
       items: items,
@@ -311,48 +341,87 @@ export default function CheckoutPage() {
                     <h3>
                       <span className="num">3</span>Shipping Address
                     </h3>
-                    <div className="field">
-                      <input id="coAddress" ref={addressRef} placeholder=" " type="text" />
-                      <label>Address Line</label>
-                    </div>
-                    <div className="field-row three" style={{ marginTop: 26 }}>
-                      <div className="field">
-                        <input id="coCity" ref={cityRef} placeholder=" " type="text" />
-                        <label>City</label>
-                      </div>
-                      <div className="field">
-                        <select
-                          id="coState"
-                          data-empty={coStateValue === "" ? "true" : "false"}
-                          value={coStateValue}
-                          onChange={(e) => setCoStateValue(e.target.value)}
-                        >
-                          <option value=""></option>
-                          <option>Johor</option>
-                          <option>Kedah</option>
-                          <option>Kelantan</option>
-                          <option>Kuala Lumpur</option>
-                          <option>Labuan</option>
-                          <option>Malacca</option>
-                          <option>Negeri Sembilan</option>
-                          <option>Pahang</option>
-                          <option>Penang</option>
-                          <option>Perak</option>
-                          <option>Perlis</option>
-                          <option>Putrajaya</option>
-                          <option>Sabah</option>
-                          <option>Sarawak</option>
-                          <option>Selangor</option>
-                          <option>Terengganu</option>
-                          <option>Other</option>
-                        </select>
-                        <label>State</label>
-                      </div>
-                      <div className="field">
-                        <input id="coPostcode" ref={postcodeRef} placeholder=" " type="text" />
-                        <label>Postcode</label>
-                      </div>
-                    </div>
+
+                    {addressMode === "saved" && savedAddresses.length > 0 ? (
+                      <>
+                        <div className="option-cards">
+                          {savedAddresses.map((a) => (
+                            <label className="option-card" key={a.id}>
+                              <input
+                                checked={selectedAddressId === a.id}
+                                name="savedAddress"
+                                type="radio"
+                                value={a.id}
+                                onChange={() => setSelectedAddressId(a.id)}
+                              />
+                              <b>{a.label}</b>
+                              <span>
+                                {a.line}
+                                {a.city ? `, ${a.city}` : ""}
+                                {a.state ? `, ${a.state}` : ""} {a.postcode}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="submit-sub" style={{ marginTop: 18, textAlign: "left" }}>
+                          <a href="#" onClick={(e) => { e.preventDefault(); setAddressMode("manual"); }}>
+                            Enter a different address
+                          </a>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {savedAddresses.length > 0 && (
+                          <div className="submit-sub" style={{ marginBottom: 18, textAlign: "left" }}>
+                            <a href="#" onClick={(e) => { e.preventDefault(); setAddressMode("saved"); setSelectedAddressId(savedAddresses[0].id); }}>
+                              ← Use a saved address
+                            </a>
+                          </div>
+                        )}
+                        <div className="field">
+                          <input id="coAddress" ref={addressRef} placeholder=" " type="text" />
+                          <label>Address Line</label>
+                        </div>
+                        <div className="field-row three" style={{ marginTop: 26 }}>
+                          <div className="field">
+                            <input id="coCity" ref={cityRef} placeholder=" " type="text" />
+                            <label>City</label>
+                          </div>
+                          <div className="field">
+                            <select
+                              id="coState"
+                              data-empty={coStateValue === "" ? "true" : "false"}
+                              value={coStateValue}
+                              onChange={(e) => setCoStateValue(e.target.value)}
+                            >
+                              <option value=""></option>
+                              <option>Johor</option>
+                              <option>Kedah</option>
+                              <option>Kelantan</option>
+                              <option>Kuala Lumpur</option>
+                              <option>Labuan</option>
+                              <option>Malacca</option>
+                              <option>Negeri Sembilan</option>
+                              <option>Pahang</option>
+                              <option>Penang</option>
+                              <option>Perak</option>
+                              <option>Perlis</option>
+                              <option>Putrajaya</option>
+                              <option>Sabah</option>
+                              <option>Sarawak</option>
+                              <option>Selangor</option>
+                              <option>Terengganu</option>
+                              <option>Other</option>
+                            </select>
+                            <label>State</label>
+                          </div>
+                          <div className="field">
+                            <input id="coPostcode" ref={postcodeRef} placeholder=" " type="text" />
+                            <label>Postcode</label>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div
