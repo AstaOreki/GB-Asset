@@ -20,7 +20,11 @@ export async function POST(request) {
     const stripe = new Stripe(secretKey);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
+      // No payment_method_types here on purpose: Stripe then shows whatever
+      // methods are turned on in Dashboard > Settings > Payment methods for
+      // this currency — Apple Pay/Google Pay ride along with "Card"
+      // automatically, and enabling FPX/GrabPay/DuitNow there (Malaysia-
+      // specific) makes them appear here with no further code changes.
       customer_email: customerEmail || undefined,
       line_items: [
         {
