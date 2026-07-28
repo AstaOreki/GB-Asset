@@ -111,9 +111,52 @@ h1, h2, h3, h4 {
 
 /* Gold scroll progress indicator */
 .scroll-progress {
-  position: fixed; top: 0; left: 0; height: 3px; width: 0%; z-index: 200;
+  position: fixed; top: var(--banner-offset, 0px); left: 0; height: 3px; width: 0%; z-index: 200;
   background: linear-gradient(90deg, var(--maison-red), var(--gold-light), var(--gold));
   box-shadow: 0 0 10px rgba(212, 175, 55, .65);
+  transition: top .4s var(--ease);
+}
+
+/* ============ ANNOUNCEMENT BANNER (homepage only — see AnnouncementBanner.jsx) ============
+   Sits in normal document flow above the header, but the header itself is
+   position:fixed starting at top:0, so it would otherwise render on top of
+   (hiding) this banner. --banner-offset is set by the component to its own
+   rendered height (0 when no banner is showing), and header/.scroll-progress
+   above both read it, so they simply start lower instead of overlapping. */
+.announcement-banner {
+  position: relative; z-index: 90;
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  padding: 12px 50px 12px 20px;
+  background: linear-gradient(120deg, var(--emerald-mid), var(--emerald-deep));
+  border-bottom: 1px solid rgba(212, 175, 55, .3);
+  text-align: center;
+}
+.announcement-banner-inner {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.announcement-banner-title {
+  font-family: var(--label); font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold-light);
+}
+.announcement-banner-content {
+  font-family: var(--body); font-size: 13px; color: var(--gray-soft);
+}
+.announcement-banner.banner-critical {
+  background: linear-gradient(120deg, #2a0d12, var(--emerald-deep));
+  border-bottom-color: rgba(176, 24, 41, .45);
+}
+.announcement-banner.banner-critical .announcement-banner-title { color: var(--maison-red-bright); }
+.announcement-banner-close {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  color: var(--gray-soft); transition: color .3s var(--ease);
+}
+.announcement-banner-close:hover { color: var(--gold-light); }
+.announcement-banner-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+@media (max-width: 640px) {
+  .announcement-banner { padding: 10px 42px 10px 14px; gap: 4px; }
+  .announcement-banner-inner { flex-direction: column; gap: 2px; }
+  .announcement-banner-content { font-size: 12px; }
 }
 
 /* ============ BUTTON RIPPLE ============ */
@@ -128,9 +171,9 @@ h1, h2, h3, h4 {
 
 /* ============ NAV / HEADER ============ */
 header {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  position: fixed; top: var(--banner-offset, 0px); left: 0; right: 0; z-index: 100;
   padding: 26px 0;
-  transition: background .5s var(--ease), padding .5s var(--ease), box-shadow .5s var(--ease), border-color .5s var(--ease);
+  transition: background .5s var(--ease), padding .5s var(--ease), box-shadow .5s var(--ease), border-color .5s var(--ease), top .4s var(--ease);
   border-bottom: 1px solid transparent;
 }
 header.scrolled {

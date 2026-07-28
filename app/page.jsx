@@ -8,6 +8,7 @@ import { useAuthAwareNav } from "../hooks/useAuthAwareNav";
 import { useRevealOnScroll } from "../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../hooks/useButtonRipple";
 import { useCartBadge } from "../hooks/useCartBadge";
+import AnnouncementBanner from "../components/AnnouncementBanner";
 import "./page.css";
 
 /**
@@ -315,6 +316,7 @@ export default function HomePage() {
 
   return (
     <>
+      <AnnouncementBanner />
       <StorefrontHeader variant="home" />
 
       <section className="hero" id="top">
