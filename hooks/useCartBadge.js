@@ -47,9 +47,22 @@ export function useCartBadge() {
     });
   }, [gba]);
 
+  // Re-read on auth changes, not just once on mount: on a fresh page load,
+  // GBA is ready (and this hook's mount-effect fires) before Firebase Auth
+  // has restored the signed-in session, so an early refresh() reads the
+  // guest cart (0/localStorage) and — with no auth-change subscription —
+  // never re-reads once the real user's cart is known. onAuthChange fires
+  // immediately with the current state plus every future change, so this
+  // one subscription covers both the initial read and later sign-in/out.
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (!gba) return;
+    const unsubscribe = gba.onAuthChange(() => {
+      refresh();
+    });
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [gba, refresh]);
 
   return { count, refresh };
 }
