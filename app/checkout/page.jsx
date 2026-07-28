@@ -34,26 +34,30 @@ export default function CheckoutPage() {
   const [cartLoaded, setCartLoaded] = useState(false);
 
   const [deliveryMethod, setDeliveryMethod] = useState("self");
-  const [coStateValue, setCoStateValue] = useState("");
   const [paymentError, setPaymentError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
 
-  // Saved addresses (profile page): if the signed-in user has any, default
-  // to picking one instead of retyping — same pattern as Grab/FoodPanda.
-  // Falls back to the existing manual fields untouched when there are none.
+  // Shipping address always comes from the profile's saved addresses now —
+  // no more retyping it here. If the user has none yet, the same
+  // "+ Add New Address" form used on /profile appears inline.
   const [savedAddresses, setSavedAddresses] = useState([]);
-  const [addressMode, setAddressMode] = useState("manual"); // 'saved' | 'manual'
   const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addrLabel, setAddrLabel] = useState("");
+  const [addrName, setAddrName] = useState("");
+  const [addrPhone, setAddrPhone] = useState("");
+  const [addrLine, setAddrLine] = useState("");
+  const [addrCity, setAddrCity] = useState("");
+  const [addrState, setAddrState] = useState("");
+  const [addrPostcode, setAddrPostcode] = useState("");
+  const [addrSaving, setAddrSaving] = useState(false);
 
   const formRef = useRef(null);
   const paymentBlockRef = useRef(null);
   const nameRef = useRef(null);
   const phoneRef = useRef(null);
   const emailRef = useRef(null);
-  const addressRef = useRef(null);
-  const cityRef = useRef(null);
-  const postcodeRef = useRef(null);
   const notesRef = useRef(null);
 
   // Load products, then the cart lines that reference them — same pattern
@@ -92,17 +96,51 @@ export default function CheckoutPage() {
     };
   }, [gba, loadCart]);
 
-  // Load saved addresses for the signed-in user and default to picking one.
-  useEffect(() => {
+  // Load saved addresses for the signed-in user and default to picking the first one.
+  const loadAddresses = useCallback(() => {
     if (!gba || !user) return;
     gba.profile.addresses.list().then((list) => {
       setSavedAddresses(list);
-      if (list.length > 0) {
-        setAddressMode("saved");
-        setSelectedAddressId(list[0].id);
-      }
+      setSelectedAddressId((prev) => (prev && list.some((a) => a.id === prev) ? prev : list[0]?.id || ""));
     });
   }, [gba, user]);
+
+  useEffect(() => {
+    loadAddresses();
+  }, [loadAddresses]);
+
+  function resetAddrForm() {
+    setAddrLabel("");
+    setAddrName("");
+    setAddrPhone("");
+    setAddrLine("");
+    setAddrCity("");
+    setAddrState("");
+    setAddrPostcode("");
+  }
+
+  function handleAddAddress() {
+    if (!gba || !addrLabel.trim() || !addrLine.trim()) return;
+    setAddrSaving(true);
+    gba.profile.addresses
+      .add({
+        label: addrLabel.trim(),
+        name: addrName.trim(),
+        phone: addrPhone.trim(),
+        line: addrLine.trim(),
+        city: addrCity.trim(),
+        state: addrState,
+        postcode: addrPostcode.trim(),
+      })
+      .then((entry) => {
+        setAddrSaving(false);
+        setShowAddForm(false);
+        resetAddrForm();
+        setSavedAddresses((prev) => [...prev, entry]);
+        setSelectedAddressId(entry.id);
+      })
+      .catch(() => setAddrSaving(false));
+  }
 
   // Auth-aware prefill: if a signed-in user's name/email fields are empty,
   // fill them from their account (matches original wireAuthNav behavior).
@@ -163,8 +201,7 @@ export default function CheckoutPage() {
       return { id: line.id, name: p.name, qty: line.qty, price: p.price, lineTotal: p.price * line.qty };
     });
 
-    const selectedSavedAddress =
-      addressMode === "saved" ? savedAddresses.find((a) => a.id === selectedAddressId) : null;
+    const selectedSavedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
     const address = selectedSavedAddress
       ? {
           line: selectedSavedAddress.line || "",
@@ -172,12 +209,7 @@ export default function CheckoutPage() {
           state: selectedSavedAddress.state || "",
           postcode: selectedSavedAddress.postcode || "",
         }
-      : {
-          line: addressRef.current.value.trim(),
-          city: cityRef.current.value.trim(),
-          state: coStateValue,
-          postcode: postcodeRef.current.value.trim(),
-        };
+      : { line: "", city: "", state: "", postcode: "" };
 
     const orderData = {
       customer: name,
@@ -342,57 +374,76 @@ export default function CheckoutPage() {
                       <span className="num">3</span>Shipping Address
                     </h3>
 
-                    {addressMode === "saved" && savedAddresses.length > 0 ? (
-                      <>
-                        <div className="option-cards">
-                          {savedAddresses.map((a) => (
-                            <label className="option-card" key={a.id}>
-                              <input
-                                checked={selectedAddressId === a.id}
-                                name="savedAddress"
-                                type="radio"
-                                value={a.id}
-                                onChange={() => setSelectedAddressId(a.id)}
-                              />
-                              <b>{a.label}</b>
-                              <span>
-                                {a.line}
-                                {a.city ? `, ${a.city}` : ""}
-                                {a.state ? `, ${a.state}` : ""} {a.postcode}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        <div className="submit-sub" style={{ marginTop: 18, textAlign: "left" }}>
-                          <a href="#" onClick={(e) => { e.preventDefault(); setAddressMode("manual"); }}>
-                            Enter a different address
-                          </a>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {savedAddresses.length > 0 && (
-                          <div className="submit-sub" style={{ marginBottom: 18, textAlign: "left" }}>
-                            <a href="#" onClick={(e) => { e.preventDefault(); setAddressMode("saved"); setSelectedAddressId(savedAddresses[0].id); }}>
-                              ← Use a saved address
-                            </a>
+                    {savedAddresses.length > 0 && (
+                      <div className="option-cards">
+                        {savedAddresses.map((a) => (
+                          <label className="option-card" key={a.id}>
+                            <input
+                              checked={selectedAddressId === a.id}
+                              name="savedAddress"
+                              type="radio"
+                              value={a.id}
+                              onChange={() => setSelectedAddressId(a.id)}
+                            />
+                            <b>{a.label}</b>
+                            <span>
+                              {a.line}
+                              {a.city ? `, ${a.city}` : ""}
+                              {a.state ? `, ${a.state}` : ""} {a.postcode}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {savedAddresses.length === 0 && !showAddForm && (
+                      <p className="profile-note">No saved addresses yet.</p>
+                    )}
+
+                    {showAddForm ? (
+                      // A plain div, not <form> — this already sits inside the
+                      // page's single #checkoutForm, and HTML forms can't nest
+                      // (a nested submit button would trigger the outer
+                      // checkout form's submit instead of this one).
+                      <div className="address-form">
+                        <div className="field-row">
+                          <div className="field">
+                            <input
+                              placeholder=" "
+                              type="text"
+                              value={addrLabel}
+                              onChange={(e) => setAddrLabel(e.target.value)}
+                            />
+                            <label>Label (e.g. Home, Office)</label>
                           </div>
-                        )}
-                        <div className="field">
-                          <input id="coAddress" ref={addressRef} placeholder=" " type="text" />
+                          <div className="field">
+                            <input placeholder=" " type="text" value={addrName} onChange={(e) => setAddrName(e.target.value)} />
+                            <label>Recipient Name</label>
+                          </div>
+                        </div>
+                        <div className="field" style={{ marginTop: 26 }}>
+                          <input placeholder=" " type="tel" value={addrPhone} onChange={(e) => setAddrPhone(e.target.value)} />
+                          <label>Phone Number</label>
+                        </div>
+                        <div className="field" style={{ marginTop: 26 }}>
+                          <input
+                            placeholder=" "
+                            type="text"
+                            value={addrLine}
+                            onChange={(e) => setAddrLine(e.target.value)}
+                          />
                           <label>Address Line</label>
                         </div>
                         <div className="field-row three" style={{ marginTop: 26 }}>
                           <div className="field">
-                            <input id="coCity" ref={cityRef} placeholder=" " type="text" />
+                            <input placeholder=" " type="text" value={addrCity} onChange={(e) => setAddrCity(e.target.value)} />
                             <label>City</label>
                           </div>
                           <div className="field">
                             <select
-                              id="coState"
-                              data-empty={coStateValue === "" ? "true" : "false"}
-                              value={coStateValue}
-                              onChange={(e) => setCoStateValue(e.target.value)}
+                              data-empty={addrState === "" ? "true" : "false"}
+                              value={addrState}
+                              onChange={(e) => setAddrState(e.target.value)}
                             >
                               <option value=""></option>
                               <option>Johor</option>
@@ -416,11 +467,41 @@ export default function CheckoutPage() {
                             <label>State</label>
                           </div>
                           <div className="field">
-                            <input id="coPostcode" ref={postcodeRef} placeholder=" " type="text" />
+                            <input
+                              placeholder=" "
+                              type="text"
+                              value={addrPostcode}
+                              onChange={(e) => setAddrPostcode(e.target.value)}
+                            />
                             <label>Postcode</label>
                           </div>
                         </div>
-                      </>
+                        <div className="address-form-actions">
+                          <button
+                            className="submit-btn small"
+                            data-ripple=""
+                            type="button"
+                            disabled={addrSaving}
+                            onClick={handleAddAddress}
+                          >
+                            {addrSaving ? "Saving…" : "Save Address"}
+                          </button>
+                          <button
+                            className="address-cancel"
+                            type="button"
+                            onClick={() => {
+                              setShowAddForm(false);
+                              resetAddrForm();
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button className="add-address-btn" type="button" onClick={() => setShowAddForm(true)}>
+                        + Add New Address
+                      </button>
                     )}
                   </div>
 

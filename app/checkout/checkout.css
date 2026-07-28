@@ -154,9 +154,16 @@ body::after {
   width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--gold); flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: var(--gold-light);
 }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-.field-row.three { grid-template-columns: 1.3fr 1fr 1fr; }
-@media (max-width: 560px) { .field-row, .field-row.three { grid-template-columns: 1fr; } }
+/* Stacked, not side-by-side: a field-row's second+ field used to pick up
+   .field's own margin-top (meant for spacing between stacked blocks),
+   which only pushed it down since it isn't its parent's :first-child —
+   the two fields in a row never actually lined up. Stacking avoids that
+   entirely; .field-row .field below removes the leftover margin so the
+   row's own gap is the only spacing. */
+.field-row { display: flex; flex-direction: column; gap: 26px; }
+.field-row .field { margin-top: 0; }
+.field-row.three { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 22px; }
+@media (max-width: 560px) { .field-row.three { grid-template-columns: 1fr; gap: 26px; } }
 
 /* ============ FORM FIELDS / FLOATING LABELS ============ */
 .field { position: relative; margin-top: 26px; }
@@ -311,6 +318,23 @@ body::after {
 .trust-mark span { display: block; font-size: 11px; color: var(--gray); margin-top: 2px; }
 
 @media (max-width: 900px) { .trust-strip-inner { gap: 24px; } }
+
+/* ============ SAVED-ADDRESS "ADD NEW" INLINE FORM (matches /profile) ============ */
+.profile-note { font-size: 13.5px; color: var(--gray-soft); line-height: 1.6; }
+.submit-btn.small { width: auto; margin-top: 0; padding: 13px 26px; font-size: 11px; }
+.add-address-btn {
+  font-family: var(--label); font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold-light); border: 1px dashed rgba(212, 175, 55, .4); border-radius: 4px;
+  padding: 14px; width: 100%; text-align: center; transition: all .3s var(--ease);
+}
+.add-address-btn:hover { border-color: var(--gold-light); background: rgba(212, 175, 55, .06); }
+.address-form { margin-top: 22px; }
+.address-form-actions { margin-top: 6px; display: flex; align-items: center; gap: 20px; }
+.address-cancel {
+  font-family: var(--label); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gray-soft); transition: color .3s var(--ease);
+}
+.address-cancel:hover { color: var(--gold-light); }
 
 /* misc */
 .hidden { display: none !important; }
