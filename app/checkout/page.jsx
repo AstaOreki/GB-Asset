@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import StorefrontHeader from "../../components/StorefrontHeader";
 import FullFooter from "../../components/FullFooter";
 import { useGBA } from "../../hooks/useGBA";
@@ -16,8 +17,27 @@ import "./checkout.css";
 // migration plan's "known pre-existing quirks" section).
 const DELIVERY_FEES = { self: 0, standard: 150, express: 280 };
 
+// Card only becomes selectable once STRIPE_SECRET_KEY (server) and this
+// public flag are both set — same "build it, gate it off until configured"
+// pattern already used for order-confirmation email (RESEND_API_KEY).
+const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
+
+/**
+ * Wrapped in Suspense because the inner component calls useSearchParams()
+ * (reads ?payment=success|cancelled&orderId= on return from Stripe) —
+ * Next.js requires a Suspense boundary around that hook, same as /login.
+ */
 export default function CheckoutPage() {
+  return (
+    <Suspense fallback={null}>
+      <CheckoutInner />
+    </Suspense>
+  );
+}
+
+function CheckoutInner() {
   const gba = useGBA();
+  const searchParams = useSearchParams();
   const { user, isAuthed, authReady } = useAuthAwareNav();
   const { refresh: refreshCartBadge } = useCartBadge();
 
@@ -37,6 +57,7 @@ export default function CheckoutPage() {
   const [paymentError, setPaymentError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [cardCancelled, setCardCancelled] = useState(false);
 
   // Shipping address always comes from the profile's saved addresses now —
   // no more retyping it here. If the user has none yet, the same
@@ -162,6 +183,30 @@ export default function CheckoutPage() {
     window.location.href = "/login?redirect=checkout";
   }, [authReady, isAuthed]);
 
+  // Landing back here after Stripe Checkout. This is cosmetic only — the
+  // order's actual status flips to "paid" server-side via the Stripe
+  // webhook (app/api/stripe-webhook), which is the only thing that can be
+  // trusted, since these query params could be typed in by hand. All this
+  // effect does is show the same success panel other payment methods reach
+  // directly, and clear the cart now that payment is confirmed (kept intact
+  // until now in case the customer abandoned the Stripe page).
+  useEffect(() => {
+    if (!gba) return;
+    const payment = searchParams.get("payment");
+    const returnedOrderId = searchParams.get("orderId");
+    if (payment === "success" && returnedOrderId) {
+      setOrderId(returnedOrderId);
+      gba.cart.clear().then(() => {
+        refreshCartBadge();
+        setStep("confirmed");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    } else if (payment === "cancelled") {
+      setCardCancelled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gba, searchParams]);
+
   const subtotal = products ? gba?.cart.subtotal(currentCart, products) ?? 0 : 0;
   const deliveryFee = DELIVERY_FEES[deliveryMethod];
   const total = subtotal + deliveryFee;
@@ -235,12 +280,34 @@ export default function CheckoutPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...orderData, orderId: newOrderId }),
         }).catch(() => {}); // fire-and-forget — an email hiccup must never block order success
-        return gba.cart.clear();
-      })
-      .then(() => {
-        refreshCartBadge();
-        setStep("confirmed");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        if (paymentChecked.value === "card") {
+          // Redirect to Stripe Checkout instead of showing the success panel
+          // here — the cart stays intact and the order stays "pending" until
+          // the payment-return effect above (on success) or the webhook
+          // (source of truth) confirms it actually went through.
+          return fetch("/api/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: newOrderId,
+              amount: orderData.amount,
+              customerEmail: email,
+              origin: window.location.origin,
+            }),
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (!data.url) throw new Error(data.error || "Could not start card payment.");
+              window.location.href = data.url;
+            });
+        }
+
+        return gba.cart.clear().then(() => {
+          refreshCartBadge();
+          setStep("confirmed");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
       })
       .catch(() => {
         setIsSubmitting(false);
@@ -524,9 +591,9 @@ export default function CheckoutPage() {
                         <b>Bank Transfer</b>
                         <span>Direct transfer, order held for verification.</span>
                       </label>
-                      <label className="option-card">
-                        <input name="payment" type="radio" value="card" />
-                        <b>Credit / Debit Card</b>
+                      <label className={`option-card${STRIPE_ENABLED ? "" : " option-disabled"}`}>
+                        <input name="payment" type="radio" value="card" disabled={!STRIPE_ENABLED} />
+                        <b>Credit / Debit Card{!STRIPE_ENABLED && " (Coming Soon)"}</b>
                         <span>Visa, Mastercard, secured checkout.</span>
                       </label>
                       <label className="option-card">
@@ -535,6 +602,12 @@ export default function CheckoutPage() {
                         <span>Pay in-store upon collection.</span>
                       </label>
                     </div>
+                    {cardCancelled && (
+                      <div className="status-note" style={{ marginTop: 18 }}>
+                        Card payment was cancelled — your order was saved but not charged. Select a payment method
+                        below to try again.
+                      </div>
+                    )}
                   </div>
 
                   <div className="checkout-block">

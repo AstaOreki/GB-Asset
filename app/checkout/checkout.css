@@ -319,6 +319,14 @@ body::after {
 
 @media (max-width: 900px) { .trust-strip-inner { gap: 24px; } }
 
+/* ============ PAYMENT METHOD: disabled option + status note ============ */
+.option-card.option-disabled { opacity: .45; cursor: not-allowed; }
+.option-card.option-disabled input { cursor: not-allowed; }
+.status-note {
+  padding: 12px 14px; border-radius: 4px; font-size: 12.5px; line-height: 1.5;
+  border: 1px solid rgba(212, 175, 55, .35); background: rgba(212, 175, 55, .08); color: var(--gold-pale);
+}
+
 /* ============ SAVED-ADDRESS "ADD NEW" INLINE FORM (matches /profile) ============ */
 .profile-note { font-size: 13.5px; color: var(--gray-soft); line-height: 1.6; }
 .submit-btn.small { width: auto; margin-top: 0; padding: 13px 26px; font-size: 11px; }
