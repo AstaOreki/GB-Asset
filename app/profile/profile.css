@@ -52,9 +52,16 @@
 }
 .profile-note { font-size: 13.5px; color: var(--gray-soft); line-height: 1.6; }
 
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-.field-row.three { grid-template-columns: 1.3fr 1fr 1fr; }
-@media (max-width: 560px) { .field-row, .field-row.three { grid-template-columns: 1fr; } }
+/* Stacked, not side-by-side: a field-row's second+ field used to pick up
+   .field's own margin-top (meant for spacing between stacked blocks),
+   which only pushed it down since it isn't its parent's :first-child —
+   the two fields in a row never actually lined up. Stacking avoids that
+   entirely; .field-row .field below removes the leftover margin so the
+   row's own gap is the only spacing. */
+.field-row { display: flex; flex-direction: column; gap: 26px; }
+.field-row .field { margin-top: 0; }
+.field-row.three { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 22px; }
+@media (max-width: 560px) { .field-row.three { grid-template-columns: 1fr; gap: 26px; } }
 
 /* ============ FORM FIELDS / FLOATING LABELS (matches checkout.css) ============ */
 .field { position: relative; margin-top: 26px; }
