@@ -196,8 +196,16 @@ nav.nav-links { display: flex; gap: 38px; justify-self: center; }
 nav.nav-links a {
   font-family: var(--label); font-size: 11.5px; font-weight: 600;
   letter-spacing: 2px; text-transform: uppercase; color: var(--gray-soft);
-  position: relative; padding-bottom: 6px;
+  position: relative; padding-bottom: 6px; white-space: nowrap;
   transition: color .35s var(--ease), text-shadow .35s var(--ease);
+}
+/* Between the hamburger breakpoint and full desktop width, the default
+   38px gap + 2px letter-spacing didn't fit all 7 links on one line,
+   wrapping labels like "ABOUT US" onto two lines. Tighten spacing only in
+   this middle range — wide desktop and the mobile drawer are unaffected. */
+@media (min-width: 901px) and (max-width: 1300px) {
+  nav.nav-links { gap: 18px; }
+  nav.nav-links a { font-size: 10px; letter-spacing: 1.2px; }
 }
 nav.nav-links a::after {
   content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px;
