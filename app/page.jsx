@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import StorefrontHeader from "../components/StorefrontHeader";
 import FullFooter from "../components/FullFooter";
 import { useGBA } from "../hooks/useGBA";
+import { useAuthAwareNav } from "../hooks/useAuthAwareNav";
 import { useRevealOnScroll } from "../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../hooks/useButtonRipple";
 import { useCartBadge } from "../hooks/useCartBadge";
@@ -26,6 +27,7 @@ const PRICE_CARDS = [
 
 export default function HomePage() {
   const gba = useGBA();
+  const { isAuthed, authReady } = useAuthAwareNav();
   const { refresh: refreshCartBadge } = useCartBadge();
 
   useRevealOnScroll();
@@ -45,10 +47,14 @@ export default function HomePage() {
     });
   }, [gba]);
 
-  // -------- ADD TO CART (writes to Firestore for signed-in users, else guest storage) --------
+  // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
   function handleAddToCart(id) {
-    if (!gba) return;
+    if (!gba || !authReady) return;
+    if (!isAuthed) {
+      window.location.href = "/login";
+      return;
+    }
     setCartStatus((s) => ({ ...s, [id]: "pending" }));
     gba.cart
       .add(id, 1)
