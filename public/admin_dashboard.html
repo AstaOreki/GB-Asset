@@ -673,8 +673,11 @@ tailwind.config = {
         const cancelBtn = document.getElementById('confirm-modal-cancel');
         messageEl.textContent = message;
         confirmBtn.textContent = confirmLabel || 'Delete';
-        confirmBtn.classList.remove('bg-error-container', 'text-on-error-container', 'bg-primary', 'text-on-primary');
-        confirmBtn.classList.add(...(variant === 'gold' ? ['bg-primary', 'text-on-primary'] : ['bg-error-container', 'text-on-error-container']));
+        // 'gold' matches the same bg-gold-deep/text-charcoal/shine-effect
+        // combo already used on this dashboard's other primary submit
+        // buttons (Create Order, Add Lead, Publish Announcement).
+        confirmBtn.classList.remove('bg-error-container', 'text-on-error-container', 'bg-gold-deep', 'text-charcoal', 'shine-effect');
+        confirmBtn.classList.add(...(variant === 'gold' ? ['bg-gold-deep', 'text-charcoal', 'shine-effect'] : ['bg-error-container', 'text-on-error-container']));
         backdrop.classList.remove('hidden');
         backdrop.classList.add('flex');
         function cleanup() {
