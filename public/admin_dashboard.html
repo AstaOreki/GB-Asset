@@ -601,7 +601,7 @@ tailwind.config = {
 </section>
 <!-- Footer -->
 <footer class="flex flex-col md:flex-row justify-between items-center w-full py-8 border-t border-outline-variant/30 gap-4">
-<p class="font-body-sm text-body-sm text-gray-muted">© 2024 GB Asset Management | Institutional Gold Wholesaler</p>
+<p class="font-body-sm text-body-sm text-gray-muted">© 2026 GB Asset Management | Institutional Gold Wholesaler</p>
 <div class="flex gap-8">
 <a class="font-body-sm text-body-sm text-gray-muted hover:text-primary transition-colors" href="#">Privacy Policy</a>
 <a class="font-body-sm text-body-sm text-gray-muted hover:text-primary transition-colors" href="#">Terms of Service</a>
@@ -729,6 +729,7 @@ tailwind.config = {
     }
 
     document.getElementById('logout-btn').addEventListener('click', () => {
+        if (!window.confirm('Are you sure you want to log out?')) return;
         GBA.logout().then(() => { window.location.href = '/admin-login'; });
     });
 

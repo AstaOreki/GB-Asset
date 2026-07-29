@@ -293,6 +293,19 @@
       .set({ cart: cart }, { merge: true });
   }
 
+  // addToCart/changeQty/removeFromCart/clearCart all read the cart then
+  // write it back — without this queue, two overlapping calls (e.g. a
+  // fast double-click on the qty stepper) could both read the same
+  // starting cart before either write landed, so the second write would
+  // silently clobber the first based on stale data. Chaining every
+  // mutation off this single promise forces them to run one at a time.
+  var cartOpQueue = Promise.resolve();
+  function queueCartOp(fn) {
+    var result = cartOpQueue.then(fn, fn);
+    cartOpQueue = result.then(function () {}, function () {});
+    return result;
+  }
+
   function migrateGuestCartToUser(uid) {
     var guest = readGuestCart();
     if (!guest.length) return Promise.resolve();
@@ -324,31 +337,37 @@
 
   function addToCart(id, qty) {
     qty = qty || 1;
-    return readCart().then(function (cart) {
-      var line = cart.find(function (l) { return l.id === id; });
-      if (line) line.qty = Math.max(1, Math.min(99, line.qty + qty));
-      else cart.push({ id: id, qty: qty });
-      return writeCart(cart).then(function () { return cart; });
+    return queueCartOp(function () {
+      return readCart().then(function (cart) {
+        var line = cart.find(function (l) { return l.id === id; });
+        if (line) line.qty = Math.max(1, Math.min(99, line.qty + qty));
+        else cart.push({ id: id, qty: qty });
+        return writeCart(cart).then(function () { return cart; });
+      });
     });
   }
 
   function changeQty(id, delta) {
-    return readCart().then(function (cart) {
-      var line = cart.find(function (l) { return l.id === id; });
-      if (!line) return cart;
-      line.qty = Math.max(1, Math.min(99, line.qty + delta));
-      return writeCart(cart).then(function () { return cart; });
+    return queueCartOp(function () {
+      return readCart().then(function (cart) {
+        var line = cart.find(function (l) { return l.id === id; });
+        if (!line) return cart;
+        line.qty = Math.max(1, Math.min(99, line.qty + delta));
+        return writeCart(cart).then(function () { return cart; });
+      });
     });
   }
 
   function removeFromCart(id) {
-    return readCart().then(function (cart) {
-      var next = cart.filter(function (l) { return l.id !== id; });
-      return writeCart(next).then(function () { return next; });
+    return queueCartOp(function () {
+      return readCart().then(function (cart) {
+        var next = cart.filter(function (l) { return l.id !== id; });
+        return writeCart(next).then(function () { return next; });
+      });
     });
   }
 
-  function clearCart() { return writeCart([]); }
+  function clearCart() { return queueCartOp(function () { return writeCart([]); }); }
 
   // ---------------------------------------------------------------- orders
   function generateOrderId() {

@@ -176,6 +176,7 @@ export default function ProfilePage() {
 
   function handleSignOut() {
     if (!gba) return;
+    if (!window.confirm("Are you sure you want to log out?")) return;
     gba.logout().then(() => {
       window.location.href = "/";
     });

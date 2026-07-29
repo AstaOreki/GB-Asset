@@ -10,12 +10,25 @@ function fmtRM(n) {
   return "RM " + Number(n).toLocaleString("en-MY", { minimumFractionDigits: 2 });
 }
 
+// order.customer/notes/address are free-text fields the customer typed at
+// checkout — must be escaped before going into the email HTML, same as the
+// admin dashboard already does for order data rendered in the browser.
+function esc(str) {
+  return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[c]);
+}
+
 function renderOrderEmailHtml(order) {
   const itemsRows = (order.items || [])
     .map(
       (item) => `
         <tr>
-          <td style="padding:10px 0;border-bottom:1px solid #e5e2e1;">${item.name} × ${item.qty}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e2e1;">${esc(item.name)} × ${Number(item.qty)}</td>
           <td style="padding:10px 0;border-bottom:1px solid #e5e2e1;text-align:right;">${fmtRM(item.lineTotal)}</td>
         </tr>`
     )
@@ -26,22 +39,23 @@ function renderOrderEmailHtml(order) {
       ? ""
       : `<p style="margin:4px 0;color:#555;">${[order.address?.line, order.address?.city, order.address?.state, order.address?.postcode]
           .filter(Boolean)
+          .map(esc)
           .join(", ")}</p>`;
 
   return `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;">
-    <h2 style="color:#a67c27;">Thank you for your order, ${order.customer}!</h2>
-    <p>Your order <strong>#${order.orderId}</strong> has been received and is being processed.</p>
+    <h2 style="color:#a67c27;">Thank you for your order, ${esc(order.customer)}!</h2>
+    <p>Your order <strong>#${esc(order.orderId)}</strong> has been received and is being processed.</p>
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
       ${itemsRows}
       <tr><td style="padding:10px 0;">Subtotal</td><td style="padding:10px 0;text-align:right;">${fmtRM(order.subtotal)}</td></tr>
-      <tr><td style="padding:10px 0;">Delivery (${DELIVERY_LABELS[order.deliveryMethod] || order.deliveryMethod})</td><td style="padding:10px 0;text-align:right;">${fmtRM(order.deliveryFee)}</td></tr>
+      <tr><td style="padding:10px 0;">Delivery (${esc(DELIVERY_LABELS[order.deliveryMethod] || order.deliveryMethod)})</td><td style="padding:10px 0;text-align:right;">${fmtRM(order.deliveryFee)}</td></tr>
       <tr><td style="padding:10px 0;font-weight:bold;border-top:2px solid #1a1a1a;">Total</td><td style="padding:10px 0;text-align:right;font-weight:bold;border-top:2px solid #1a1a1a;">${fmtRM(order.amount)}</td></tr>
     </table>
-    <p style="margin:4px 0;"><strong>Delivery method:</strong> ${DELIVERY_LABELS[order.deliveryMethod] || order.deliveryMethod}</p>
+    <p style="margin:4px 0;"><strong>Delivery method:</strong> ${esc(DELIVERY_LABELS[order.deliveryMethod] || order.deliveryMethod)}</p>
     ${addressBlock}
-    <p style="margin:4px 0;"><strong>Payment method:</strong> ${order.paymentMethod}</p>
-    ${order.notes ? `<p style="margin:4px 0;"><strong>Notes:</strong> ${order.notes}</p>` : ""}
+    <p style="margin:4px 0;"><strong>Payment method:</strong> ${esc(order.paymentMethod)}</p>
+    ${order.notes ? `<p style="margin:4px 0;"><strong>Notes:</strong> ${esc(order.notes)}</p>` : ""}
     <p style="margin-top:24px;color:#777;font-size:13px;">GBA Asset — this is an automated confirmation, please keep it for your records.</p>
   </div>`;
 }

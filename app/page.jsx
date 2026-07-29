@@ -50,8 +50,12 @@ export default function HomePage() {
 
   // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
-  function handleAddToCart(id) {
-    if (!gba || !authReady) return;
+  // If a click lands before gba/authReady resolve (e.g. slow connection),
+  // it used to be silently dropped — button looked interactive but nothing
+  // happened. Queue the click instead and run it once auth is known.
+  const [pendingAddId, setPendingAddId] = useState(null);
+
+  function performAddToCart(id) {
     if (!isAuthed) {
       window.location.href = "/login";
       return;
@@ -70,6 +74,22 @@ export default function HomePage() {
         setCartStatus((s) => ({ ...s, [id]: "idle" }));
       });
   }
+
+  function handleAddToCart(id) {
+    if (!gba || !authReady) {
+      setPendingAddId(id);
+      return;
+    }
+    performAddToCart(id);
+  }
+
+  useEffect(() => {
+    if (!gba || !authReady || !pendingAddId) return;
+    const id = pendingAddId;
+    setPendingAddId(null);
+    performAddToCart(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gba, authReady, pendingAddId]);
 
   // -------- CONSULTATION / ENQUIRY FORM → Firestore --------
   const formRef = useRef(null);
