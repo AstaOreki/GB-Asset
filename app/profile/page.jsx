@@ -174,9 +174,17 @@ export default function ProfilePage() {
     gba.profile.addresses.remove(id).then(loadAddresses);
   }
 
+  // ---- sign out (themed confirm modal, matches the site instead of the
+  // browser's native confirm() popup) ----
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   function handleSignOut() {
     if (!gba) return;
-    if (!window.confirm("Are you sure you want to log out?")) return;
+    setShowLogoutConfirm(true);
+  }
+
+  function confirmSignOut() {
+    setShowLogoutConfirm(false);
     gba.logout().then(() => {
       window.location.href = "/";
     });
@@ -392,6 +400,23 @@ export default function ProfilePage() {
           </button>
         </div>
       </section>
+
+      {showLogoutConfirm && (
+        <div className="confirm-backdrop" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="panel confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Are you sure?</h3>
+            <p>Are you sure you want to log out?</p>
+            <div className="confirm-modal-actions">
+              <button className="address-cancel" type="button" onClick={() => setShowLogoutConfirm(false)}>
+                Cancel
+              </button>
+              <button className="submit-btn small" data-ripple="" type="button" onClick={confirmSignOut}>
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <FullFooter />
     </>
