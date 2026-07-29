@@ -2,10 +2,14 @@
 // components (no headless browser — see route.js for why Puppeteer was
 // swapped out). Pure presentation; all the filtering/summary math happens
 // client-side in admin_dashboard.html before this ever runs.
+import { readFileSync } from "fs";
+import { join } from "path";
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 
-const LOGO_URL =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAcYG8dNuU9Clu2ePHfM94yE26B1YRH0yjMbpqLABwDF3Np1f8MgdF2x-KmJUnBwd2i5IpO8q-fpU9KSHgAlEHUvHn8dYfHasLfYuOGa6MfgZpDzoYb5f3uKSsndATyT2NwH3kNH_twIxnW90EZZ0OFk1kGCvLjHRGyAVt6O5iP6mzVga6D1LPjNgYkbC8gG8TQqiyOkyWpuy4F1psuw43JsHyP_AK6OwqfDMjwe3Q64BYpnbaADnPZ2iUqeftjJBUjuApKD3_QPt9O";
+// Embedded directly (not fetched by URL) so the PDF doesn't depend on a
+// network round-trip to render the logo — this file only ever runs
+// server-side (imported by route.js), so reading from disk is safe here.
+const LOGO_SRC = readFileSync(join(process.cwd(), "public/image/logo.png"));
 
 const STATUS_LABELS = {
   pending: "Processing",
@@ -96,7 +100,7 @@ export default function SalesReportDocument({ periodLabel, generatedAt, totals, 
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.brand}>
-            <Image src={LOGO_URL} style={styles.logo} />
+            <Image src={LOGO_SRC} style={styles.logo} />
             <Text style={styles.brandName}>GB ASSET</Text>
           </View>
           <Text style={styles.headerMeta}>Generated {fmtGeneratedAt(generatedAt)}</Text>
