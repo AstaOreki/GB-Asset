@@ -66,7 +66,12 @@ export async function POST(request) {
     return Response.json({ error: "Email service not configured." }, { status: 501 });
   }
 
-  const order = await request.json();
+  let order;
+  try {
+    order = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
   if (!order || !order.email || !order.orderId) {
     return Response.json({ error: "Missing order details." }, { status: 400 });
   }

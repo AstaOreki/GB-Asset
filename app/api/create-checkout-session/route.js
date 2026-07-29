@@ -10,7 +10,12 @@ export async function POST(request) {
     return Response.json({ error: "Card payment is not configured yet." }, { status: 501 });
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
   const { orderId, amount, customerEmail, origin } = body;
   if (!orderId || !amount || !origin) {
     return Response.json({ error: "Missing orderId, amount, or origin." }, { status: 400 });

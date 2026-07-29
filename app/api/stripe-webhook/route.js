@@ -32,11 +32,19 @@ export async function POST(request) {
     if (orderId) {
       const db = getAdminDb();
       if (db) {
-        await db.collection("orders").doc(orderId).update({
-          status: "paid",
-          stripeSessionId: session.id,
-          paidAt: new Date(),
-        });
+        // .update() throws if the order doc doesn't exist (e.g. it was
+        // since deleted from the admin dashboard) — that's not something
+        // retrying the webhook would ever fix, so swallow it here rather
+        // than 500 and have Stripe retry indefinitely.
+        await db
+          .collection("orders")
+          .doc(orderId)
+          .update({
+            status: "paid",
+            stripeSessionId: session.id,
+            paidAt: new Date(),
+          })
+          .catch(() => {});
       }
     }
   }
