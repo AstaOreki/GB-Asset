@@ -666,13 +666,15 @@ tailwind.config = {
 
     // Shared confirmation step before destructive actions (delete order/lead/
     // announcement) — these used to fire immediately with no undo.
-    function confirmAction(message, onConfirm, confirmLabel) {
+    function confirmAction(message, onConfirm, confirmLabel, variant) {
         const backdrop = document.getElementById('confirm-modal-backdrop');
         const messageEl = document.getElementById('confirm-modal-message');
         const confirmBtn = document.getElementById('confirm-modal-confirm');
         const cancelBtn = document.getElementById('confirm-modal-cancel');
         messageEl.textContent = message;
         confirmBtn.textContent = confirmLabel || 'Delete';
+        confirmBtn.classList.remove('bg-error-container', 'text-on-error-container', 'bg-primary', 'text-on-primary');
+        confirmBtn.classList.add(...(variant === 'gold' ? ['bg-primary', 'text-on-primary'] : ['bg-error-container', 'text-on-error-container']));
         backdrop.classList.remove('hidden');
         backdrop.classList.add('flex');
         function cleanup() {
@@ -732,7 +734,7 @@ tailwind.config = {
     document.getElementById('logout-btn').addEventListener('click', () => {
         confirmAction('Are you sure you want to log out?', () => {
             GBA.logout().then(() => { window.location.href = '/admin-login'; });
-        }, 'Log Out');
+        }, 'Log Out', 'gold');
     });
 
     GBA.onAuthChange(function (user) {
