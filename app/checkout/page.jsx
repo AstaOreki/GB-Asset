@@ -236,15 +236,17 @@ function CheckoutInner() {
       return;
     }
 
+    const user = gba.getCurrentUser();
+    if (!user) {
+      window.alert("Your session has expired — please sign in again.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const delivery = deliveryMethod;
-    const fee = DELIVERY_FEES[delivery];
-    const lineSubtotal = gba.cart.subtotal(currentCart, products);
-    const items = currentCart.map((line) => {
-      const p = products[line.id];
-      return { id: line.id, name: p.name, qty: line.qty, price: p.price, lineTotal: p.price * line.qty };
-    });
+    const paymentMethod = paymentChecked.value;
+    const notes = notesRef.current.value.trim();
 
     const selectedSavedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
     const address = selectedSavedAddress
@@ -256,32 +258,57 @@ function CheckoutInner() {
         }
       : { line: "", city: "", state: "", postcode: "" };
 
-    const orderData = {
-      customer: name,
-      phone: phone,
-      email: email,
-      deliveryMethod: delivery,
-      deliveryFee: fee,
-      address: address,
-      paymentMethod: paymentChecked.value,
-      notes: notesRef.current.value.trim(),
-      items: items,
-      product: items.map((i) => i.name).join(", "),
-      amount: lineSubtotal + fee,
-      subtotal: lineSubtotal,
-    };
+    // Only product ids + quantities go to the server — price, subtotal,
+    // and the final amount are all recomputed there from real product
+    // data and come back in the response below. Nothing client-computed
+    // determines what actually gets charged; see app/api/create-order.
+    user
+      .getIdToken()
+      .then((idToken) =>
+        fetch("/api/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({
+            items: currentCart.map((line) => ({ id: line.id, qty: line.qty })),
+            deliveryMethod: delivery,
+            paymentMethod,
+            customer: name,
+            phone,
+            email,
+            notes,
+            address,
+          }),
+        })
+      )
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.error);
 
-    gba.orders
-      .create(orderData)
-      .then((newOrderId) => {
+        const newOrderId = data.orderId;
         setOrderId(newOrderId);
+
+        const orderData = {
+          customer: name,
+          phone,
+          email,
+          deliveryMethod: delivery,
+          deliveryFee: data.deliveryFee,
+          address,
+          paymentMethod,
+          notes,
+          items: data.items,
+          product: data.items.map((i) => i.name).join(", "),
+          amount: data.amount,
+          subtotal: data.subtotal,
+        };
+
         fetch("/api/send-order-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...orderData, orderId: newOrderId }),
         }).catch(() => {}); // fire-and-forget — an email hiccup must never block order success
 
-        if (paymentChecked.value === "card") {
+        if (paymentMethod === "card") {
           // Redirect to Stripe Checkout instead of showing the success panel
           // here — the cart stays intact and the order stays "pending" until
           // the payment-return effect above (on success) or the webhook
@@ -291,15 +318,15 @@ function CheckoutInner() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId: newOrderId,
-              amount: orderData.amount,
+              amount: data.amount,
               customerEmail: email,
               origin: window.location.origin,
             }),
           })
             .then((r) => r.json())
-            .then((data) => {
-              if (!data.url) throw new Error(data.error || "Could not start card payment.");
-              window.location.href = data.url;
+            .then((sessionData) => {
+              if (!sessionData.url) throw new Error(sessionData.error || "Could not start card payment.");
+              window.location.href = sessionData.url;
             });
         }
 
@@ -309,9 +336,9 @@ function CheckoutInner() {
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       })
-      .catch(() => {
+      .catch((err) => {
         setIsSubmitting(false);
-        window.alert("We could not place your order — please check your connection and try again.");
+        window.alert(err.message || "We could not place your order — please check your connection and try again.");
       });
   }
 

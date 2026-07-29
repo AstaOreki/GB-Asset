@@ -43,16 +43,18 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------------- orders
-    // Placing an order requires being signed in — but only the fields the
-    // storefront actually sets, and it must be marked "pending" and stamped
-    // with a real server timestamp so no one can fabricate a "paid"/
-    // "shipped" order or backdate one.
+    // Storefront checkout no longer creates orders straight from the
+    // client — these rules could check status/createdAt/userId, but had
+    // no way to verify that amount/items actually matched real product
+    // prices, so a signed-in user could call the Firestore SDK directly
+    // with a doctored amount. Order creation now goes through
+    // app/api/create-order, which re-derives every price server-side via
+    // firebase-admin (which bypasses these rules entirely) before
+    // writing. The only client-side create left is the admin dashboard's
+    // manual "New Order" quick-add for phone/walk-in sales.
     // Only admins can read the order list, change status, or delete.
     match /orders/{orderId} {
-      allow create: if isSignedIn() &&
-                       request.resource.data.status == "pending" &&
-                       request.resource.data.createdAt == request.time &&
-                       request.resource.data.userId == request.auth.uid;
+      allow create: if isAdmin();
       allow read, update, delete: if isAdmin();
     }
 
