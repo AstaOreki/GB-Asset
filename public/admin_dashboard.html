@@ -171,6 +171,10 @@ tailwind.config = {
 <span class="material-symbols-outlined">dashboard</span>
 <span class="font-nav-link text-nav-link uppercase">Overview</span>
 </button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="sales-report">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-nav-link text-nav-link uppercase">Sales Report</span>
+</button>
 <button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="orders">
 <span class="material-symbols-outlined">shopping_cart</span>
 <span class="font-nav-link text-nav-link uppercase">Orders</span>
@@ -352,6 +356,77 @@ tailwind.config = {
 </table>
 </div>
 </section>
+</section>
+<!-- ================= SALES REPORT ================= -->
+<section class="view-section space-y-gutter" id="view-sales-report">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<span class="font-label-caps text-label-caps text-gold-deep mb-2 block uppercase">Financial Performance</span>
+<h2 class="font-display-lg text-headline-md text-primary tracking-tight">Sales Report</h2>
+</div>
+<button class="flex items-center gap-2 bg-gold-deep text-charcoal px-6 py-2.5 rounded-lg font-nav-link text-nav-link shine-effect transition-all uppercase font-bold disabled:opacity-50" id="sales-report-export-btn" type="button">
+<span class="material-symbols-outlined text-[18px]" id="sales-report-export-icon">picture_as_pdf</span> <span id="sales-report-export-label">Export Report</span>
+</button>
+</div>
+
+<div class="glass-panel rounded-xl p-6 flex flex-wrap items-end gap-gutter">
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">Report Period</label>
+<select class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface focus:ring-1 focus:ring-primary" id="sales-report-period">
+<option value="today">Today</option>
+<option value="week">This Week</option>
+<option value="month" selected>This Month</option>
+<option value="custom">Custom Range</option>
+</select>
+</div>
+<div class="flex-1 min-w-[160px] hidden" id="sales-report-custom-from-wrap">
+<label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">From</label>
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface focus:ring-1 focus:ring-primary" id="sales-report-custom-from" type="date"/>
+</div>
+<div class="flex-1 min-w-[160px] hidden" id="sales-report-custom-to-wrap">
+<label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">To</label>
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface focus:ring-1 focus:ring-primary" id="sales-report-custom-to" type="date"/>
+</div>
+<div class="font-body-sm text-[11px] text-gray-muted" id="sales-report-range-label"></div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-gutter">
+<div class="glass-panel rounded-lg p-8 gold-glow transition-all">
+<h4 class="font-label-caps text-gray-muted mb-2">Total Revenue</h4>
+<div class="font-headline-md text-headline-md text-primary" id="sales-report-total-revenue">RM 0.00</div>
+</div>
+<div class="glass-panel rounded-lg p-8 gold-glow transition-all">
+<h4 class="font-label-caps text-gray-muted mb-2">Total Orders</h4>
+<div class="font-headline-md text-headline-md text-on-surface" id="sales-report-total-orders">0</div>
+</div>
+<div class="glass-panel rounded-lg p-8 gold-glow transition-all">
+<h4 class="font-label-caps text-gray-muted mb-2">Products Sold</h4>
+<div class="font-headline-md text-headline-md text-on-surface" id="sales-report-products-sold">0</div>
+</div>
+</div>
+
+<p class="hidden text-error text-body-sm" id="sales-report-export-error"></p>
+
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 border-b border-outline-variant">
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">ORDER ID</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">CUSTOMER</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">PRODUCT</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">AMOUNT (RM)</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-center">STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30" id="sales-report-table-body"></tbody>
+</table>
+</div>
+<div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
+<span class="font-body-sm text-[11px] text-gray-muted uppercase tracking-widest" id="sales-report-count-label">Showing 0 results</span>
+</div>
+</div>
 </section>
 <!-- ================= ORDERS ================= -->
 <section class="view-section space-y-gutter" id="view-orders">
@@ -759,7 +834,7 @@ tailwind.config = {
     });
 
     function initDashboard() {
-        GBA.orders.listen(orders => { state.orders = orders; state.loaded.orders = true; renderOverview(); renderOrders(); });
+        GBA.orders.listen(orders => { state.orders = orders; state.loaded.orders = true; renderOverview(); renderOrders(); renderSalesReport(); });
         GBA.consultations.listen(consultations => { state.consultations = consultations; state.loaded.consultations = true; renderOverview(); renderConsultations(); });
         GBA.announcements.listen(announcements => {
             if (seenAnnouncementIds === null) {
@@ -851,7 +926,7 @@ tailwind.config = {
     document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', closeSidebar));
 
     // ---------- NAVIGATION ----------
-    const viewTitles = { overview: 'Overview', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements' };
+    const viewTitles = { overview: 'Overview', 'sales-report': 'Sales Report', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements' };
     function setView(view) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById('view-' + view).classList.add('active');
@@ -861,7 +936,10 @@ tailwind.config = {
     }
     document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', () => setView(btn.getAttribute('data-view'))));
     document.querySelectorAll('[data-view-link]').forEach(btn => btn.addEventListener('click', () => setView(btn.getAttribute('data-view-link'))));
-    document.getElementById('export-btn').addEventListener('click', () => { addLog(adminActor, 'Report Exported', 'Full institutional report generated', 'SUCCESS'); showToast('Report export queued.'); });
+    // Was a fake "queued" toast with no real export — now takes the admin
+    // straight to Sales Report, where the real Export Report button (wired
+    // to the PDF endpoint below) lives.
+    document.getElementById('export-btn').addEventListener('click', () => setView('sales-report'));
     document.getElementById('topbar-settings-btn').addEventListener('click', () => setView('logs'));
 
     // ---------- OVERVIEW ----------
@@ -899,6 +977,154 @@ tailwind.config = {
                 <td class="px-8 py-5 border-b border-outline-variant/10">${statusBadge(o.status)}</td>
             </tr>`).join('') || `<tr><td colspan="5" class="px-8 py-8 text-center text-gray-muted">${state.loaded.orders ? 'No orders yet.' : 'Loading orders…'}</td></tr>`;
     }
+
+    // ---------- SALES REPORT ----------
+    const salesReportFilters = { period: 'month', customFrom: '', customTo: '' };
+
+    function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+    function endOfDay(d) { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; }
+
+    function salesReportRange() {
+        const now = new Date();
+        if (salesReportFilters.period === 'today') {
+            return { start: startOfDay(now), end: endOfDay(now), label: 'Today — ' + formatDateShort(now) };
+        }
+        if (salesReportFilters.period === 'week') {
+            const start = startOfDay(now);
+            start.setDate(start.getDate() - start.getDay());
+            return { start, end: endOfDay(now), label: 'This Week — ' + formatDateShort(start) + ' to ' + formatDateShort(now) };
+        }
+        if (salesReportFilters.period === 'custom') {
+            if (!salesReportFilters.customFrom || !salesReportFilters.customTo) return null;
+            const start = startOfDay(new Date(salesReportFilters.customFrom));
+            const end = endOfDay(new Date(salesReportFilters.customTo));
+            if (end < start) return null;
+            return { start, end, label: 'Custom Range — ' + formatDateShort(start) + ' to ' + formatDateShort(end) };
+        }
+        const start = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+        return { start, end: endOfDay(now), label: 'This Month — ' + formatDateShort(start) + ' to ' + formatDateShort(now) };
+    }
+
+    // Shared by both renderSalesReport() and the export button so the PDF
+    // always contains exactly what's on screen.
+    function computeSalesReport() {
+        const range = salesReportRange();
+        if (!range) return { range: null, filtered: [], totals: { revenue: 0, orders: 0, productsSold: 0 } };
+        const filtered = state.orders.filter(o => {
+            const d = toDate(o.createdAt);
+            return d >= range.start && d <= range.end;
+        });
+        const revenueOrders = filtered.filter(o => o.status !== 'cancelled');
+        const revenue = revenueOrders.reduce((sum, o) => sum + Number(o.amount || 0), 0);
+        // Storefront checkout orders carry a real items[] array; admin's
+        // manual "New Order" quick-add only records a product description
+        // string with no line items — count those as 1 unit so they still
+        // contribute here instead of being silently skipped.
+        const productsSold = revenueOrders.reduce((sum, o) => {
+            if (Array.isArray(o.items) && o.items.length) {
+                return sum + o.items.reduce((s, i) => s + Number(i.qty || 0), 0);
+            }
+            return sum + 1;
+        }, 0);
+        return { range, filtered, totals: { revenue, orders: filtered.length, productsSold } };
+    }
+
+    function renderSalesReport() {
+        const { range, filtered, totals } = computeSalesReport();
+
+        document.getElementById('sales-report-range-label').textContent = range ? range.label : 'Pick a start and end date.';
+        document.getElementById('sales-report-total-revenue').textContent = 'RM ' + totals.revenue.toLocaleString('en-MY', { minimumFractionDigits: 2 });
+        document.getElementById('sales-report-total-orders').textContent = totals.orders;
+        document.getElementById('sales-report-products-sold').textContent = totals.productsSold;
+
+        const sorted = filtered.slice().sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+        document.getElementById('sales-report-table-body').innerHTML = sorted.map(o => `
+            <tr class="hover:bg-surface-container-high/40 transition-all">
+                <td class="px-6 py-5 font-ui-data text-on-surface">${escapeHtml(o.id)}</td>
+                <td class="px-6 py-5 font-body-sm text-on-surface-variant">${formatDateShort(o.createdAt)}</td>
+                <td class="px-6 py-5 font-body-sm text-on-surface">${escapeHtml(o.customer)}</td>
+                <td class="px-6 py-5"><span class="px-3 py-1 rounded bg-charcoal border border-gold-deep/20 text-gold-light text-[11px] font-medium">${escapeHtml(o.product)}</span></td>
+                <td class="px-6 py-5 font-ui-data text-right text-primary">${Number(o.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</td>
+                <td class="px-6 py-5 text-center">${statusBadge(o.status)}</td>
+            </tr>`).join('') || `<tr><td colspan="6" class="px-6 py-10 text-center text-gray-muted">${state.loaded.orders ? 'No orders in this period.' : 'Loading orders…'}</td></tr>`;
+
+        document.getElementById('sales-report-count-label').textContent = `Showing ${filtered.length} of ${state.orders.length} orders`;
+    }
+
+    document.getElementById('sales-report-period').addEventListener('change', (e) => {
+        salesReportFilters.period = e.target.value;
+        const isCustom = salesReportFilters.period === 'custom';
+        document.getElementById('sales-report-custom-from-wrap').classList.toggle('hidden', !isCustom);
+        document.getElementById('sales-report-custom-to-wrap').classList.toggle('hidden', !isCustom);
+        renderSalesReport();
+    });
+    document.getElementById('sales-report-custom-from').addEventListener('change', (e) => { salesReportFilters.customFrom = e.target.value; renderSalesReport(); });
+    document.getElementById('sales-report-custom-to').addEventListener('change', (e) => { salesReportFilters.customTo = e.target.value; renderSalesReport(); });
+
+    document.getElementById('sales-report-export-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('sales-report-export-btn');
+        const icon = document.getElementById('sales-report-export-icon');
+        const label = document.getElementById('sales-report-export-label');
+        const errorEl = document.getElementById('sales-report-export-error');
+        errorEl.classList.add('hidden');
+
+        const { range, filtered, totals } = computeSalesReport();
+        if (!range) {
+            errorEl.textContent = 'Pick a start and end date for the custom range first.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        btn.disabled = true;
+        icon.textContent = 'hourglass_top';
+        label.textContent = 'Generating…';
+        try {
+            const res = await fetch('/api/export-sales-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    periodLabel: range.label,
+                    generatedAt: new Date().toISOString(),
+                    totals,
+                    orders: filtered
+                        .slice()
+                        .sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt))
+                        .map(o => ({
+                            id: o.id,
+                            date: formatDateShort(o.createdAt),
+                            customer: o.customer,
+                            product: o.product,
+                            amount: Number(o.amount || 0),
+                            status: o.status,
+                        })),
+                }),
+            });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.error || 'Could not generate the report.');
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `Sales_Report_${dateStr}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            addLog(adminActor, 'Sales Report Exported', range.label, 'SUCCESS');
+            showToast('Report downloaded.');
+        } catch (err) {
+            errorEl.textContent = err.message || 'Could not generate the report.';
+            errorEl.classList.remove('hidden');
+            showToast('Export failed.');
+        } finally {
+            btn.disabled = false;
+            icon.textContent = 'picture_as_pdf';
+            label.textContent = 'Export Report';
+        }
+    });
 
     // ---------- ORDERS ----------
     function renderOrders() {
@@ -1269,6 +1495,7 @@ tailwind.config = {
 
     function renderAll() {
         renderOverview();
+        renderSalesReport();
         renderOrders();
         renderConsultations();
         renderLogs();
