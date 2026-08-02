@@ -86,7 +86,23 @@ export async function POST(request) {
   const deliveryFee = DELIVERY_FEES[deliveryMethod];
   const amount = subtotal + deliveryFee;
 
-  const orderId = generateOrderId();
+  // generateOrderId() is a 6-digit random suffix — collisions are rare but
+  // not impossible, and .set() on an existing doc silently overwrites it
+  // rather than erroring. Retry on the rare collision instead of risking a
+  // clobbered order.
+  let orderId;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = generateOrderId();
+    const existing = await db.collection("orders").doc(candidate).get();
+    if (!existing.exists) {
+      orderId = candidate;
+      break;
+    }
+  }
+  if (!orderId) {
+    return Response.json({ error: "Could not generate a unique order ID, please try again." }, { status: 500 });
+  }
+
   const order = {
     id: orderId,
     userId: decoded.uid,
