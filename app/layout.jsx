@@ -2,9 +2,9 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata = {
-  title: "GBA Asset | Malaysia's Trusted Bullion & Wholesale Gold Investment",
+  title: "GB Asset | Malaysia's Trusted Bullion & Wholesale Gold",
   description:
-    "Malaysia's trusted bullion and wholesale gold investment platform.",
+    "Malaysia's trusted bullion and wholesale gold platform.",
 };
 
 export default function RootLayout({ children }) {

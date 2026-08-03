@@ -732,7 +732,7 @@ function CheckoutInner() {
                   </div>
                   <div className="summary-row muted">
                     <span>SST</span>
-                    <span>Exempt &mdash; Investment Gold</span>
+                    <span>Exempt &mdash; Bullion Gold</span>
                   </div>
                   <div className="summary-divider"></div>
                   <div className="summary-total">
@@ -746,7 +746,7 @@ function CheckoutInner() {
                       <rect height="9" rx="1.5" width="14" x="5" y="11"></rect>
                       <path d="M8 11V7a4 4 0 018 0v4"></path>
                     </svg>
-                    <span>Payment details are encrypted. GBA Asset never stores full card numbers.</span>
+                    <span>Payment details are encrypted. GB Asset never stores full card numbers.</span>
                   </div>
                 </div>
               </div>

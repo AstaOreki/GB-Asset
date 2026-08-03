@@ -18,7 +18,7 @@
   // via the "products" collection, so the storefront stays wired to real data
   // without needing a full product-editor UI).
   var STATIC_PRODUCTS = {
-    "bar-1kg":  { name: "1 Kilo Investment Bar", tag: "Signature Bar",      purity: "999.9", price: 537893, img: "image/gold_1kg.png",  w: 52 },
+    "bar-1kg":  { name: "1 Kilo Gold Bar", tag: "Signature Bar",      purity: "999.9", price: 537893, img: "image/gold_1kg.png",  w: 52 },
     "bar-100g": { name: "100 GM Wholesale Bar",  tag: "Best Seller",        purity: "999.9", price: 53832,  img: "image/gold_100g.png", w: 56 },
     "bar-50g":  { name: "50 GM Gold Bar",        tag: "Popular Choice",     purity: "999.9", price: 26929,  img: "image/gold_50g.png",  w: 50 },
     "bar-10g":  { name: "10 GM Gift Bar",        tag: "Starter Collection", purity: "999.9", price: 5579,   img: "image/gold_10g.png",  w: 40 },

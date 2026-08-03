@@ -103,7 +103,7 @@ export default function FullFooter() {
         </div>
       </div>
       <div className="footer-bottom wrap">
-        <div>© 2026 GBA Asset. All rights reserved.</div>
+        <div>© 2026 GB Asset. All rights reserved.</div>
         <div>
           <Link href="/privacy-policy">Privacy Policy</Link>
           <a href="#">Terms &amp; Conditions</a>

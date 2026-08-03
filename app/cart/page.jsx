@@ -126,7 +126,7 @@ export default function CartPage() {
                     </svg>
                   </div>
                   <h3>Your cart is empty</h3>
-                  <p>You haven&apos;t added any bullion to your cart yet. Browse our collection to begin your investment.</p>
+                  <p>You haven&apos;t added any bullion to your cart yet. Browse our collection to get started.</p>
                   <Link className="btn btn-primary" data-ripple="" href="/#products">
                     Explore Gold
                   </Link>
@@ -217,7 +217,7 @@ export default function CartPage() {
                 </div>
                 <div className="summary-row muted">
                   <span>SST</span>
-                  <span>Exempt &mdash; Investment Gold</span>
+                  <span>Exempt &mdash; Bullion Gold</span>
                 </div>
                 <div className="summary-divider"></div>
                 <div className="summary-total">

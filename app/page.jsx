@@ -348,7 +348,7 @@ export default function HomePage() {
             <br />
             <em>Timeless Value</em>
           </h1>
-          <p className="sub">Malaysia&apos;s trusted bullion and wholesale gold investment platform.</p>
+          <p className="sub">Malaysia&apos;s trusted bullion and wholesale gold platform.</p>
           <div className="hero-actions">
             <a className="btn btn-primary" data-ripple="" href="#pricing">
               View Live Prices
@@ -716,7 +716,7 @@ export default function HomePage() {
               </div>
               <div className="show-body">
                 <div className="tag">Signature Bar</div>
-                <h3>1 Kilo Investment Bar</h3>
+                <h3>1 Kilo Gold Bar</h3>
                 <p>Our most sought-after bar for serious investors and institutions.</p>
                 <div className="sprice">RM 537,893</div>
               </div>
@@ -757,7 +757,7 @@ export default function HomePage() {
         <div className="wrap">
           <div className="section-head reveal">
             <div className="eyebrow">Why Gold</div>
-            <h2>Investment Benefits</h2>
+            <h2>Gold Benefits</h2>
             <p>Four timeless reasons collectors and investors alike return to gold, generation after generation.</p>
           </div>
           <div className="benefits-grid reveal-stagger">

@@ -10,7 +10,7 @@ import "./privacy-policy.css";
  * MinimalHeader, so this page itself stays a server component.
  */
 export const metadata = {
-  title: "Privacy Policy | GBA Asset",
+  title: "Privacy Policy | GB Asset",
 };
 
 export default function PrivacyPolicyPage() {
@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
             <div className="eyebrow">Legal</div>
             <h1>Privacy Policy</h1>
             <p>
-              How GBA Asset collects, uses, discloses, and safeguards your
+              How GB Asset collects, uses, discloses, and safeguards your
               information when you visit our Website or use our services.
             </p>
           </div>
@@ -34,13 +34,13 @@ export default function PrivacyPolicyPage() {
             <div className="policy-content">
               <div className="intro">
                 <p>
-                  At GBA Asset, we value your privacy. This Privacy Policy
+                  At GB Asset, we value your privacy. This Privacy Policy
                   explains how we collect, use, disclose, and safeguard your
                   information when you visit https://gbaasset.com
                   ("Website").
                 </p>
                 <p>
-                  This Privacy Policy explains how GBA Asset ("we", "our",
+                  This Privacy Policy explains how GB Asset ("we", "our",
                   "us") collects, uses, and protects your personal data when
                   you interact with us through our website at
                   https://gbaasset.com ("Website"), use our digital services,
@@ -97,7 +97,7 @@ export default function PrivacyPolicyPage() {
                   Personal Information
                 </h2>
                 <p>
-                  At GBA Asset, we recognize the importance of protecting
+                  At GB Asset, we recognize the importance of protecting
                   children&apos;s personal data. We do allow our customers to
                   register accounts on behalf of their children under the
                   age of 18, subject to parental consent and supervision.
@@ -121,7 +121,7 @@ export default function PrivacyPolicyPage() {
                   <span className="num">03</span> How We Use Your Information
                 </h2>
                 <p>
-                  GBA Asset only processes your personal data where we have a
+                  GB Asset only processes your personal data where we have a
                   valid legal basis to do so. Depending on the context, this
                   may include obtaining your consent, fulfilling a contract
                   or transaction with you, protecting your vital interests or
@@ -196,7 +196,7 @@ export default function PrivacyPolicyPage() {
                   Service Providers
                 </h2>
                 <p>
-                  GBA Asset uses cookies and similar tracking technologies to
+                  GB Asset uses cookies and similar tracking technologies to
                   enhance your browsing experience, personalize content, and
                   analyze Website traffic. Cookies are small data files
                   stored on your device that allow us to remember your
@@ -330,7 +330,7 @@ export default function PrivacyPolicyPage() {
                 <h3>Questions or Concerns?</h3>
                 <p>If you have any questions or concerns, contact:</p>
                 <p>
-                  GBA Asset
+                  GB Asset
                   <br />
                   S. Ameer Jewelers,
                   <br />

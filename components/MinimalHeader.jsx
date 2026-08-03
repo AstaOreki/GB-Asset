@@ -32,7 +32,7 @@ export default function MinimalHeader() {
             <div className="logo-mark">
               <div aria-hidden="true" className="brand-emblem">
                 <img
-                  alt="GBA Asset Logo"
+                  alt="GB Asset Logo"
                   className="brand-emblem-img"
                   loading="lazy"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcYG8dNuU9Clu2ePHfM94yE26B1YRH0yjMbpqLABwDF3Np1f8MgdF2x-KmJUnBwd2i5IpO8q-fpU9KSHgAlEHUvHn8dYfHasLfYuOGa6MfgZpDzoYb5f3uKSsndATyT2NwH3kNH_twIxnW90EZZ0OFk1kGCvLjHRGyAVt6O5iP6mzVga6D1LPjNgYkbC8gG8TQqiyOkyWpuy4F1psuw43JsHyP_AK6OwqfDMjwe3Q64BYpnbaADnPZ2iUqeftjJBUjuApKD3_QPt9O"

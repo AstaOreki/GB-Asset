@@ -58,7 +58,7 @@ function renderOrderEmailHtml(order) {
     ${addressBlock}
     <p style="margin:4px 0;"><strong>Payment method:</strong> ${esc(order.paymentMethod)}</p>
     ${order.notes ? `<p style="margin:4px 0;"><strong>Notes:</strong> ${esc(order.notes)}</p>` : ""}
-    <p style="margin-top:24px;color:#777;font-size:13px;">GBA Asset — this is an automated confirmation, please keep it for your records.</p>
+    <p style="margin-top:24px;color:#777;font-size:13px;">GB Asset — this is an automated confirmation, please keep it for your records.</p>
   </div>`;
 }
 
@@ -105,7 +105,7 @@ export async function POST(request) {
 // --- What's needed for this route to actually send ---
 // 1. RESEND_API_KEY — from the Resend dashboard's API Keys page.
 // 2. RESEND_FROM_EMAIL — a sender address on a domain verified in Resend
-//    (e.g. "GBA Asset <orders@gbagold.my>"), set up via Resend's Domains
+//    (e.g. "GB Asset <orders@gbagold.my>"), set up via Resend's Domains
 //    page (add the SPF/DKIM/DMARC TXT records it gives you to gbagold.my's
 //    DNS, then click Verify). Use the same address as the real Workspace
 //    mailbox so customer replies land somewhere someone actually reads.

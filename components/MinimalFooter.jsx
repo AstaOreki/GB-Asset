@@ -7,5 +7,5 @@
  * FullFooter's bare `footer{}` rules elsewhere in the same global sheet.
  */
 export default function MinimalFooter() {
-  return <footer className="minimal-footer">© 2026 GBA Asset. All rights reserved.</footer>;
+  return <footer className="minimal-footer">© 2026 GB Asset. All rights reserved.</footer>;
 }

@@ -334,7 +334,7 @@ function AuthPanel() {
     <section className="auth-panel" ref={panelRef}>
       <div className="auth-wrap">
         <div className="auth-head">
-          <div className="eyebrow">GBA Asset</div>
+          <div className="eyebrow">GB Asset</div>
           <div className="hairline-dot" />
           <h2 id="headTitle">{mode === "login" ? "Welcome Back" : "Create Your Account"}</h2>
           <p id="headSub">
