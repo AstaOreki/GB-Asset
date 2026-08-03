@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 const DELIVERY_LABELS = {
   self: "Self Pickup",
@@ -61,8 +61,13 @@ function renderOrderEmailHtml(order) {
 }
 
 export async function POST(request) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  // Sends via the business's own Google Workspace mailbox over SMTP,
+  // rather than a transactional-email provider (Resend). Needs 2-Step
+  // Verification enabled on the sending account and an App Password
+  // generated for it — see README notes at the bottom of this file.
+  const workspaceEmail = process.env.GOOGLE_WORKSPACE_EMAIL;
+  const workspaceAppPassword = process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  if (!workspaceEmail || !workspaceAppPassword) {
     return Response.json({ error: "Email service not configured." }, { status: 501 });
   }
 
@@ -77,9 +82,14 @@ export async function POST(request) {
   }
 
   try {
-    const resend = new Resend(apiKey);
-    await resend.emails.send({
-      from: "GBA Asset <onboarding@resend.dev>",
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: workspaceEmail, pass: workspaceAppPassword },
+    });
+    await transporter.sendMail({
+      from: `GBA Asset <${workspaceEmail}>`,
       to: order.email,
       subject: `Order Confirmation — #${order.orderId}`,
       html: renderOrderEmailHtml(order),
@@ -89,3 +99,14 @@ export async function POST(request) {
     return Response.json({ error: err.message || "Failed to send email." }, { status: 500 });
   }
 }
+
+// --- What's needed for this route to actually send ---
+// 1. GOOGLE_WORKSPACE_EMAIL — the sending mailbox, e.g. orders@gbagold.my
+// 2. GOOGLE_WORKSPACE_APP_PASSWORD — a 16-character App Password for that
+//    account (Google Account -> Security -> 2-Step Verification -> App
+//    passwords). Requires 2-Step Verification to be turned on for that
+//    account first. If a Workspace admin has disabled App Passwords
+//    org-wide, OAuth2 is required instead — a bigger setup (Google Cloud
+//    project + OAuth client + refresh token).
+// Both values get added as Vercel environment variables, same as every
+// other secret this project uses.
