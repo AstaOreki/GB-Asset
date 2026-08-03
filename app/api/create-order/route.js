@@ -1,4 +1,4 @@
-import { getAdminAuth, getAdminDb } from "../../../lib/firebaseAdmin";
+import { getAdminDb, verifyIdToken } from "../../../lib/firebaseAdmin";
 import { DELIVERY_FEES, computeDeliveryFee, getServerProducts } from "../../../lib/catalog";
 
 // Order creation moved server-side so the price a customer is actually
@@ -25,9 +25,8 @@ function generateOrderId() {
 const PAYMENT_METHODS = new Set(["bank", "card", "cash"]);
 
 export async function POST(request) {
-  const auth = getAdminAuth();
   const db = getAdminDb();
-  if (!auth || !db) {
+  if (!db) {
     return Response.json({ error: "Server not configured." }, { status: 501 });
   }
 
@@ -39,8 +38,11 @@ export async function POST(request) {
 
   let decoded;
   try {
-    decoded = await auth.verifyIdToken(idToken);
+    decoded = await verifyIdToken(idToken);
   } catch {
+    decoded = null;
+  }
+  if (!decoded) {
     return Response.json({ error: "Invalid or expired session." }, { status: 401 });
   }
 
