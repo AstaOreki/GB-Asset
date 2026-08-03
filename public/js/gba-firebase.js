@@ -217,25 +217,42 @@
     });
   }
 
+  // Same read-modify-write race the cart queue below already guards
+  // against: two overlapping add/remove calls (e.g. two open tabs) could
+  // both read the same starting addresses array before either write
+  // lands, so the second write would silently clobber the first based on
+  // stale data. Chaining every mutation off this one promise forces them
+  // to run one at a time.
+  var addressOpQueue = Promise.resolve();
+  function queueAddressOp(fn) {
+    var result = addressOpQueue.then(fn, fn);
+    addressOpQueue = result.then(function () {}, function () {});
+    return result;
+  }
+
   function addAddress(addr) {
     if (!currentUser) return Promise.reject(new Error("Not signed in."));
-    var ref = db.collection("users").doc(currentUser.uid);
-    return ref.get().then(function (doc) {
-      var data = doc.data() || {};
-      var addresses = Array.isArray(data.addresses) ? data.addresses.slice() : [];
-      var entry = Object.assign({ id: "addr_" + Date.now() }, addr);
-      addresses.push(entry);
-      return ref.set({ addresses: addresses }, { merge: true }).then(function () { return entry; });
+    return queueAddressOp(function () {
+      var ref = db.collection("users").doc(currentUser.uid);
+      return ref.get().then(function (doc) {
+        var data = doc.data() || {};
+        var addresses = Array.isArray(data.addresses) ? data.addresses.slice() : [];
+        var entry = Object.assign({ id: "addr_" + Date.now() }, addr);
+        addresses.push(entry);
+        return ref.set({ addresses: addresses }, { merge: true }).then(function () { return entry; });
+      });
     });
   }
 
   function removeAddress(id) {
     if (!currentUser) return Promise.reject(new Error("Not signed in."));
-    var ref = db.collection("users").doc(currentUser.uid);
-    return ref.get().then(function (doc) {
-      var data = doc.data() || {};
-      var addresses = (Array.isArray(data.addresses) ? data.addresses : []).filter(function (a) { return a.id !== id; });
-      return ref.set({ addresses: addresses }, { merge: true });
+    return queueAddressOp(function () {
+      var ref = db.collection("users").doc(currentUser.uid);
+      return ref.get().then(function (doc) {
+        var data = doc.data() || {};
+        var addresses = (Array.isArray(data.addresses) ? data.addresses : []).filter(function (a) { return a.id !== id; });
+        return ref.set({ addresses: addresses }, { merge: true });
+      });
     });
   }
 
@@ -387,13 +404,28 @@
     return "GBA-" + d.getFullYear() + "-" + rand;
   }
 
+  // generateOrderId() is a 6-digit random suffix — collisions are rare but
+  // not impossible, and .set() on an existing doc silently overwrites it
+  // rather than erroring. Retry on the rare collision instead of risking a
+  // clobbered order, mirroring app/api/create-order's server-side retry.
   function createOrder(order) {
-    var id = generateOrderId();
-    order.id = id;
     order.userId = currentUser ? currentUser.uid : null;
     order.status = order.status || "pending";
     order.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    return db.collection("orders").doc(id).set(order).then(function () { return id; });
+
+    function attempt(triesLeft) {
+      var id = generateOrderId();
+      var ref = db.collection("orders").doc(id);
+      return ref.get().then(function (doc) {
+        if (doc.exists) {
+          if (triesLeft <= 1) return Promise.reject(new Error("Could not generate a unique order ID, please try again."));
+          return attempt(triesLeft - 1);
+        }
+        order.id = id;
+        return ref.set(order).then(function () { return id; });
+      });
+    }
+    return attempt(5);
   }
 
   function listenOrders(cb) {

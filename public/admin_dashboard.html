@@ -464,10 +464,11 @@ tailwind.config = {
 <label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">Filter by Status</label>
 <select class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface focus:ring-1 focus:ring-primary" id="filter-order-status">
 <option value="All">All Statuses</option>
-<option value="shipped">Shipped</option>
 <option value="pending">Pending</option>
-<option value="cancelled">Cancelled</option>
+<option value="paid">Paid</option>
+<option value="shipped">Shipped</option>
 <option value="in_transit">In Transit</option>
+<option value="cancelled">Cancelled</option>
 </select>
 </div>
 <div class="flex items-end h-[68px]">
@@ -572,7 +573,6 @@ tailwind.config = {
 <div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-muted after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-deep peer-checked:after:bg-ivory"></div>
 </label>
 </div>
-<button class="w-full mt-4 border border-outline-variant py-3 font-nav-link text-nav-link text-gray-soft uppercase tracking-widest hover:border-gold-light hover:text-gold-light transition-all" id="force-logoff-btn">Force Global Logoff</button>
 </div>
 </div>
 </div>
@@ -990,6 +990,7 @@ tailwind.config = {
     // ---------- OVERVIEW ----------
     function statusBadge(status) {
         const map = {
+            paid: { label: 'Paid', cls: 'bg-primary/20 text-primary' },
             shipped: { label: 'Shipped', cls: 'bg-green-900/30 text-green-500' },
             pending: { label: 'Processing', cls: 'bg-secondary-container text-secondary' },
             in_transit: { label: 'In Transit', cls: 'bg-blue-900/30 text-blue-400' },
@@ -999,8 +1000,18 @@ tailwind.config = {
         return `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] ${m.cls} font-bold uppercase tracking-wider">${m.label}</span>`;
     }
 
+    // "pending" covers both a manual order awaiting bank-transfer/cash
+    // verification AND a card order whose Stripe checkout was abandoned —
+    // neither has actually been paid for yet, so neither should count
+    // toward revenue. app/api/stripe-webhook is the only thing that ever
+    // sets "paid"; "shipped"/"in_transit" imply an admin already confirmed
+    // and progressed the sale manually.
+    function isRevenueOrder(o) {
+        return o.status !== 'cancelled' && o.status !== 'pending';
+    }
+
     function renderOverview() {
-        const totalVolume = state.orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + Number(o.amount || 0), 0);
+        const totalVolume = state.orders.filter(isRevenueOrder).reduce((sum, o) => sum + Number(o.amount || 0), 0);
         document.getElementById('stat-total-volume').textContent = (totalVolume / 1000000).toFixed(2) + 'M';
 
         const pending = state.consultations.filter(c => c.status === 'new');
@@ -1059,7 +1070,7 @@ tailwind.config = {
             const d = toDate(o.createdAt);
             return d >= range.start && d <= range.end;
         });
-        const revenueOrders = filtered.filter(o => o.status !== 'cancelled');
+        const revenueOrders = filtered.filter(isRevenueOrder);
         const revenue = revenueOrders.reduce((sum, o) => sum + Number(o.amount || 0), 0);
         // Storefront checkout orders carry a real items[] array; admin's
         // manual "New Order" quick-add only records a product description
@@ -1124,9 +1135,10 @@ tailwind.config = {
         icon.textContent = 'hourglass_top';
         label.textContent = 'Generating…';
         try {
+            const idToken = await GBA.getCurrentUser().getIdToken();
             const res = await fetch('/api/export-sales-report', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
                 body: JSON.stringify({
                     periodLabel: range.label,
                     generatedAt: new Date().toISOString(),
@@ -1192,6 +1204,7 @@ tailwind.config = {
                 <td class="px-6 py-5"><div class="flex justify-center">
                     <select data-order-status="${o.id}" class="bg-charcoal border border-outline-variant rounded text-[10px] font-bold uppercase tracking-wider py-1 px-2 outline-none focus:border-gold-light">
                         <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Processing</option>
+                        <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>Paid</option>
                         <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
                         <option value="in_transit" ${o.status === 'in_transit' ? 'selected' : ''}>In Transit</option>
                         <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
@@ -1203,12 +1216,18 @@ tailwind.config = {
         document.getElementById('orders-count-label').textContent = `Showing ${list.length} of ${state.orders.length} results`;
 
         document.querySelectorAll('[data-order-status]').forEach(sel => {
+            const previousValue = sel.value;
             sel.addEventListener('change', async () => {
                 const id = sel.getAttribute('data-order-status');
                 const order = state.orders.find(o => o.id === id);
-                await GBA.orders.updateStatus(id, sel.value);
-                addLog(adminActor, 'Order Status Updated', order ? `#${order.id} — ${order.customer} → ${sel.value}` : id, 'SUCCESS');
-                showToast('Order status updated.');
+                try {
+                    await GBA.orders.updateStatus(id, sel.value);
+                    addLog(adminActor, 'Order Status Updated', order ? `#${order.id} — ${order.customer} → ${sel.value}` : id, 'SUCCESS');
+                    showToast('Order status updated.');
+                } catch (err) {
+                    sel.value = previousValue;
+                    showToast('Could not update order status: ' + err.message);
+                }
             });
         });
 
@@ -1217,9 +1236,13 @@ tailwind.config = {
                 const id = btn.getAttribute('data-delete-order');
                 const order = state.orders.find(o => o.id === id);
                 confirmAction(`Delete order #${id}${order ? ' — ' + order.customer : ''}? This cannot be undone.`, async () => {
-                    await GBA.orders.remove(id);
-                    addLog(adminActor, 'Order Deleted', order ? `#${order.id} — ${order.customer}` : id, 'SUCCESS');
-                    showToast('Order removed.');
+                    try {
+                        await GBA.orders.remove(id);
+                        addLog(adminActor, 'Order Deleted', order ? `#${order.id} — ${order.customer}` : id, 'SUCCESS');
+                        showToast('Order removed.');
+                    } catch (err) {
+                        showToast('Could not delete order: ' + err.message);
+                    }
                 });
             });
         });
@@ -1227,7 +1250,64 @@ tailwind.config = {
 
     document.getElementById('filter-order-status').addEventListener('change', (e) => { ui.orderFilters.status = e.target.value; renderOrders(); });
     document.getElementById('reset-order-filters').addEventListener('click', () => { ui.orderFilters.status = 'All'; document.getElementById('filter-order-status').value = 'All'; renderOrders(); });
-    document.getElementById('export-orders-btn').addEventListener('click', () => showToast('Order data export queued.'));
+    document.getElementById('export-orders-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('export-orders-btn');
+        let list = state.orders.slice();
+        if (ui.orderFilters.status !== 'All') list = list.filter(o => o.status === ui.orderFilters.status);
+        list.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+        const revenueOrders = list.filter(isRevenueOrder);
+        const revenue = revenueOrders.reduce((sum, o) => sum + Number(o.amount || 0), 0);
+        const productsSold = revenueOrders.reduce((sum, o) => {
+            if (Array.isArray(o.items) && o.items.length) return sum + o.items.reduce((s, i) => s + Number(i.qty || 0), 0);
+            return sum + 1;
+        }, 0);
+        const statusLabel = ui.orderFilters.status === 'All'
+            ? 'All Orders'
+            : `Orders — ${document.getElementById('filter-order-status').selectedOptions[0].textContent}`;
+
+        btn.disabled = true;
+        try {
+            const idToken = await GBA.getCurrentUser().getIdToken();
+            const res = await fetch('/api/export-sales-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                body: JSON.stringify({
+                    periodLabel: statusLabel,
+                    generatedAt: new Date().toISOString(),
+                    totals: { revenue, orders: list.length, productsSold },
+                    orders: list.map(o => ({
+                        id: o.id,
+                        date: formatDateShort(o.createdAt),
+                        customer: o.customer,
+                        product: o.product,
+                        amount: Number(o.amount || 0),
+                        status: o.status,
+                    })),
+                }),
+            });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.error || 'Could not generate the export.');
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `Orders_Export_${dateStr}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            addLog(adminActor, 'Order Data Exported', statusLabel, 'SUCCESS');
+            showToast('Order data downloaded.');
+        } catch (err) {
+            showToast('Export failed: ' + err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    });
 
     document.getElementById('new-order-btn').addEventListener('click', () => document.getElementById('new-order-form').classList.toggle('hidden'));
     document.getElementById('order-cancel-btn').addEventListener('click', () => document.getElementById('new-order-form').classList.add('hidden'));
@@ -1299,35 +1379,51 @@ tailwind.config = {
             const docId = btn.getAttribute('data-schedule');
             const c = state.consultations.find(x => x.docId === docId);
             if (!c) return;
-            await GBA.consultations.update(docId, { status: 'scheduled' });
-            addLog(adminActor, 'Consultation Scheduled', c.name, 'SUCCESS');
-            showToast('Call scheduled.');
+            try {
+                await GBA.consultations.update(docId, { status: 'scheduled' });
+                addLog(adminActor, 'Consultation Scheduled', c.name, 'SUCCESS');
+                showToast('Call scheduled.');
+            } catch (err) {
+                showToast('Could not schedule call: ' + err.message);
+            }
         }));
         document.querySelectorAll('[data-contacted]').forEach(btn => btn.addEventListener('click', async () => {
             const docId = btn.getAttribute('data-contacted');
             const c = state.consultations.find(x => x.docId === docId);
             if (!c) return;
-            await GBA.consultations.update(docId, { status: 'contacted' });
-            addLog(adminActor, 'Lead Marked Contacted', c.name, 'SUCCESS');
-            showToast('Marked as contacted.');
+            try {
+                await GBA.consultations.update(docId, { status: 'contacted' });
+                addLog(adminActor, 'Lead Marked Contacted', c.name, 'SUCCESS');
+                showToast('Marked as contacted.');
+            } catch (err) {
+                showToast('Could not mark as contacted: ' + err.message);
+            }
         }));
         document.querySelectorAll('[data-assign]').forEach(btn => btn.addEventListener('click', () => {
             const docId = btn.getAttribute('data-assign');
             const c = state.consultations.find(x => x.docId === docId);
             if (!c) return;
             promptAction('Assign this lead to:', c.assignedTo || '', async (name) => {
-                await GBA.consultations.update(docId, { assignedTo: name });
-                addLog(adminActor, 'Lead Assigned', `${c.name} → ${name || 'Unassigned'}`, 'SUCCESS');
-                showToast('Lead assignment updated.');
+                try {
+                    await GBA.consultations.update(docId, { assignedTo: name });
+                    addLog(adminActor, 'Lead Assigned', `${c.name} → ${name || 'Unassigned'}`, 'SUCCESS');
+                    showToast('Lead assignment updated.');
+                } catch (err) {
+                    showToast('Could not update assignment: ' + err.message);
+                }
             });
         }));
         document.querySelectorAll('[data-delete-lead]').forEach(btn => btn.addEventListener('click', () => {
             const docId = btn.getAttribute('data-delete-lead');
             const c = state.consultations.find(x => x.docId === docId);
             confirmAction(`Delete the lead from ${c ? c.name : 'this contact'}? This cannot be undone.`, async () => {
-                await GBA.consultations.remove(docId);
-                addLog(adminActor, 'Lead Removed', c ? c.name : docId, 'SUCCESS');
-                showToast('Lead removed.');
+                try {
+                    await GBA.consultations.remove(docId);
+                    addLog(adminActor, 'Lead Removed', c ? c.name : docId, 'SUCCESS');
+                    showToast('Lead removed.');
+                } catch (err) {
+                    showToast('Could not delete lead: ' + err.message);
+                }
             });
         }));
     }
@@ -1348,11 +1444,16 @@ tailwind.config = {
             return;
         }
         errorEl.classList.add('hidden');
-        await GBA.consultations.submit({ name, org, phone, email, location, message });
-        addLog(adminActor, 'New Consultation Lead Added', name, 'SUCCESS');
-        ['lead-name', 'lead-org', 'lead-phone', 'lead-email', 'lead-location', 'lead-message'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('new-lead-form').classList.add('hidden');
-        showToast('Lead added.');
+        try {
+            await GBA.consultations.submit({ name, org, phone, email, location, message });
+            addLog(adminActor, 'New Consultation Lead Added', name, 'SUCCESS');
+            ['lead-name', 'lead-org', 'lead-phone', 'lead-email', 'lead-location', 'lead-message'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('new-lead-form').classList.add('hidden');
+            showToast('Lead added.');
+        } catch (err) {
+            errorEl.textContent = 'Could not add lead: ' + err.message;
+            errorEl.classList.remove('hidden');
+        }
     });
 
     // ---------- SYSTEM LOGS ----------
@@ -1393,10 +1494,6 @@ tailwind.config = {
     document.getElementById('toggle-market-link').addEventListener('change', async (e) => {
         await GBA.settings.update({ marketLink: e.target.checked });
         addLog(adminActor, 'Market Liquidity Link Toggled', e.target.checked ? 'Live wholesale bridge enabled' : 'Live wholesale bridge disabled', 'SUCCESS');
-    });
-    document.getElementById('force-logoff-btn').addEventListener('click', async () => {
-        addLog(adminActor, 'Force Global Logoff Triggered', 'All active sessions terminated', 'BLOCKED');
-        showToast('Global logoff triggered.');
     });
 
     // ---------- ANNOUNCEMENTS ----------
@@ -1447,9 +1544,13 @@ tailwind.config = {
                 const docId = btn.getAttribute('data-delete-ann');
                 const b = state.announcements.find(x => x.docId === docId);
                 confirmAction(`Delete the announcement "${b ? b.title : ''}"? This cannot be undone.`, async () => {
-                    await GBA.announcements.remove(docId);
-                    addLog(adminActor, 'Announcement Removed', b ? b.title : docId, 'SUCCESS');
-                    showToast('Bulletin removed.');
+                    try {
+                        await GBA.announcements.remove(docId);
+                        addLog(adminActor, 'Announcement Removed', b ? b.title : docId, 'SUCCESS');
+                        showToast('Bulletin removed.');
+                    } catch (err) {
+                        showToast('Could not delete announcement: ' + err.message);
+                    }
                 });
             }));
         }

@@ -30,6 +30,19 @@ export async function POST(request) {
     return Response.json({ error: "Server not configured." }, { status: 501 });
   }
 
+  // The admin dashboard's "System Mode" toggle (Settings) is meant to
+  // actually restrict public buying, not just flip a cosmetic label — a
+  // client-side-only check here would still let a request straight to
+  // this endpoint through, so it has to be enforced where orders are
+  // actually written.
+  const settingsSnap = await db.collection("settings").doc("system").get();
+  if (settingsSnap.exists && settingsSnap.data().systemMode) {
+    return Response.json(
+      { error: "Ordering is temporarily paused for maintenance. Please check back shortly." },
+      { status: 503 }
+    );
+  }
+
   const authHeader = request.headers.get("authorization") || "";
   const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!idToken) {

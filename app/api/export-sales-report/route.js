@@ -1,5 +1,19 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import SalesReportDocument from "./SalesReportDocument";
+import { verifyIdToken } from "../../../lib/firebaseAdmin";
+
+// Sourced from the same env var the storefront's inline firebase-config
+// script uses (see app/layout.jsx) so this can't drift from the actual
+// admin list — this route had no authorization check at all before, so
+// anyone with the URL could spend server compute rendering a PDF and get
+// back a real, GBA-branded "Sales Report" for whatever numbers they typed.
+function isAdminEmail(email) {
+  const list = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return Boolean(email) && list.includes(email.toLowerCase());
+}
 
 // Server-side PDF export for the admin dashboard's Sales Report section
 // (public/admin_dashboard.html). The client already holds the exact
@@ -16,6 +30,21 @@ import SalesReportDocument from "./SalesReportDocument";
 export const runtime = "nodejs";
 
 export async function POST(request) {
+  const authHeader = request.headers.get("authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return Response.json({ error: "Not signed in." }, { status: 401 });
+  }
+  let decoded;
+  try {
+    decoded = await verifyIdToken(idToken);
+  } catch {
+    decoded = null;
+  }
+  if (!decoded || !isAdminEmail(decoded.email)) {
+    return Response.json({ error: "Not authorized." }, { status: 403 });
+  }
+
   let body;
   try {
     body = await request.json();

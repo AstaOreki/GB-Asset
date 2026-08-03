@@ -48,6 +48,7 @@ function CheckoutInner() {
   const [products, setProducts] = useState(null);
   const [currentCart, setCurrentCart] = useState([]);
   const [cartLoaded, setCartLoaded] = useState(false);
+  const [systemMode, setSystemMode] = useState(false);
 
   const [deliveryMethod, setDeliveryMethod] = useState("self");
   const [paymentError, setPaymentError] = useState(false);
@@ -130,6 +131,18 @@ function CheckoutInner() {
   useEffect(() => {
     loadAddresses();
   }, [loadAddresses]);
+
+  // Mirrors the admin dashboard's "System Mode" toggle (Settings). The
+  // real enforcement is server-side in app/api/create-order — this is
+  // just so a customer sees why the form is blocked instead of an
+  // unexplained order-placement failure.
+  useEffect(() => {
+    if (!gba) return;
+    const unsubscribe = gba.settings.listen((settings) => setSystemMode(!!settings.systemMode));
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [gba]);
 
   function resetAddrForm() {
     setAddrLabel("");
@@ -214,7 +227,7 @@ function CheckoutInner() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!gba || !products) return;
+    if (!gba || !products || systemMode) return;
 
     const form = formRef.current;
     const paymentChecked = form.querySelector('input[name="payment"]:checked');
@@ -314,17 +327,18 @@ function CheckoutInner() {
           // Redirect to Stripe Checkout instead of showing the success panel
           // here — the cart stays intact and the order stays "pending" until
           // the payment-return effect above (on success) or the webhook
-          // (source of truth) confirms it actually went through.
-          return fetch("/api/create-checkout-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: newOrderId,
-              amount: data.amount,
-              customerEmail: email,
-              origin: window.location.origin,
-            }),
-          })
+          // (source of truth) confirms it actually went through. The charge
+          // amount is never sent from here — the server re-reads it from
+          // the order it just created, see app/api/create-checkout-session.
+          return user
+            .getIdToken()
+            .then((sessionToken) =>
+              fetch("/api/create-checkout-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+                body: JSON.stringify({ orderId: newOrderId }),
+              })
+            )
             .then((r) => r.json())
             .then((sessionData) => {
               if (!sessionData.url) throw new Error(sessionData.error || "Could not start card payment.");
@@ -660,7 +674,17 @@ function CheckoutInner() {
                     </div>
                   </div>
 
-                  <button className="submit-btn" data-ripple="" type="submit" disabled={isSubmitting || !products || !cartLoaded}>
+                  {systemMode && (
+                    <div className="status-note status-note-error" style={{ marginBottom: 14 }}>
+                      Ordering is temporarily paused for maintenance — please check back shortly.
+                    </div>
+                  )}
+                  <button
+                    className="submit-btn"
+                    data-ripple=""
+                    type="submit"
+                    disabled={isSubmitting || !products || !cartLoaded || systemMode}
+                  >
                     {isSubmitting ? "Placing Order…" : !products || !cartLoaded ? "Loading…" : "Place Order"}
                   </button>
                   {orderError && (

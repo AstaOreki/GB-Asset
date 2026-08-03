@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const DELIVERY_LABELS = {
   self: "Self Pickup",
   standard: "Insured Courier",
@@ -80,6 +82,9 @@ export async function POST(request) {
   }
   if (!order || !order.email || !order.orderId) {
     return Response.json({ error: "Missing order details." }, { status: 400 });
+  }
+  if (!EMAIL_RE.test(order.email)) {
+    return Response.json({ error: "Invalid email address." }, { status: 400 });
   }
 
   try {
