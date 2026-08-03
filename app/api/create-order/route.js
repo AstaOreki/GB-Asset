@@ -1,5 +1,5 @@
 import { getAdminAuth, getAdminDb } from "../../../lib/firebaseAdmin";
-import { DELIVERY_FEES, getServerProducts } from "../../../lib/catalog";
+import { DELIVERY_FEES, computeDeliveryFee, getServerProducts } from "../../../lib/catalog";
 
 // Order creation moved server-side so the price a customer is actually
 // charged can never be set by the client. GBA.orders.create() (still used
@@ -83,7 +83,7 @@ export async function POST(request) {
   }
 
   const subtotal = lineItems.reduce((sum, l) => sum + l.lineTotal, 0);
-  const deliveryFee = DELIVERY_FEES[deliveryMethod];
+  const deliveryFee = computeDeliveryFee(deliveryMethod, subtotal);
   const amount = subtotal + deliveryFee;
 
   // generateOrderId() is a 6-digit random suffix — collisions are rare but

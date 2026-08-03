@@ -115,7 +115,9 @@ body::after {
 }
 .btn:hover { transform: translateY(-2px); }
 .btn-primary {
-  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  /* See app/page.css's .btn-primary for why this stop isn't --gold-deep —
+     measured contrast fix, kept in sync with that copy. */
+  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #9c7a1f);
   color: var(--emerald-deep);
   box-shadow: 0 14px 32px -14px rgba(212, 175, 55, .6), 0 4px 20px -10px rgba(122, 12, 30, .35);
 }
@@ -326,6 +328,7 @@ body::after {
   padding: 12px 14px; border-radius: 4px; font-size: 12.5px; line-height: 1.5;
   border: 1px solid rgba(212, 175, 55, .35); background: rgba(212, 175, 55, .08); color: var(--gold-pale);
 }
+.status-note-error { border-color: rgba(176, 24, 41, .5); background: rgba(176, 24, 41, .1); color: #e08a6a; }
 
 /* ============ SAVED-ADDRESS "ADD NEW" INLINE FORM (matches /profile) ============ */
 .profile-note { font-size: 13.5px; color: var(--gray-soft); line-height: 1.6; }

@@ -8,12 +8,8 @@ import { useGBA } from "../../hooks/useGBA";
 import { useRevealOnScroll } from "../../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../../hooks/useButtonRipple";
 import { useCartBadge } from "../../hooks/useCartBadge";
+import { computeDeliveryFee } from "../../lib/catalog";
 import "./cart.css";
-
-// cart.html-specific delivery model (NOT checkout.html's fixed 3-tier map —
-// the two pages intentionally disagree, per the approved migration plan).
-const FREE_SHIP_THRESHOLD = 50000;
-const COURIER_FEE = 150;
 
 /**
  * "/cart" — ported from cart.html.
@@ -32,8 +28,6 @@ export default function CartPage() {
 
   const [products, setProducts] = useState(null); // null until GBA.getProducts() resolves
   const [cart, setCart] = useState([]);
-  const [promoInput, setPromoInput] = useState("");
-  const [promoMsg, setPromoMsg] = useState("");
 
   const loadCart = useCallback(() => {
     if (!gba || !products) return;
@@ -84,19 +78,12 @@ export default function CartPage() {
     });
   }
 
-  // FAKE / UI-theater, exactly as cart.html: no Firestore check, zero effect
-  // on totals — just a static "will be verified at checkout" message.
-  function handlePromoApply() {
-    if (!promoInput.trim()) {
-      setPromoMsg("Enter a code to apply.");
-      return;
-    }
-    setPromoMsg("This code will be verified at checkout.");
-  }
-
   const fmtRM = (n) => (gba ? gba.fmtRM(n) : "RM " + Math.round(n).toLocaleString("en-MY"));
   const subtotal = gba && products ? gba.cart.subtotal(cart, products) : 0;
-  const delivery = subtotal >= FREE_SHIP_THRESHOLD ? 0 : COURIER_FEE;
+  // Previews the "standard" delivery tier specifically — the same shared
+  // threshold checkout uses, so this estimate is never a promise checkout
+  // fails to honor (it used to have its own separate, drifted threshold).
+  const delivery = computeDeliveryFee("standard", subtotal);
   const total = subtotal + delivery;
   const isEmpty = cart.length === 0;
 
@@ -238,22 +225,6 @@ export default function CartPage() {
                   <span className="stvalue" id="sumTotal">
                     {fmtRM(total)}
                   </span>
-                </div>
-
-                <div className="promo-row">
-                  <input
-                    id="promoInput"
-                    placeholder="Promo code"
-                    type="text"
-                    value={promoInput}
-                    onChange={(e) => setPromoInput(e.target.value)}
-                  />
-                  <button id="promoBtn" type="button" onClick={handlePromoApply}>
-                    Apply
-                  </button>
-                </div>
-                <div className="promo-msg" id="promoMsg">
-                  {promoMsg}
                 </div>
 
                 <Link

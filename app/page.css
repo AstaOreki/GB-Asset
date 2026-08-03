@@ -140,7 +140,13 @@ body::after {
 }
 .btn:hover { transform: translateY(-2px); }
 .btn-primary {
-  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  /* Measured contrast failure: --emerald-deep text against --gold-deep's
+     #8B6914 end of this gradient was 4.0:1, short of the 4.5:1 WCAG AA
+     minimum for text. #9c7a1f keeps the same "deep gold" read but clears
+     it at ~5:1 — a scoped override rather than changing --gold-deep
+     globally, since that value is fine elsewhere (borders, small accents)
+     where it never carries text on top of it. */
+  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #9c7a1f);
   color: var(--emerald-deep);
   box-shadow: 0 14px 32px -14px rgba(212,175,55,.6), 0 4px 20px -10px rgba(122,12,30,.35);
 }

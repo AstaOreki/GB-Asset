@@ -242,7 +242,7 @@
   // ------------------------------------------------------------- products
   function getProducts() {
     if (productsCache) return Promise.resolve(productsCache);
-    return db.collection("products").get().then(function (snap) {
+    var fetchPromise = db.collection("products").get().then(function (snap) {
       var merged = {};
       Object.keys(STATIC_PRODUCTS).forEach(function (id) {
         merged[id] = Object.assign({}, STATIC_PRODUCTS[id]);
@@ -258,6 +258,17 @@
       productsCache = STATIC_PRODUCTS;
       return STATIC_PRODUCTS;
     });
+    // A stalled connection can leave fetchPromise neither resolved nor
+    // rejected (the .catch() above only helps once it actually fails), so
+    // every page waiting on this — cart, checkout, home — would hang
+    // indefinitely with no error and no way for the user to tell if it's
+    // slow or broken. Race a timeout so a hang degrades to the static
+    // catalog instead of blocking forever; fetchPromise keeps running in
+    // the background and still updates productsCache if it eventually lands.
+    var timeoutPromise = new Promise(function (resolve) {
+      setTimeout(function () { resolve(STATIC_PRODUCTS); }, 6000);
+    });
+    return Promise.race([fetchPromise, timeoutPromise]);
   }
 
   function updateProductPrice(id, price) {

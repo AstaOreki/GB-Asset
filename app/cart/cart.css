@@ -50,7 +50,9 @@ body::after{
 }
 .btn:hover{transform:translateY(-2px);}
 .btn-primary{
-  background:linear-gradient(120deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  /* See app/page.css's .btn-primary for why this stop isn't --gold-deep —
+     measured contrast fix, kept in sync with that copy. */
+  background:linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #9c7a1f);
   color:var(--emerald-deep);
   box-shadow:0 14px 32px -14px rgba(212,175,55,.6), 0 4px 20px -10px rgba(122,12,30,.35);
 }
@@ -208,18 +210,6 @@ body::after{
 .summary-total{display:flex;justify-content:space-between;align-items:baseline;}
 .summary-total .stlabel{font-family:var(--label);font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-light);}
 .summary-total .stvalue{font-family:var(--serif-accent);font-style:italic;font-size:25px;color:var(--ivory);}
-
-.promo-row{display:flex;gap:8px;margin-top:24px;}
-.promo-row input{flex:1;min-width:0;background:transparent;border:1px solid rgba(212,175,55,.35);border-radius:2px;padding:11px 12px;color:var(--ivory);font-size:12.5px;font-family:var(--body);}
-.promo-row input::placeholder{color:var(--gray);}
-.promo-row input:focus{outline:none;border-color:var(--gold-light);}
-.promo-row button{
-  padding:0 16px;border:1px solid var(--gold);border-radius:2px;color:var(--gold-light);
-  font-family:var(--label);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-  white-space:nowrap;transition:all .3s var(--ease);
-}
-.promo-row button:hover{background:var(--gold);color:var(--emerald-deep);}
-.promo-msg{margin-top:10px;font-size:11.5px;color:var(--gold-light);min-height:14px;}
 
 .summary-note{margin-top:20px;font-size:11.5px;color:var(--gray);display:flex;gap:9px;align-items:flex-start;line-height:1.65;}
 .summary-note svg{width:15px;height:15px;flex-shrink:0;margin-top:2px;stroke:var(--gold-light);fill:none;stroke-width:1.4;}

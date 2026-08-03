@@ -10,12 +10,8 @@ import { useAuthAwareNav } from "../../hooks/useAuthAwareNav";
 import { useRevealOnScroll } from "../../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../../hooks/useButtonRipple";
 import { useCartBadge } from "../../hooks/useCartBadge";
+import { computeDeliveryFee } from "../../lib/catalog";
 import "./checkout.css";
-
-// Fixed 3-tier delivery-fee map — no free-shipping threshold on checkout
-// (that's cart.html's different, intentionally-inconsistent model; see the
-// migration plan's "known pre-existing quirks" section).
-const DELIVERY_FEES = { self: 0, standard: 150, express: 280 };
 
 // Card only becomes selectable once STRIPE_SECRET_KEY (server) and this
 // public flag are both set — same "build it, gate it off until configured"
@@ -58,6 +54,11 @@ function CheckoutInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [cardCancelled, setCardCancelled] = useState(false);
+  // Was window.alert() for both the expired-session and order-placement-
+  // failure cases — the one moment the interface most needs to stay
+  // reassuring (the customer's money/cart is on the line) it was dropping
+  // into an unstyled OS dialog. Now an inline themed message instead.
+  const [orderError, setOrderError] = useState("");
 
   // Shipping address always comes from the profile's saved addresses now —
   // no more retyping it here. If the user has none yet, the same
@@ -208,7 +209,7 @@ function CheckoutInner() {
   }, [gba, searchParams]);
 
   const subtotal = products ? gba?.cart.subtotal(currentCart, products) ?? 0 : 0;
-  const deliveryFee = DELIVERY_FEES[deliveryMethod];
+  const deliveryFee = computeDeliveryFee(deliveryMethod, subtotal);
   const total = subtotal + deliveryFee;
 
   function handleSubmit(e) {
@@ -238,10 +239,11 @@ function CheckoutInner() {
 
     const user = gba.getCurrentUser();
     if (!user) {
-      window.alert("Your session has expired — please sign in again.");
+      setOrderError("Your session has expired — please sign in again.");
       return;
     }
 
+    setOrderError("");
     setIsSubmitting(true);
 
     const delivery = deliveryMethod;
@@ -338,7 +340,7 @@ function CheckoutInner() {
       })
       .catch((err) => {
         setIsSubmitting(false);
-        window.alert(err.message || "We could not place your order — please check your connection and try again.");
+        setOrderError(err.message || "We could not place your order — please check your connection and try again.");
       });
   }
 
@@ -661,6 +663,11 @@ function CheckoutInner() {
                   <button className="submit-btn" data-ripple="" type="submit" disabled={isSubmitting || !products || !cartLoaded}>
                     {isSubmitting ? "Placing Order…" : !products || !cartLoaded ? "Loading…" : "Place Order"}
                   </button>
+                  {orderError && (
+                    <div className="status-note status-note-error" style={{ marginTop: 14 }}>
+                      {orderError} Your cart has not been changed — please try again.
+                    </div>
+                  )}
                   <div className="submit-sub">By placing your order you agree to our Terms &amp; Conditions.</div>
                 </form>
 

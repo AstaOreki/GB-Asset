@@ -168,25 +168,35 @@ export default function ProfilePage() {
       .catch(() => setAddrSaving(false));
   }
 
+  // Shared themed confirm modal — matches the site instead of the browser's
+  // native confirm() popup. Holds { message, confirmLabel, onConfirm } for
+  // whichever action is currently asking for confirmation (sign-out,
+  // address removal); null when no dialog is open.
+  const [confirmDialog, setConfirmDialog] = useState(null);
+
   function handleRemoveAddress(id) {
     if (!gba) return;
-    if (!window.confirm("Remove this saved address?")) return;
-    gba.profile.addresses.remove(id).then(loadAddresses);
+    setConfirmDialog({
+      message: "Remove this saved address?",
+      confirmLabel: "Remove",
+      onConfirm: () => {
+        setConfirmDialog(null);
+        gba.profile.addresses.remove(id).then(loadAddresses);
+      },
+    });
   }
-
-  // ---- sign out (themed confirm modal, matches the site instead of the
-  // browser's native confirm() popup) ----
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   function handleSignOut() {
     if (!gba) return;
-    setShowLogoutConfirm(true);
-  }
-
-  function confirmSignOut() {
-    setShowLogoutConfirm(false);
-    gba.logout().then(() => {
-      window.location.href = "/";
+    setConfirmDialog({
+      message: "Are you sure you want to log out?",
+      confirmLabel: "Log Out",
+      onConfirm: () => {
+        setConfirmDialog(null);
+        gba.logout().then(() => {
+          window.location.href = "/";
+        });
+      },
     });
   }
 
@@ -401,17 +411,17 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {showLogoutConfirm && (
-        <div className="confirm-backdrop" onClick={() => setShowLogoutConfirm(false)}>
+      {confirmDialog && (
+        <div className="confirm-backdrop" onClick={() => setConfirmDialog(null)}>
           <div className="panel confirm-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Are you sure?</h3>
-            <p>Are you sure you want to log out?</p>
+            <p>{confirmDialog.message}</p>
             <div className="confirm-modal-actions">
-              <button className="address-cancel" type="button" onClick={() => setShowLogoutConfirm(false)}>
+              <button className="address-cancel" type="button" onClick={() => setConfirmDialog(null)}>
                 Cancel
               </button>
-              <button className="submit-btn small" data-ripple="" type="button" onClick={confirmSignOut}>
-                Log Out
+              <button className="submit-btn small" data-ripple="" type="button" onClick={confirmDialog.onConfirm}>
+                {confirmDialog.confirmLabel}
               </button>
             </div>
           </div>

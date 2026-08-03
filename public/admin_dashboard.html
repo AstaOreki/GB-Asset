@@ -665,8 +665,8 @@ tailwind.config = {
 <p class="font-body-sm text-body-sm text-gray-muted text-center">No announcements published yet.</p>
 </div>
 <div class="mt-12 flex justify-center gap-12">
-<div class="text-center"><p class="font-display-lg text-headline-sm text-ivory">4.8B</p><p class="font-ui-data text-ui-data text-gray-muted uppercase">Assets Managed</p></div>
-<div class="text-center"><p class="font-display-lg text-headline-sm text-ivory">24/7</p><p class="font-ui-data text-ui-data text-gray-muted uppercase">Market Access</p></div>
+<div class="text-center"><p class="font-display-lg text-headline-sm text-ivory">999.9</p><p class="font-ui-data text-ui-data text-gray-muted uppercase">Fine Gold Purity</p></div>
+<div class="text-center"><p class="font-display-lg text-headline-sm text-ivory">100%</p><p class="font-ui-data text-ui-data text-gray-muted uppercase">Authentic &amp; Certified</p></div>
 </div>
 </div>
 </div>
@@ -699,6 +699,18 @@ tailwind.config = {
 <div class="flex justify-end gap-3">
 <button class="px-5 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface font-nav-link text-nav-link uppercase transition-colors" id="confirm-modal-cancel" type="button">Cancel</button>
 <button class="px-5 py-2.5 rounded-lg bg-error-container text-on-error-container font-nav-link text-nav-link uppercase font-bold hover:brightness-110 transition-all" id="confirm-modal-confirm" type="button">Delete</button>
+</div>
+</div>
+</div>
+
+<!-- Shared single-field text-input modal (replaces window.prompt()) -->
+<div class="hidden fixed inset-0 bg-black/70 z-[200] items-center justify-center p-6" id="prompt-modal-backdrop">
+<div class="glass-panel rounded-lg p-8 max-w-sm w-full">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2" id="prompt-modal-title">Are you sure?</h3>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-3 outline-none mb-6" id="prompt-modal-input" type="text"/>
+<div class="flex justify-end gap-3">
+<button class="px-5 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface font-nav-link text-nav-link uppercase transition-colors" id="prompt-modal-cancel" type="button">Cancel</button>
+<button class="px-5 py-2.5 rounded-lg bg-gold-deep text-charcoal shine-effect font-nav-link text-nav-link uppercase font-bold transition-all" id="prompt-modal-confirm" type="button">Save</button>
 </div>
 </div>
 </div>
@@ -768,6 +780,39 @@ tailwind.config = {
         confirmBtn.addEventListener('click', onConfirmClick);
         cancelBtn.addEventListener('click', onCancelClick);
         backdrop.addEventListener('click', onBackdropClick);
+    }
+
+    // Themed replacement for window.prompt() — same show/cleanup pattern as
+    // confirmAction() above. onConfirm receives the trimmed input value;
+    // never called if the dialog is cancelled or dismissed.
+    function promptAction(title, defaultValue, onConfirm) {
+        const backdrop = document.getElementById('prompt-modal-backdrop');
+        const titleEl = document.getElementById('prompt-modal-title');
+        const input = document.getElementById('prompt-modal-input');
+        const confirmBtn = document.getElementById('prompt-modal-confirm');
+        const cancelBtn = document.getElementById('prompt-modal-cancel');
+        titleEl.textContent = title;
+        input.value = defaultValue || '';
+        backdrop.classList.remove('hidden');
+        backdrop.classList.add('flex');
+        input.focus();
+        input.select();
+        function cleanup() {
+            backdrop.classList.add('hidden');
+            backdrop.classList.remove('flex');
+            confirmBtn.removeEventListener('click', onConfirmClick);
+            cancelBtn.removeEventListener('click', onCancelClick);
+            backdrop.removeEventListener('click', onBackdropClick);
+            input.removeEventListener('keydown', onKeydown);
+        }
+        function onConfirmClick() { const v = input.value.trim(); cleanup(); onConfirm(v); }
+        function onCancelClick() { cleanup(); }
+        function onBackdropClick(e) { if (e.target === backdrop) cleanup(); }
+        function onKeydown(e) { if (e.key === 'Enter') onConfirmClick(); else if (e.key === 'Escape') onCancelClick(); }
+        confirmBtn.addEventListener('click', onConfirmClick);
+        cancelBtn.addEventListener('click', onCancelClick);
+        backdrop.addEventListener('click', onBackdropClick);
+        input.addEventListener('keydown', onKeydown);
     }
 
     function escapeHtml(str) {
@@ -1266,15 +1311,15 @@ tailwind.config = {
             addLog(adminActor, 'Lead Marked Contacted', c.name, 'SUCCESS');
             showToast('Marked as contacted.');
         }));
-        document.querySelectorAll('[data-assign]').forEach(btn => btn.addEventListener('click', async () => {
+        document.querySelectorAll('[data-assign]').forEach(btn => btn.addEventListener('click', () => {
             const docId = btn.getAttribute('data-assign');
             const c = state.consultations.find(x => x.docId === docId);
             if (!c) return;
-            const name = prompt('Assign this lead to:', c.assignedTo || '');
-            if (name === null) return;
-            await GBA.consultations.update(docId, { assignedTo: name.trim() });
-            addLog(adminActor, 'Lead Assigned', `${c.name} → ${name.trim() || 'Unassigned'}`, 'SUCCESS');
-            showToast('Lead assignment updated.');
+            promptAction('Assign this lead to:', c.assignedTo || '', async (name) => {
+                await GBA.consultations.update(docId, { assignedTo: name });
+                addLog(adminActor, 'Lead Assigned', `${c.name} → ${name || 'Unassigned'}`, 'SUCCESS');
+                showToast('Lead assignment updated.');
+            });
         }));
         document.querySelectorAll('[data-delete-lead]').forEach(btn => btn.addEventListener('click', () => {
             const docId = btn.getAttribute('data-delete-lead');
