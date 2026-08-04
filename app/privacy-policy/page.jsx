@@ -338,7 +338,7 @@ export default function PrivacyPolicyPage() {
                   <br />
                   10200 George Town, Pulau Pinang.
                   <br />
-                  Tel: +60 12-345 6789 (WhatsApp &amp; Telefon)
+                  Tel: +60 12-240 0600 (WhatsApp &amp; Telefon)
                 </p>
               </div>
 

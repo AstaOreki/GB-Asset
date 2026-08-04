@@ -668,6 +668,7 @@ body::after {
   pointer-events: none;
 }
 .store-grid { position: relative; z-index: 1; display: grid; grid-template-columns: .9fr 1.1fr; gap: 60px; align-items: center; }
+.store-grid + .store-grid { margin-top: 90px; }
 .store-info .eyebrow { color: var(--gold); }
 .store-info h2 { margin-top: 14px; font-size: clamp(28px,3.2vw,40px); color: var(--ivory); }
 .store-info p { margin-top: 18px; color: var(--gray-soft); font-size: 15px; font-weight: 300; line-height: 1.75; }

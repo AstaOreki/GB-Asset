@@ -1005,7 +1005,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <b>Contact</b>
-                  <span>+60 12-345 6789</span>
+                  <span>+60 12-240 0600</span>
                 </div>
               </div>
             </div>
@@ -1026,6 +1026,72 @@ export default function HomePage() {
               referrerPolicy="no-referrer-when-downgrade"
               src="https://www.google.com/maps?q=S.+Ameer+Jewelers,5.416198,100.337665&z=17&output=embed"
               title="S. Ameer Jewelers store location map"
+            ></iframe>
+          </div>
+        </div>
+
+        <div className="wrap store-grid">
+          <div className="store-info reveal">
+            <div className="eyebrow">Now In KL</div>
+            <h2>Kuala Lumpur Showroom</h2>
+            <p>
+              Our newest location brings the same trusted bullion expertise to the heart of the city, right by
+              KLCC.
+            </p>
+            <div className="store-details">
+              <div className="store-detail">
+                <div className="ic">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12Z"></path>
+                    <circle cx="12" cy="9" r="2.5"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <b>GB Asset</b>
+                  <span>Binjai 8 Premium Soho, Unit 8, Lorong Binjai, KLCC, Kuala Lumpur</span>
+                </div>
+              </div>
+              <div className="store-detail">
+                <div className="ic">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 7v5l3.5 2"></path>
+                  </svg>
+                </div>
+                <div>
+                  <b>Opening Hours</b>
+                  <span>Mon – Sat : 9:00 AM – 6:00 PM</span>
+                </div>
+              </div>
+              <div className="store-detail">
+                <div className="ic">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M6.3 17.7 4.5 21.5l3.9-1.7A8.5 8.5 0 1 0 5.2 13a8.4 8.4 0 0 0 1.1 4.7Z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <b>Contact</b>
+                  <span>+60 12-240 0600</span>
+                </div>
+              </div>
+            </div>
+            <a
+              className="btn btn-primary store-directions-btn"
+              data-ripple=""
+              href="https://www.google.com/maps/search/?api=1&query=Binjai+8+Premium+Soho,3.15868,101.71742"
+              rel="noopener"
+              target="_blank"
+            >
+              Get Directions
+            </a>
+          </div>
+          <div className="store-map reveal">
+            <iframe
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              src="https://www.google.com/maps?q=Binjai+8+Premium+Soho,3.15868,101.71742&z=17&output=embed"
+              title="GB Asset Kuala Lumpur showroom location map"
             ></iframe>
           </div>
         </div>

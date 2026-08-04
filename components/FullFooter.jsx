@@ -89,7 +89,7 @@ export default function FullFooter() {
         <div>
           <h4>Contact Us</h4>
           <div className="contact-line">
-            <span className="ic">☎</span> +60 12-345 6789
+            <span className="ic">☎</span> +60 12-240 0600
           </div>
           <div className="contact-line">
             <span className="ic">✉</span> sales@gbaasset.com
