@@ -967,11 +967,12 @@ export default function HomePage() {
         <div className="wrap store-grid">
           <div className="store-info reveal">
             <div className="eyebrow">Visit Us</div>
-            <h2>Our Store Location</h2>
+            <h2>Our Store Locations</h2>
             <p>
               Step into our showroom to view our bullion collection in person, get an in-store valuation, or speak
               directly with our precious metals specialists.
             </p>
+            <div className="eyebrow location-tag">Penang</div>
             <div className="store-details">
               <div className="store-detail">
                 <div className="ic">
@@ -1032,12 +1033,7 @@ export default function HomePage() {
 
         <div className="wrap store-grid">
           <div className="store-info reveal">
-            <div className="eyebrow">Now In KL</div>
-            <h2>Kuala Lumpur Showroom</h2>
-            <p>
-              Our newest location brings the same trusted bullion expertise to the heart of the city, right by
-              KLCC.
-            </p>
+            <div className="eyebrow location-tag">Kuala Lumpur</div>
             <div className="store-details">
               <div className="store-detail">
                 <div className="ic">
