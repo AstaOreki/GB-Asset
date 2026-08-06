@@ -12,7 +12,7 @@ export const metadata = {
       "GB Asset helps you buy and sell gold bullion with real-time pricing and wholesaler rates — so trading gold stays simple and transparent.",
     url: "https://gbagold.my",
     siteName: "GB Asset",
-    images: [{ url: "/image/logo.png", width: 1024, height: 1024, alt: "GB Asset" }],
+    images: [{ url: "/og-image.png", width: 512, height: 512, alt: "GB Asset" }],
     locale: "en_MY",
     type: "website",
   },
@@ -21,7 +21,10 @@ export const metadata = {
     title: "GB Asset — Malaysia's Trusted Bullion & Wholesale Gold",
     description:
       "GB Asset helps you buy and sell gold bullion with real-time pricing and wholesaler rates — so trading gold stays simple and transparent.",
-    images: ["/image/logo.png"],
+    images: ["/og-image.png"],
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
   },
 };
 
