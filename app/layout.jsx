@@ -2,9 +2,27 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata = {
-  title: "GB Asset | Malaysia's Trusted Bullion & Wholesale Gold",
+  metadataBase: new URL("https://gbagold.my"),
+  title: "GB Asset — Malaysia's Trusted Bullion & Wholesale Gold",
   description:
-    "Malaysia's trusted bullion and wholesale gold platform.",
+    "GB Asset helps you buy and sell gold bullion with real-time pricing and wholesaler rates — so trading gold stays simple and transparent.",
+  openGraph: {
+    title: "GB Asset — Malaysia's Trusted Bullion & Wholesale Gold",
+    description:
+      "GB Asset helps you buy and sell gold bullion with real-time pricing and wholesaler rates — so trading gold stays simple and transparent.",
+    url: "https://gbagold.my",
+    siteName: "GB Asset",
+    images: [{ url: "/image/logo.png", width: 1024, height: 1024, alt: "GB Asset" }],
+    locale: "en_MY",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "GB Asset — Malaysia's Trusted Bullion & Wholesale Gold",
+    description:
+      "GB Asset helps you buy and sell gold bullion with real-time pricing and wholesaler rates — so trading gold stays simple and transparent.",
+    images: ["/image/logo.png"],
+  },
 };
 
 export default function RootLayout({ children }) {
