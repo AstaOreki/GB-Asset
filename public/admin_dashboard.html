@@ -974,7 +974,7 @@ tailwind.config = {
         const r = state.latestRate;
         document.getElementById('current-sell').textContent = r ? GBA.fmtRM(r.sell) : '—';
         document.getElementById('current-buy').textContent = r ? GBA.fmtRM(r.buy) : '—';
-        document.getElementById('current-margin').textContent = r ? GBA.fmtRM(r.margin) : '—';
+        document.getElementById('current-margin').textContent = r ? GBA.fmtMarginPercent(r.sell, r.buy) : '—';
         document.getElementById('current-updated').textContent = r ? 'Updated ' + GBA.fmtDateTime(r.recordedAt) : 'No rate recorded yet.';
         document.getElementById('current-product').textContent = r ? productLabel(r) : '—';
     }
@@ -986,7 +986,7 @@ tailwind.config = {
                 <td class="px-6 py-4 text-on-surface">${productLabel(r)}</td>
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.sell)}</td>
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.buy)}</td>
-                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.margin)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtMarginPercent(r.sell, r.buy)}</td>
             </tr>`).join('') || `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-muted">${state.loaded.priceHistory ? 'No rate records yet.' : 'Loading…'}</td></tr>`;
     }
 
@@ -1007,7 +1007,7 @@ tailwind.config = {
         const buy = parseFloat(document.querySelector(`[data-buy-input="${id}"]`).value);
         const sell = parseFloat(document.querySelector(`[data-sell-input="${id}"]`).value);
         const marginEl = document.querySelector(`[data-margin-preview="${id}"]`);
-        marginEl.textContent = (sell > 0 && buy > 0) ? GBA.fmtRM(sell - buy) : '—';
+        marginEl.textContent = (sell > 0 && buy > 0) ? GBA.fmtMarginPercent(sell, buy) : '—';
     }
 
     function renderPricing() {
@@ -1027,7 +1027,7 @@ tailwind.config = {
                 <td class="px-8 py-5 text-right">
                     <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-sell-input="${id}" type="number" min="0" step="0.01" value="${Number(p.sellPrice || 0)}"/>
                 </td>
-                <td class="px-8 py-5 text-right font-body-sm text-on-surface" data-margin-preview="${id}">${GBA.fmtRM(Number(p.margin || 0))}</td>
+                <td class="px-8 py-5 text-right font-body-sm text-on-surface" data-margin-preview="${id}">${GBA.fmtMarginPercent(Number(p.sellPrice || 0), Number(p.buyPrice || 0))}</td>
                 <td class="px-8 py-5 text-right">
                     <button class="font-label-caps text-gold-light hover:text-primary transition-colors" data-save-rate="${id}">Save</button>
                 </td>

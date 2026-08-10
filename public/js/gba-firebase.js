@@ -657,6 +657,14 @@
 
   function fmtRM(n) { return "RM " + Math.round(n).toLocaleString("en-MY"); }
 
+  // Margin as % markup over the buy price (how much was added over cost),
+  // not % of sell price (gross margin) — shown everywhere margin appears
+  // instead of a flat RM amount.
+  function fmtMarginPercent(sell, buy) {
+    if (!(buy > 0)) return "—";
+    return (((sell - buy) / buy) * 100).toFixed(2) + "%";
+  }
+
   function fmtDate(ts) {
     var d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
     return d ? d.toLocaleDateString("en-MY", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -694,6 +702,7 @@
     listenProducts: listenProducts,
     updateProductRate: updateProductRate,
     fmtRM: fmtRM,
+    fmtMarginPercent: fmtMarginPercent,
     fmtDate: fmtDate,
     fmtDateTime: fmtDateTime,
     cart: {

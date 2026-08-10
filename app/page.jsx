@@ -815,7 +815,7 @@ export default function HomePage() {
                     <span data-label="Weight (g)">{row.weight ? `${row.weight}g` : "—"}</span>
                     <span data-label="Buy Gold From GBA">{gba.fmtRM(row.sell)}</span>
                     <span data-label="GBA Buys From You">{gba.fmtRM(row.buy)}</span>
-                    <span data-label="Margin">{gba.fmtRM(row.margin)}</span>
+                    <span data-label="Margin">{gba.fmtMarginPercent(row.sell, row.buy)}</span>
                   </div>
                 ))
               )}
