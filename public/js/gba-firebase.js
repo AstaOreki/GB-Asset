@@ -17,18 +17,19 @@
   // Firebase console in this build — only pricing is live-editable by admin
   // via the "products" collection, so the storefront stays wired to real data
   // without needing a full product-editor UI). Each bar carries its own
-  // buyPerGram/sellPerGram (bulk bars run a smaller per-gram margin than
-  // small ones, so this isn't just one shared rate multiplied by weight) —
-  // `price` is the derived total (sellPerGram * grams), kept as its own
-  // field since every other consumer (cart/checkout/create-order) already
-  // reads a flat per-unit price. buyPerGram defaults to sellPerGram (margin
-  // 0) here only as a placeholder until the admin enters a real buy rate.
+  // buyPrice/sellPrice as the TOTAL price for that bar (not per-gram —
+  // bulk bars carry a different premium than small ones, and this is what
+  // admins actually enter and what every other consumer, MKS PAMP's own
+  // reference table included, quotes). `price` mirrors sellPrice, kept as
+  // its own field since cart/checkout/create-order already read a flat
+  // per-unit price. buyPrice defaults to sellPrice (margin 0) here only as
+  // a placeholder until the admin enters a real buy price.
   var STATIC_PRODUCTS = {
-    "bar-1kg":  { name: "1 Kilo Gold Bar", tag: "Signature Bar",      purity: "999.9", grams: 1000, sellPerGram: 537.89, buyPerGram: 537.89, margin: 0, price: 537893, img: "image/gold_1kg.png",  w: 52 },
-    "bar-100g": { name: "100 GM Wholesale Bar",  tag: "Best Seller",        purity: "999.9", grams: 100,  sellPerGram: 538.32, buyPerGram: 538.32, margin: 0, price: 53832,  img: "image/gold_100g.png", w: 56 },
-    "bar-50g":  { name: "50 GM Gold Bar",        tag: "Popular Choice",     purity: "999.9", grams: 50,   sellPerGram: 538.58, buyPerGram: 538.58, margin: 0, price: 26929,  img: "image/gold_50g.png",  w: 50 },
-    "bar-10g":  { name: "10 GM Gift Bar",        tag: "Starter Collection", purity: "999.9", grams: 10,   sellPerGram: 557.90, buyPerGram: 557.90, margin: 0, price: 5579,   img: "image/gold_10g.png",  w: 40 },
-    "bar-1g":   { name: "1 GM Gold Bar",         tag: "Entry Collection",   purity: "999.9", grams: 1,    sellPerGram: 559.00, buyPerGram: 559.00, margin: 0, price: 559,    img: "image/gold_1g.png",   w: 24 }
+    "bar-1kg":  { name: "1 Kilo Gold Bar", tag: "Signature Bar",      purity: "999.9", grams: 1000, sellPrice: 537893, buyPrice: 537893, margin: 0, price: 537893, img: "image/gold_1kg.png",  w: 52 },
+    "bar-100g": { name: "100 GM Wholesale Bar",  tag: "Best Seller",        purity: "999.9", grams: 100,  sellPrice: 53832,  buyPrice: 53832,  margin: 0, price: 53832,  img: "image/gold_100g.png", w: 56 },
+    "bar-50g":  { name: "50 GM Gold Bar",        tag: "Popular Choice",     purity: "999.9", grams: 50,   sellPrice: 26929,  buyPrice: 26929,  margin: 0, price: 26929,  img: "image/gold_50g.png",  w: 50 },
+    "bar-10g":  { name: "10 GM Gift Bar",        tag: "Starter Collection", purity: "999.9", grams: 10,   sellPrice: 5579,   buyPrice: 5579,   margin: 0, price: 5579,   img: "image/gold_10g.png",  w: 40 },
+    "bar-1g":   { name: "1 GM Gold Bar",         tag: "Entry Collection",   purity: "999.9", grams: 1,    sellPrice: 559,    buyPrice: 559,    margin: 0, price: 559,    img: "image/gold_1g.png",   w: 24 }
   };
 
   var currentUser = null;
@@ -263,18 +264,16 @@
   }
 
   // ------------------------------------------------------------- products
-  // A Firestore products/{id} doc may only carry buyPerGram/sellPerGram
+  // A Firestore products/{id} doc may only carry buyPrice/sellPrice
   // (written by updateProductRate below) — derive price/margin from those
   // so every reader sees consistent numbers without each caller
-  // re-deriving it. Docs saved before this per-gram model shipped only have
-  // a flat `price` with no per-gram rate; those are left as-is until the
-  // admin re-saves that bar from the new form.
+  // re-deriving it. Both are the bar's TOTAL price, not per-gram.
   function deriveProductPricing(product) {
-    if (typeof product.sellPerGram === "number" && typeof product.grams === "number") {
-      product.price = Math.round(product.sellPerGram * product.grams * 100) / 100;
+    if (typeof product.sellPrice === "number") {
+      product.price = product.sellPrice;
     }
-    if (typeof product.sellPerGram === "number" && typeof product.buyPerGram === "number") {
-      product.margin = Math.round((product.sellPerGram - product.buyPerGram) * 100) / 100;
+    if (typeof product.sellPrice === "number" && typeof product.buyPrice === "number") {
+      product.margin = Math.round((product.sellPrice - product.buyPrice) * 100) / 100;
     }
     return product;
   }
@@ -325,20 +324,23 @@
     }, function () { cb(STATIC_PRODUCTS); });
   }
 
-  function updateProductRate(id, buyPerGram, sellPerGram) {
+  // buyPrice/sellPrice are the bar's TOTAL price (what the admin actually
+  // types, matching every other price shown on the site) — not per-gram.
+  function updateProductRate(id, buyPrice, sellPrice) {
     var grams = STATIC_PRODUCTS[id] && STATIC_PRODUCTS[id].grams;
     var name = STATIC_PRODUCTS[id] && STATIC_PRODUCTS[id].name;
-    var margin = Math.round((sellPerGram - buyPerGram) * 100) / 100;
-    var price = Math.round(sellPerGram * grams * 100) / 100;
+    var margin = Math.round((sellPrice - buyPrice) * 100) / 100;
     return db.collection("products").doc(id).set({
-      buyPerGram: buyPerGram, sellPerGram: sellPerGram, margin: margin, price: price,
+      buyPrice: buyPrice, sellPrice: sellPrice, margin: margin, price: sellPrice,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).then(function () {
       productsCache = null;
       // Price Today has no separate manual entry — it's a derived record
-      // of whichever bar was just saved (its own per-gram Buy/Sell/weight),
-      // so admins never enter "today's price" twice and each weight's rate
-      // is tracked on its own instead of blended into one average.
+      // of whichever bar was just saved, so admins never enter "today's
+      // price" twice. Price Today itself tracks a per-gram rate, so derive
+      // that here (total ÷ weight) rather than asking the admin to.
+      var sellPerGram = grams ? Math.round((sellPrice / grams) * 100) / 100 : sellPrice;
+      var buyPerGram = grams ? Math.round((buyPrice / grams) * 100) / 100 : buyPrice;
       return upsertPriceRecord(id, sellPerGram, buyPerGram, grams, name);
     });
   }

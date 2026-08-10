@@ -1007,7 +1007,7 @@ tailwind.config = {
         const buy = parseFloat(document.querySelector(`[data-buy-input="${id}"]`).value);
         const sell = parseFloat(document.querySelector(`[data-sell-input="${id}"]`).value);
         const marginEl = document.querySelector(`[data-margin-preview="${id}"]`);
-        marginEl.textContent = (sell > 0 && buy > 0) ? GBA.fmtRM(sell - buy) + ' / g' : '—';
+        marginEl.textContent = (sell > 0 && buy > 0) ? GBA.fmtRM(sell - buy) : '—';
     }
 
     function renderPricing() {
@@ -1022,12 +1022,12 @@ tailwind.config = {
                     <div class="text-gray-muted text-[12px]">${p.grams}g</div>
                 </td>
                 <td class="px-8 py-5 text-right">
-                    <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-buy-input="${id}" type="number" min="0" step="0.01" value="${Number(p.buyPerGram || 0)}"/>
+                    <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-buy-input="${id}" type="number" min="0" step="0.01" value="${Number(p.buyPrice || 0)}"/>
                 </td>
                 <td class="px-8 py-5 text-right">
-                    <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-sell-input="${id}" type="number" min="0" step="0.01" value="${Number(p.sellPerGram || 0)}"/>
+                    <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-sell-input="${id}" type="number" min="0" step="0.01" value="${Number(p.sellPrice || 0)}"/>
                 </td>
-                <td class="px-8 py-5 text-right font-body-sm text-on-surface" data-margin-preview="${id}">${GBA.fmtRM(Number(p.margin || 0))} / g</td>
+                <td class="px-8 py-5 text-right font-body-sm text-on-surface" data-margin-preview="${id}">${GBA.fmtRM(Number(p.margin || 0))}</td>
                 <td class="px-8 py-5 text-right">
                     <button class="font-label-caps text-gold-light hover:text-primary transition-colors" data-save-rate="${id}">Save</button>
                 </td>
@@ -1048,7 +1048,7 @@ tailwind.config = {
                 btn.disabled = true;
                 try {
                     await GBA.updateProductRate(id, buy, sell);
-                    addLog(adminActor, 'Product Rate Updated', `${products[id].name} → Buy ${GBA.fmtRM(buy)}/g, Sell ${GBA.fmtRM(sell)}/g`, 'SUCCESS');
+                    addLog(adminActor, 'Product Price Updated', `${products[id].name} → Buy ${GBA.fmtRM(buy)}, Sell ${GBA.fmtRM(sell)}`, 'SUCCESS');
                     showToast('Rate updated.');
                     loadProducts();
                 } catch (err) {
