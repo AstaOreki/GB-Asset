@@ -60,40 +60,39 @@ export default function HomePage() {
 
   // -------- PRICE TODAY (gold rate history, from Firestore "priceHistory") --------
   const [activeRange, setActiveRange] = useState("1d");
-  const [historyRows, setHistoryRows] = useState(null); // null = loading, [] = empty
-  const [historyError, setHistoryError] = useState(false);
-  const [todayRows, setTodayRows] = useState(null); // always "1d" — feeds the stats row
+  // The table always shows exactly one row per bar (5 rows) — whichever
+  // price is current, carried forward from its last update — not a growing
+  // log, so it's driven by the carry-forward feed regardless of which tab
+  // is selected. Same feed drives the stats row below.
+  const [currentRows, setCurrentRows] = useState(null); // null = loading, [] = empty
+  // Only the trend chart varies by tab — a real history of what changed
+  // over the selected period.
+  const [chartRows, setChartRows] = useState(null);
+  const [chartError, setChartError] = useState(false);
 
   useEffect(() => {
     if (!gba) return;
-    // Don't reset historyRows to null here — switching tabs keeps the
-    // previous period's rows on screen (per dataviz refetch guidance: hold
+    return gba.priceHistory.listenCurrent((rows) => setCurrentRows(rows));
+  }, [gba]);
+
+  useEffect(() => {
+    if (!gba) return;
+    // Don't reset chartRows to null here — switching tabs keeps the
+    // previous period's line on screen (per dataviz refetch guidance: hold
     // the last frame, no flash back to a loading state) until the new
     // range's snapshot arrives.
-    setHistoryError(false);
-    // "1 Day" shows every bar's current price, carrying forward whichever
-    // ones weren't touched today — not just today's literal saves — so it
-    // always reflects all 5 bars, matching how Today's High/Low/Last
-    // Update below are computed. Longer ranges show actual historical
-    // per-day-per-bar entries instead (no carry-forward gap-filling).
-    if (activeRange === "1d") {
-      return gba.priceHistory.listenCurrent((rows) => setHistoryRows(rows));
-    }
+    setChartError(false);
     return gba.priceHistory.listen(
       activeRange,
-      (rows) => setHistoryRows(rows),
+      (rows) => setChartRows(rows),
       () => {
-        setHistoryError(true);
-        setHistoryRows([]);
+        setChartError(true);
+        setChartRows([]);
       }
     );
   }, [gba, activeRange]);
 
-  useEffect(() => {
-    if (!gba) return;
-    return gba.priceHistory.listenCurrent(setTodayRows);
-  }, [gba]);
-
+  const todayRows = currentRows;
   const todayHigh = todayRows && todayRows.length ? Math.max(...todayRows.map((r) => r.sell)) : null;
   const todayLow = todayRows && todayRows.length ? Math.min(...todayRows.map((r) => r.sell)) : null;
   const lastUpdate = todayRows && todayRows.length ? todayRows[0].recordedAt : null;
@@ -786,8 +785,8 @@ export default function HomePage() {
             ))}
           </div>
 
-          {gba && !historyError && historyRows && historyRows.length > 0 && (
-            <PriceChart rows={historyRows} rangeKey={activeRange} fmtRM={gba.fmtRM} />
+          {gba && !chartError && chartRows && chartRows.length > 0 && (
+            <PriceChart rows={chartRows} rangeKey={activeRange} fmtRM={gba.fmtRM} />
           )}
 
           <h3 className="price-table-title reveal">Daily Price</h3>
@@ -800,23 +799,18 @@ export default function HomePage() {
               <span>Margin (RM/g)</span>
             </div>
             <div className="price-table-body">
-              {historyError ? (
-                <div className="price-table-empty is-error">
-                  <h3>Something went wrong</h3>
-                  <p>We couldn&apos;t load rate history right now. Please try again shortly.</p>
-                </div>
-              ) : historyRows === null ? (
+              {currentRows === null ? (
                 <div className="price-table-empty">
                   <h3>Loading rates…</h3>
                 </div>
-              ) : historyRows.length === 0 ? (
+              ) : currentRows.length === 0 ? (
                 <div className="price-table-empty">
-                  <h3>No rate records for this period</h3>
+                  <h3>No rates set yet</h3>
                   <p>Daily gold rates are updated by our team — check back soon.</p>
                 </div>
               ) : (
-                historyRows.map((row) => (
-                  <div className="price-row" key={row.docId}>
+                [...currentRows].sort((a, b) => (b.weight || 0) - (a.weight || 0)).map((row) => (
+                  <div className="price-row" key={row.productId || row.docId}>
                     <span data-label="Date">{gba.fmtDateTime(row.recordedAt)}</span>
                     <span data-label="Weight (g)">{row.weight ? `${row.weight}g` : "—"}</span>
                     <span data-label="Buy Gold From GBA (RM/g)">{gba.fmtRM(row.sell)}</span>
