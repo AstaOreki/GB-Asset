@@ -84,20 +84,22 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------- priceHistory
-    // Public storefront reads the full immutable rate history for "Price
-    // Today". Only admins may append a new record via the dashboard; past
-    // records can never be edited or deleted — this is what makes the
-    // history trustworthy.
+    // Public storefront reads the per-bar daily rate history for "Price
+    // Today" — one doc per bar per calendar day (id "{productId}_{date}"),
+    // upserted throughout the day as the admin edits it, so a past day's
+    // doc is only ever touched on the day it represents. Only admins may
+    // write; nothing can ever be deleted, so day-by-day history stays
+    // intact for the 1W/1M/6M/1Y filters.
     match /priceHistory/{recordId} {
       allow read: if true;
-      allow create: if isAdmin() &&
-                       request.resource.data.keys().hasOnly(['sell', 'buy', 'margin', 'weight', 'productName', 'recordedAt']) &&
+      allow create, update: if isAdmin() &&
+                       request.resource.data.keys().hasOnly(['sell', 'buy', 'margin', 'weight', 'productName', 'productId', 'date', 'recordedAt']) &&
                        request.resource.data.sell is number && request.resource.data.sell > 0 &&
                        request.resource.data.buy is number && request.resource.data.buy > 0 &&
                        request.resource.data.weight is number && request.resource.data.weight > 0 &&
                        request.resource.data.margin == request.resource.data.sell - request.resource.data.buy &&
                        request.resource.data.recordedAt == request.time;
-      allow update, delete: if false;
+      allow delete: if false;
     }
 
     // ----------------------------------------------------------- settings

@@ -339,7 +339,7 @@
       // of whichever bar was just saved (its own per-gram Buy/Sell/weight),
       // so admins never enter "today's price" twice and each weight's rate
       // is tracked on its own instead of blended into one average.
-      return addPriceRecord(sellPerGram, buyPerGram, grams, name);
+      return upsertPriceRecord(id, sellPerGram, buyPerGram, grams, name);
     });
   }
 
@@ -556,12 +556,25 @@
     return d;
   }
 
-  function addPriceRecord(sell, buy, weight, productName) {
+  function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+  function dateKeyFor(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+
+  // One doc per bar per calendar day (id "{productId}_{YYYY-MM-DD}"),
+  // upserted — saving the same bar again the same day overwrites that
+  // day's entry instead of piling up duplicate rows ("a fixed price the
+  // admin can change anytime", not a log entry per click). A new calendar
+  // day gets its own doc, which is what preserves day-by-day history for
+  // the 1W/1M/6M/1Y filters and what "resets daily" means here: nothing
+  // is deleted, today's edits just land in today's doc.
+  function upsertPriceRecord(productId, sell, buy, weight, productName) {
     var margin = Math.round((sell - buy) * 100) / 100;
-    return db.collection("priceHistory").add({
+    var dateKey = dateKeyFor(new Date());
+    var docId = productId + "_" + dateKey;
+    return db.collection("priceHistory").doc(docId).set({
       sell: sell, buy: buy, margin: margin, weight: weight, productName: productName || "",
+      productId: productId, date: dateKey,
       recordedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function (ref) { return ref.id; });
+    }, { merge: true }).then(function () { return docId; });
   }
 
   // cb(records) on every update, newest first. errCb (if given) is called
@@ -580,12 +593,36 @@
       }, function (err) { if (errCb) errCb(err); else cb([]); });
   }
 
-  // cb(record|null) — the single latest record, i.e. today's current rate.
+  // cb(record|null) — whichever bar was most recently saved, and when.
   function listenLatestPriceRecord(cb) {
     return db.collection("priceHistory").orderBy("recordedAt", "desc").limit(1)
       .onSnapshot(function (snap) {
         cb(snap.empty ? null : Object.assign({ docId: snap.docs[0].id }, snap.docs[0].data({ serverTimestamps: "estimate" })));
       }, function () { cb(null); });
+  }
+
+  // cb(records) — the current price for every bar, carrying forward each
+  // bar's most recent entry even if it wasn't touched today (so "today"
+  // always shows all 5 bars, not just whichever ones changed today).
+  // Reads the most recent 50 records and keeps the first (newest) one seen
+  // per productId — with one upsert per bar per day, 50 comfortably covers
+  // several weeks even if a bar goes untouched for a while. Legacy
+  // records from before per-bar tracking have no productId and are
+  // skipped rather than wrongly claiming a "current" slot.
+  function listenCurrentRates(cb) {
+    return db.collection("priceHistory").orderBy("recordedAt", "desc").limit(50)
+      .onSnapshot(function (snap) {
+        var seen = {};
+        var out = [];
+        snap.forEach(function (doc) {
+          var data = doc.data({ serverTimestamps: "estimate" });
+          if (data.productId && !seen[data.productId]) {
+            seen[data.productId] = true;
+            out.push(Object.assign({ docId: doc.id }, data));
+          }
+        });
+        cb(out);
+      }, function () { cb([]); });
   }
 
   // ----------------------------------------------------------------- logs
@@ -686,9 +723,9 @@
       remove: deleteAnnouncement
     },
     priceHistory: {
-      add: addPriceRecord,
       listen: listenPriceHistory,
-      listenLatest: listenLatestPriceRecord
+      listenLatest: listenLatestPriceRecord,
+      listenCurrent: listenCurrentRates
     },
     logs: { add: addLog, listen: listenLogs },
     settings: { listen: listenSettings, update: updateSettings }

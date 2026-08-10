@@ -71,6 +71,14 @@ export default function HomePage() {
     // the last frame, no flash back to a loading state) until the new
     // range's snapshot arrives.
     setHistoryError(false);
+    // "1 Day" shows every bar's current price, carrying forward whichever
+    // ones weren't touched today — not just today's literal saves — so it
+    // always reflects all 5 bars, matching how Today's High/Low/Last
+    // Update below are computed. Longer ranges show actual historical
+    // per-day-per-bar entries instead (no carry-forward gap-filling).
+    if (activeRange === "1d") {
+      return gba.priceHistory.listenCurrent((rows) => setHistoryRows(rows));
+    }
     return gba.priceHistory.listen(
       activeRange,
       (rows) => setHistoryRows(rows),
@@ -83,7 +91,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!gba) return;
-    return gba.priceHistory.listen("1d", setTodayRows);
+    return gba.priceHistory.listenCurrent(setTodayRows);
   }, [gba]);
 
   const todayHigh = todayRows && todayRows.length ? Math.max(...todayRows.map((r) => r.sell)) : null;
