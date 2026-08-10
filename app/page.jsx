@@ -43,11 +43,12 @@ export default function HomePage() {
   useRevealOnScroll();
   useButtonRipple();
 
-  // -------- LIVE PRICES (reads admin-set prices from Firestore "products") --------
+  // -------- LIVE PRICES (realtime from Firestore "products", so an admin's --------
+  // -------- per-gram rate update shows up here without a page refresh) --------
   const [prices, setPrices] = useState({});
   useEffect(() => {
     if (!gba) return;
-    gba.getProducts().then((products) => {
+    return gba.listenProducts((products) => {
       const next = {};
       PRICE_CARDS.forEach((card) => {
         const p = products[card.id];

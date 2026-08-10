@@ -14,15 +14,21 @@
   var CART_KEY = "gba_cart_v1"; // same key the pages already used for guests
 
   // Static product catalogue (names/images/weights never change from the
-  // Firebase console in this build — only price is live-editable by admin
+  // Firebase console in this build — only pricing is live-editable by admin
   // via the "products" collection, so the storefront stays wired to real data
-  // without needing a full product-editor UI).
+  // without needing a full product-editor UI). Each bar carries its own
+  // buyPerGram/sellPerGram (bulk bars run a smaller per-gram margin than
+  // small ones, so this isn't just one shared rate multiplied by weight) —
+  // `price` is the derived total (sellPerGram * grams), kept as its own
+  // field since every other consumer (cart/checkout/create-order) already
+  // reads a flat per-unit price. buyPerGram defaults to sellPerGram (margin
+  // 0) here only as a placeholder until the admin enters a real buy rate.
   var STATIC_PRODUCTS = {
-    "bar-1kg":  { name: "1 Kilo Gold Bar", tag: "Signature Bar",      purity: "999.9", price: 537893, img: "image/gold_1kg.png",  w: 52 },
-    "bar-100g": { name: "100 GM Wholesale Bar",  tag: "Best Seller",        purity: "999.9", price: 53832,  img: "image/gold_100g.png", w: 56 },
-    "bar-50g":  { name: "50 GM Gold Bar",        tag: "Popular Choice",     purity: "999.9", price: 26929,  img: "image/gold_50g.png",  w: 50 },
-    "bar-10g":  { name: "10 GM Gift Bar",        tag: "Starter Collection", purity: "999.9", price: 5579,   img: "image/gold_10g.png",  w: 40 },
-    "bar-1g":   { name: "1 GM Gold Bar",         tag: "Entry Collection",   purity: "999.9", price: 559,    img: "image/gold_1g.png",   w: 24 }
+    "bar-1kg":  { name: "1 Kilo Gold Bar", tag: "Signature Bar",      purity: "999.9", grams: 1000, sellPerGram: 537.89, buyPerGram: 537.89, margin: 0, price: 537893, img: "image/gold_1kg.png",  w: 52 },
+    "bar-100g": { name: "100 GM Wholesale Bar",  tag: "Best Seller",        purity: "999.9", grams: 100,  sellPerGram: 538.32, buyPerGram: 538.32, margin: 0, price: 53832,  img: "image/gold_100g.png", w: 56 },
+    "bar-50g":  { name: "50 GM Gold Bar",        tag: "Popular Choice",     purity: "999.9", grams: 50,   sellPerGram: 538.58, buyPerGram: 538.58, margin: 0, price: 26929,  img: "image/gold_50g.png",  w: 50 },
+    "bar-10g":  { name: "10 GM Gift Bar",        tag: "Starter Collection", purity: "999.9", grams: 10,   sellPerGram: 557.90, buyPerGram: 557.90, margin: 0, price: 5579,   img: "image/gold_10g.png",  w: 40 },
+    "bar-1g":   { name: "1 GM Gold Bar",         tag: "Entry Collection",   purity: "999.9", grams: 1,    sellPerGram: 559.00, buyPerGram: 559.00, margin: 0, price: 559,    img: "image/gold_1g.png",   w: 24 }
   };
 
   var currentUser = null;
@@ -257,16 +263,37 @@
   }
 
   // ------------------------------------------------------------- products
+  // A Firestore products/{id} doc may only carry buyPerGram/sellPerGram
+  // (written by updateProductRate below) — derive price/margin from those
+  // so every reader sees consistent numbers without each caller
+  // re-deriving it. Docs saved before this per-gram model shipped only have
+  // a flat `price` with no per-gram rate; those are left as-is until the
+  // admin re-saves that bar from the new form.
+  function deriveProductPricing(product) {
+    if (typeof product.sellPerGram === "number" && typeof product.grams === "number") {
+      product.price = Math.round(product.sellPerGram * product.grams * 100) / 100;
+    }
+    if (typeof product.sellPerGram === "number" && typeof product.buyPerGram === "number") {
+      product.margin = Math.round((product.sellPerGram - product.buyPerGram) * 100) / 100;
+    }
+    return product;
+  }
+
+  function mergeProducts(snap) {
+    var merged = {};
+    Object.keys(STATIC_PRODUCTS).forEach(function (id) {
+      merged[id] = Object.assign({}, STATIC_PRODUCTS[id]);
+    });
+    snap.forEach(function (doc) {
+      if (merged[doc.id]) deriveProductPricing(Object.assign(merged[doc.id], doc.data()));
+    });
+    return merged;
+  }
+
   function getProducts() {
     if (productsCache) return Promise.resolve(productsCache);
     var fetchPromise = db.collection("products").get().then(function (snap) {
-      var merged = {};
-      Object.keys(STATIC_PRODUCTS).forEach(function (id) {
-        merged[id] = Object.assign({}, STATIC_PRODUCTS[id]);
-      });
-      snap.forEach(function (doc) {
-        if (merged[doc.id]) Object.assign(merged[doc.id], doc.data());
-      });
+      var merged = mergeProducts(snap);
       productsCache = merged;
       return merged;
     }).catch(function () {
@@ -288,9 +315,23 @@
     return Promise.race([fetchPromise, timeoutPromise]);
   }
 
-  function updateProductPrice(id, price) {
-    return db.collection("products").doc(id).set({ price: price }, { merge: true })
-      .then(function () { productsCache = null; });
+  // Realtime feed for the storefront so an admin's price update shows up on
+  // an already-open homepage without a refresh.
+  function listenProducts(cb) {
+    return db.collection("products").onSnapshot(function (snap) {
+      var merged = mergeProducts(snap);
+      productsCache = merged;
+      cb(merged);
+    }, function () { cb(STATIC_PRODUCTS); });
+  }
+
+  function updateProductRate(id, buyPerGram, sellPerGram) {
+    var grams = STATIC_PRODUCTS[id] && STATIC_PRODUCTS[id].grams;
+    var margin = Math.round((sellPerGram - buyPerGram) * 100) / 100;
+    var price = Math.round(sellPerGram * grams * 100) / 100;
+    return db.collection("products").doc(id).set({
+      buyPerGram: buyPerGram, sellPerGram: sellPerGram, margin: margin, price: price
+    }, { merge: true }).then(function () { productsCache = null; });
   }
 
   // ------------------------------------------------------------------ cart
@@ -603,7 +644,8 @@
       }
     },
     getProducts: getProducts,
-    updateProductPrice: updateProductPrice,
+    listenProducts: listenProducts,
+    updateProductRate: updateProductRate,
     fmtRM: fmtRM,
     fmtDate: fmtDate,
     fmtDateTime: fmtDateTime,

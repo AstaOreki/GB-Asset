@@ -346,19 +346,7 @@ tailwind.config = {
 <h3 class="font-headline-sm text-headline-sm text-primary">Product Pricing</h3>
 <a class="font-label-caps text-gray-muted hover:text-primary transition-colors flex items-center gap-1" href="https://www.mkspamp.com.my/pricing" rel="noopener" target="_blank">MKS PAMP Reference <span class="material-symbols-outlined text-[16px]">open_in_new</span></a>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full text-left">
-<thead>
-<tr class="text-ui-data text-gray-muted border-b border-outline-variant/20">
-<th class="px-8 py-4 font-normal">PRODUCT</th>
-<th class="px-8 py-4 font-normal">PURITY</th>
-<th class="px-8 py-4 font-normal text-right">PRICE (RM)</th>
-<th class="px-8 py-4 font-normal text-right">ACTION</th>
-</tr>
-</thead>
-<tbody class="font-body-sm text-[13px]" id="pricing-table-body"></tbody>
-</table>
-</div>
+<div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6" id="pricing-cards"></div>
 </section>
 </section>
 <!-- ================= PRICE TODAY ================= -->
@@ -1004,37 +992,70 @@ tailwind.config = {
         });
     }
 
+    function productMarginPreview(id) {
+        const buy = parseFloat(document.querySelector(`[data-buy-input="${id}"]`).value);
+        const sell = parseFloat(document.querySelector(`[data-sell-input="${id}"]`).value);
+        const grams = state.products[id].grams;
+        const marginEl = document.querySelector(`[data-margin-preview="${id}"]`);
+        const totalEl = document.querySelector(`[data-total-preview="${id}"]`);
+        if (sell > 0 && buy > 0) {
+            marginEl.textContent = GBA.fmtRM(sell - buy) + ' / g';
+            totalEl.textContent = GBA.fmtRM(sell * grams);
+        } else {
+            marginEl.textContent = '—';
+            totalEl.textContent = '—';
+        }
+    }
+
     function renderPricing() {
         const products = state.products || {};
-        document.getElementById('pricing-table-body').innerHTML = Object.keys(products).map(id => {
+        document.getElementById('pricing-cards').innerHTML = Object.keys(products).map(id => {
             const p = products[id];
             return `
-            <tr class="group hover:bg-surface-container-high/40 transition-all">
-                <td class="px-8 py-5 font-body-sm text-on-surface">${escapeHtml(p.name)}</td>
-                <td class="px-8 py-5 font-body-sm text-gray-muted">${escapeHtml(p.purity)}</td>
-                <td class="px-8 py-5 text-right">
-                    <input class="w-32 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-price-input="${id}" type="number" min="0" step="0.01" value="${Number(p.price)}"/>
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <button class="font-label-caps text-gold-light hover:text-primary transition-colors" data-save-price="${id}">Save</button>
-                </td>
-            </tr>`;
-        }).join('') || `<tr><td colspan="4" class="px-8 py-10 text-center text-gray-muted">No products found.</td></tr>`;
+            <div class="glass-panel rounded-lg p-6 border border-outline-variant/30">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h4 class="font-headline-sm text-headline-sm text-on-surface">${escapeHtml(p.name)}</h4>
+                        <p class="font-body-sm text-[12px] text-gray-muted">AU ${escapeHtml(p.purity)} • ${p.grams}g</p>
+                    </div>
+                    <p class="font-headline-sm text-headline-sm text-primary" data-total-preview="${id}">${GBA.fmtRM(Number(p.sellPerGram || 0) * p.grams)}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="font-label-caps text-[10px] text-gray-muted uppercase">Buy Price / g</label>
+                        <input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-2 px-2 outline-none font-ui-data" data-buy-input="${id}" type="number" min="0" step="0.01" value="${Number(p.buyPerGram || 0)}"/>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="font-label-caps text-[10px] text-gray-muted uppercase">Sell Price / g</label>
+                        <input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-2 px-2 outline-none font-ui-data" data-sell-input="${id}" type="number" min="0" step="0.01" value="${Number(p.sellPerGram || 0)}"/>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                    <p class="font-body-sm text-[12px] text-gray-muted">Margin: <span class="text-on-surface" data-margin-preview="${id}">${GBA.fmtRM(Number(p.margin || 0))} / g</span></p>
+                    <button class="font-label-caps text-gold-light hover:text-primary transition-colors" data-save-rate="${id}">Save</button>
+                </div>
+            </div>`;
+        }).join('') || `<p class="text-center text-gray-muted py-10">No products found.</p>`;
 
-        document.querySelectorAll('[data-save-price]').forEach(btn => {
+        document.querySelectorAll('[data-buy-input], [data-sell-input]').forEach(input => {
+            input.addEventListener('input', () => productMarginPreview(input.getAttribute('data-buy-input') || input.getAttribute('data-sell-input')));
+        });
+
+        document.querySelectorAll('[data-save-rate]').forEach(btn => {
             btn.addEventListener('click', async () => {
-                const id = btn.getAttribute('data-save-price');
-                const input = document.querySelector(`[data-price-input="${id}"]`);
-                const price = parseFloat(input.value);
-                if (!(price > 0)) { showToast('Enter a valid price first.'); return; }
+                const id = btn.getAttribute('data-save-rate');
+                const buy = parseFloat(document.querySelector(`[data-buy-input="${id}"]`).value);
+                const sell = parseFloat(document.querySelector(`[data-sell-input="${id}"]`).value);
+                if (!(buy > 0) || !(sell > 0)) { showToast('Enter valid Buy and Sell prices first.'); return; }
+                if (buy > sell) { showToast('Buy price cannot be higher than Sell price.'); return; }
                 btn.disabled = true;
                 try {
-                    await GBA.updateProductPrice(id, price);
-                    addLog(adminActor, 'Product Price Updated', `${products[id].name} → RM ${price.toLocaleString('en-MY', { minimumFractionDigits: 2 })}`, 'SUCCESS');
-                    showToast('Price updated.');
+                    await GBA.updateProductRate(id, buy, sell);
+                    addLog(adminActor, 'Product Rate Updated', `${products[id].name} → Buy ${GBA.fmtRM(buy)}/g, Sell ${GBA.fmtRM(sell)}/g`, 'SUCCESS');
+                    showToast('Rate updated.');
                     loadProducts();
                 } catch (err) {
-                    showToast('Could not update price: ' + err.message);
+                    showToast('Could not update rate: ' + err.message);
                 } finally {
                     btn.disabled = false;
                 }
