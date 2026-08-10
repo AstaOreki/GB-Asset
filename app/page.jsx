@@ -10,6 +10,7 @@ import { useButtonRipple } from "../hooks/useButtonRipple";
 import { useCartBadge } from "../hooks/useCartBadge";
 import AnnouncementBanner from "../components/AnnouncementBanner";
 import PriceChart from "../components/PriceChart";
+import ProfitCalculator from "../components/ProfitCalculator";
 import "./page.css";
 
 /**
@@ -823,6 +824,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <ProfitCalculator />
 
       <section className="benefits">
         <div className="wrap">
