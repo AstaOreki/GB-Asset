@@ -11,6 +11,11 @@ import { useMemo, useRef, useState } from "react";
 const SELL_COLOR = "#c98500";
 const BUY_COLOR = "#199e70";
 
+// "Sell"/"Buy" alone read ambiguous (sell to whom?) — spell out the
+// direction of the transaction, matching the table headers above.
+const SELL_LABEL = "Buy Gold From GBA";
+const BUY_LABEL = "GBA Buys From You";
+
 const CHART_W = 800;
 const CHART_H = 300;
 const PAD = { top: 20, right: 20, bottom: 34, left: 64 };
@@ -109,8 +114,8 @@ export default function PriceChart({ rows, rangeKey, fmtRM }) {
   return (
     <div className="price-chart">
       <div className="price-chart-legend">
-        <span className="price-chart-key"><i style={{ background: SELL_COLOR }} />Sell</span>
-        <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />Buy</span>
+        <span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span>
+        <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span>
       </div>
       <div className="price-chart-canvas">
         <svg
@@ -159,8 +164,8 @@ export default function PriceChart({ rows, rangeKey, fmtRM }) {
             style={{ left: `${tooltipLeft}%` }}
           >
             <div className="price-chart-tooltip-date">{hovered.date.toLocaleString("en-MY", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
-            <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: SELL_COLOR }} />Sell</span><b>{fmtRM(hovered.sell)}</b></div>
-            <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: BUY_COLOR }} />Buy</span><b>{fmtRM(hovered.buy)}</b></div>
+            <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span><b>{fmtRM(hovered.sell)}</b></div>
+            <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span><b>{fmtRM(hovered.buy)}</b></div>
           </div>
         )}
       </div>
