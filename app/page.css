@@ -481,19 +481,38 @@ body::after {
   .price-chart-tooltip-row { font-size: 12px; gap: 10px; }
 }
 
-/* ============ PROFIT CALCULATOR ============ */
-.profit-calc { background: var(--emerald-deep); padding: 130px 0; position: relative; overflow: hidden; }
-.profit-calc::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(212,175,55,.12), transparent 60%);
-}
-.profit-calc .wrap { position: relative; z-index: 1; }
-.profit-calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
-.profit-calc-inputs.glass-card { margin-top: 0; }
-.profit-calc-results {
+/* ============ GOLD INVESTMENT CALCULATOR ============ */
+.invest-calc {
   background: linear-gradient(160deg, rgba(251,248,241,.05), rgba(251,248,241,.02));
-  border: 1px solid rgba(212,175,55,.18); border-radius: 4px; padding: 30px 32px;
+  border: 1px solid rgba(212,175,55,.18); border-radius: 4px;
+  padding: 30px 32px; margin-bottom: 24px;
 }
+.invest-calc-head h3 { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--ivory); }
+.invest-calc-head p { margin-top: 6px; font-size: 13px; color: var(--gray-soft); line-height: 1.6; }
+.invest-calc-body { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; margin-top: 26px; }
+.invest-calc-inputs .field:first-child { margin-top: 0; }
+.invest-percent-block { margin-top: 28px; }
+.invest-percent-label { display: block; font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; }
+.invest-percent-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.invest-percent-btn {
+  padding: 9px 16px; border: 1px solid rgba(212,175,55,.3); border-radius: 20px;
+  font-family: var(--label); font-size: 12px; font-weight: 600; letter-spacing: .5px;
+  color: var(--gray-soft); background: rgba(251,248,241,.03);
+  transition: all .3s var(--ease);
+}
+.invest-percent-btn:hover { border-color: var(--gold-light); color: var(--ivory); }
+.invest-percent-btn.active { background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27); border-color: transparent; color: var(--emerald-deep); }
+.invest-custom-field { margin-top: 18px; max-width: 220px; }
+.invest-calc-results {
+  background: rgba(0,0,0,.15); border: 1px solid rgba(212,175,55,.12); border-radius: 4px; padding: 26px 28px;
+}
+.invest-calc-note { margin-top: 16px; font-size: 12px; color: var(--maison-red-bright); line-height: 1.6; }
+@media (max-width: 900px) { .invest-calc-body { grid-template-columns: 1fr; gap: 32px; } }
+@media (max-width: 640px) {
+  .invest-calc { padding: 22px 20px; }
+  .invest-calc-results { padding: 20px 20px; }
+}
+
 .profit-result-row {
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
   padding: 14px 0; border-bottom: 1px solid rgba(212,175,55,.1);
@@ -506,11 +525,7 @@ body::after {
 .profit-result-final span:last-child { font-size: 24px; font-weight: 500; }
 .profit-result-final.is-profit span:last-child { color: var(--gold-light); }
 .profit-result-final.is-loss span:last-child { color: var(--maison-red-bright); }
-.profit-calc-disclaimer { margin-top: 20px; font-size: 12px; color: var(--gray); line-height: 1.6; }
-@media (max-width: 900px) { .profit-calc-grid { grid-template-columns: 1fr; gap: 36px; } }
 @media (max-width: 640px) {
-  .profit-calc { padding: 90px 0; }
-  .profit-calc-results { padding: 24px 22px; }
   .profit-result-final span:last-child { font-size: 20px; }
 }
 

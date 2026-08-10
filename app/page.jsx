@@ -97,6 +97,10 @@ export default function HomePage() {
   const todayHigh = todayRows && todayRows.length ? Math.max(...todayRows.map((r) => r.sell)) : null;
   const todayLow = todayRows && todayRows.length ? Math.min(...todayRows.map((r) => r.sell)) : null;
   const lastUpdate = todayRows && todayRows.length ? todayRows[0].recordedAt : null;
+  // The 1g bar's current sell rate is the live "price per gram" the
+  // Gold Investment Calculator buys at.
+  const oneGramRow = currentRows && currentRows.find((r) => r.weight === 1);
+  const pricePerGram = oneGramRow ? oneGramRow.sell : null;
 
   // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
@@ -793,6 +797,8 @@ export default function HomePage() {
             <PriceChart rows={chartRows.filter((r) => r.weight === 1)} rangeKey={activeRange} fmtRM={gba.fmtRM} />
           )}
 
+          <ProfitCalculator pricePerGram={pricePerGram} fmtRM={gba && gba.fmtRM} />
+
           <h3 className="price-table-title reveal">Daily Price</h3>
           <div className="price-table reveal">
             <div className="price-table-head">
@@ -827,8 +833,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      <ProfitCalculator />
 
       <section className="benefits">
         <div className="wrap">
