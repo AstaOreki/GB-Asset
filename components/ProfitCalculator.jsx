@@ -20,27 +20,27 @@ function handleNonNegativeChange(setter) {
 }
 
 /**
- * Gold Investment Calculator — how many grams a given RM amount buys at
- * today's live 1g rate, and what that could be worth at an assumed future
- * % change. `pricePerGram` is the 1g bar's current Sell rate (what a
- * customer pays to buy), passed down from the Price Today section so this
- * never fetches/derives its own price.
+ * Gold Investment Calculator — what a given gold quantity (grams) is worth
+ * at today's live 1g rate, and what that could be worth at an assumed
+ * future % change. `pricePerGram` is the 1g bar's current Sell rate (what
+ * a customer pays to buy), passed down from the Price Today section so
+ * this never fetches/derives/hardcodes its own price — it always reflects
+ * whatever the admin has entered for today.
  */
 export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) {
-  const [amount, setAmount] = useState("");
+  const [gramsInput, setGramsInput] = useState("");
   const [selectedPercent, setSelectedPercent] = useState(10);
   const [isCustom, setIsCustom] = useState(false);
   const [customPercent, setCustomPercent] = useState("");
 
-  const investment = parseFloat(amount);
+  const grams = parseFloat(gramsInput);
   const percent = isCustom ? parseFloat(customPercent) : selectedPercent;
   const hasPrice = typeof pricePerGram === "number" && pricePerGram > 0;
   const hasValidInputs =
-    amount !== "" && !isNaN(investment) && investment > 0 && !isNaN(percent) && (!isCustom || customPercent !== "") && hasPrice;
+    gramsInput !== "" && !isNaN(grams) && grams > 0 && !isNaN(percent) && (!isCustom || customPercent !== "") && hasPrice;
 
-  const grams = hasValidInputs ? investment / pricePerGram : null;
-  const currentValue = hasValidInputs ? investment : null;
-  const futureValue = hasValidInputs ? investment * (1 + percent / 100) : null;
+  const currentValue = hasValidInputs ? grams * pricePerGram : null;
+  const futureValue = hasValidInputs ? currentValue * (1 + percent / 100) : null;
   const estimatedProfit = hasValidInputs ? futureValue - currentValue : null;
   const isLoss = estimatedProfit != null && estimatedProfit < 0;
 
@@ -54,7 +54,7 @@ export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) 
       <div className="invest-calc-head">
         <h3>Gold Investment Calculator</h3>
         <p>
-          See how many grams your investment buys at today&apos;s live rate
+          See what your gold is worth at today&apos;s live rate
           {hasPrice ? ` (${fmtLivePrice ? fmtLivePrice(pricePerGram) : fmtRM(pricePerGram)}/g)` : ""}, and what it could be worth later.
         </p>
       </div>
@@ -68,10 +68,10 @@ export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) 
               placeholder=" "
               step="0.01"
               type="number"
-              value={amount}
-              onChange={handleNonNegativeChange(setAmount)}
+              value={gramsInput}
+              onChange={handleNonNegativeChange(setGramsInput)}
             />
-            <label>Investment Amount (RM)</label>
+            <label>Gold Quantity (g)</label>
           </div>
 
           <div className="invest-percent-block">
@@ -103,7 +103,7 @@ export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) 
         <div className="invest-calc-results">
           <div className="profit-result-row">
             <span>Gold Purchased</span>
-            <span>{hasValidInputs ? `${grams.toFixed(3)} g` : "—"}</span>
+            <span>{hasValidInputs ? `${grams.toLocaleString("en-MY")} g` : "—"}</span>
           </div>
           <div className="profit-result-row">
             <span>Current Gold Value</span>
