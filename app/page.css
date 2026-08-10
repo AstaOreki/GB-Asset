@@ -408,7 +408,9 @@ body::after {
   border: 1px solid rgba(212,175,55,.18); border-radius: 4px;
   padding: 22px 24px 10px; margin-bottom: 24px;
 }
-.price-chart-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px 20px; margin-bottom: 6px; }
+.price-chart-legend { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 20px; margin-bottom: 6px; }
+.price-chart-title { font-family: var(--label); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-light); }
+.price-chart-keys { display: flex; flex-wrap: wrap; gap: 10px 20px; }
 .price-chart-key { display: inline-flex; align-items: center; gap: 7px; font-family: var(--label); font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--gray-soft); }
 .price-chart-key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .price-chart-canvas { position: relative; aspect-ratio: 800 / 300; }
@@ -471,7 +473,8 @@ body::after {
   .price-stats { grid-template-columns: 1fr; }
   .price-tab-btn { font-size: 9.5px; letter-spacing: .5px; padding: 12px 2px; }
   .price-chart { padding: 16px 14px 6px; }
-  .price-chart-legend { justify-content: flex-start; gap: 8px 14px; }
+  .price-chart-legend { gap: 8px 14px; }
+  .price-chart-title { font-size: 10.5px; }
   .price-chart-key { font-size: 9.5px; }
   .price-chart-canvas { aspect-ratio: 800 / 380; }
   .price-chart-tooltip { padding: 8px 10px; }

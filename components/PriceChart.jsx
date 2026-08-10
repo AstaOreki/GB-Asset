@@ -114,8 +114,11 @@ export default function PriceChart({ rows, rangeKey, fmtRM }) {
   return (
     <div className="price-chart">
       <div className="price-chart-legend">
-        <span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span>
-        <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span>
+        <span className="price-chart-title">1g Gold Price Trend</span>
+        <span className="price-chart-keys">
+          <span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span>
+          <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span>
+        </span>
       </div>
       <div className="price-chart-canvas">
         <svg

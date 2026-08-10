@@ -786,8 +786,11 @@ export default function HomePage() {
             ))}
           </div>
 
-          {gba && !chartError && chartRows && chartRows.length > 0 && (
-            <PriceChart rows={chartRows} rangeKey={activeRange} fmtRM={gba.fmtRM} />
+          {/* Charted on the 1g bar specifically — mixing all 5 weights into one
+              line made the chart zigzag between unrelated price levels instead
+              of showing a real trend. */}
+          {gba && !chartError && chartRows && chartRows.filter((r) => r.weight === 1).length > 0 && (
+            <PriceChart rows={chartRows.filter((r) => r.weight === 1)} rangeKey={activeRange} fmtRM={gba.fmtRM} />
           )}
 
           <h3 className="price-table-title reveal">Daily Price</h3>
