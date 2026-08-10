@@ -97,7 +97,12 @@ service cloud.firestore {
                        request.resource.data.sell is number && request.resource.data.sell > 0 &&
                        request.resource.data.buy is number && request.resource.data.buy > 0 &&
                        request.resource.data.weight is number && request.resource.data.weight > 0 &&
-                       request.resource.data.margin == request.resource.data.sell - request.resource.data.buy &&
+                       // Exact equality here used to fail on ordinary decimal
+                       // rates (e.g. 538.32 - 538.00 isn't exactly 0.32 in
+                       // floating point) — a small tolerance instead of "=="
+                       // still rejects a genuinely wrong/tampered margin.
+                       request.resource.data.margin >= (request.resource.data.sell - request.resource.data.buy) - 0.01 &&
+                       request.resource.data.margin <= (request.resource.data.sell - request.resource.data.buy) + 0.01 &&
                        request.resource.data.recordedAt == request.time;
       allow delete: if false;
     }
