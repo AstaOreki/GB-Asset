@@ -369,7 +369,7 @@ tailwind.config = {
 <div class="lg:col-span-5 space-y-8">
 <div class="bg-surface-container-high p-8 rounded-lg border border-outline-variant/30">
 <div class="flex justify-between items-start mb-4">
-<p class="font-label-caps text-label-caps text-gray-muted uppercase">Current Rate (per gram, 999.9)</p>
+<p class="font-label-caps text-label-caps text-gray-muted uppercase">Current Rate (per gram, 999.9) — <span id="current-product">—</span></p>
 <a class="font-label-caps text-gray-muted hover:text-primary transition-colors flex items-center gap-1 text-[11px] whitespace-nowrap" href="https://www.mkspamp.com.my/pricing" rel="noopener" target="_blank">MKS PAMP Reference <span class="material-symbols-outlined text-[14px]">open_in_new</span></a>
 </div>
 <div class="grid grid-cols-2 gap-6">
@@ -389,7 +389,7 @@ tailwind.config = {
 </div>
 <div class="glass-panel border border-outline-variant p-8 rounded-lg">
 <h2 class="font-headline-sm text-headline-sm text-gold-light mb-2">Calculated automatically</h2>
-<p class="font-body-sm text-body-sm text-gray-muted">Price Today isn't entered here — it's the average per-gram Buy/Sell across all 5 bars in Product Pricing below. Save any bar's rate there and a new history record appends automatically, so you only enter prices once.</p>
+<p class="font-body-sm text-body-sm text-gray-muted">Price Today isn't entered here — saving any bar's rate in Product Pricing below appends that bar's own per-gram Buy/Sell/weight as a new history record automatically, so you only enter prices once.</p>
 <button class="mt-6 font-label-caps text-gold-light hover:text-primary transition-colors flex items-center gap-1" data-view-link="overview">Go to Product Pricing <span class="material-symbols-outlined text-[16px]">arrow_forward</span></button>
 </div>
 </div>
@@ -401,6 +401,7 @@ tailwind.config = {
 <thead>
 <tr class="bg-surface-container-high/50 border-b border-outline-variant">
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">WEIGHT</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">BUY GOLD FROM GBA</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">GBA BUYS FROM YOU</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">MARGIN</th>
@@ -967,16 +968,18 @@ tailwind.config = {
         document.getElementById('current-buy').textContent = r ? GBA.fmtRM(r.buy) : '—';
         document.getElementById('current-margin').textContent = r ? GBA.fmtRM(r.margin) : '—';
         document.getElementById('current-updated').textContent = r ? 'Updated ' + GBA.fmtDateTime(r.recordedAt) : 'No rate recorded yet.';
+        document.getElementById('current-product').textContent = r ? `${escapeHtml(r.productName || '—')} (${r.weight}g)` : '—';
     }
 
     function renderPriceHistoryTable() {
         document.getElementById('price-history-table-body').innerHTML = state.priceHistory.map(r => `
             <tr>
                 <td class="px-6 py-4 text-on-surface">${GBA.fmtDateTime(r.recordedAt)}</td>
+                <td class="px-6 py-4 text-on-surface">${escapeHtml(r.productName || '—')} (${r.weight}g)</td>
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.sell)}</td>
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.buy)}</td>
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.margin)}</td>
-            </tr>`).join('') || `<tr><td colspan="4" class="px-6 py-10 text-center text-gray-muted">${state.loaded.priceHistory ? 'No rate records yet.' : 'Loading…'}</td></tr>`;
+            </tr>`).join('') || `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-muted">${state.loaded.priceHistory ? 'No rate records yet.' : 'Loading…'}</td></tr>`;
     }
 
     function loadProducts() {

@@ -436,12 +436,12 @@ body::after {
   border: 1px solid rgba(212,175,55,.18); border-radius: 4px; overflow: hidden;
 }
 .price-table-head {
-  display: grid; grid-template-columns: 1.1fr 1.4fr 1.4fr .9fr; gap: 18px;
+  display: grid; grid-template-columns: 1.1fr .7fr 1.3fr 1.3fr .9fr; gap: 16px;
   padding: 18px 26px; border-bottom: 1px solid rgba(212,175,55,.16);
   font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light);
 }
 .price-row {
-  display: grid; grid-template-columns: 1.1fr 1.4fr 1.4fr .9fr; gap: 18px;
+  display: grid; grid-template-columns: 1.1fr .7fr 1.3fr 1.3fr .9fr; gap: 16px;
   padding: 20px 26px; border-bottom: 1px solid rgba(212,175,55,.1);
   transition: background .3s var(--ease);
 }

@@ -91,9 +91,10 @@ service cloud.firestore {
     match /priceHistory/{recordId} {
       allow read: if true;
       allow create: if isAdmin() &&
-                       request.resource.data.keys().hasOnly(['sell', 'buy', 'margin', 'recordedAt']) &&
+                       request.resource.data.keys().hasOnly(['sell', 'buy', 'margin', 'weight', 'productName', 'recordedAt']) &&
                        request.resource.data.sell is number && request.resource.data.sell > 0 &&
                        request.resource.data.buy is number && request.resource.data.buy > 0 &&
+                       request.resource.data.weight is number && request.resource.data.weight > 0 &&
                        request.resource.data.margin == request.resource.data.sell - request.resource.data.buy &&
                        request.resource.data.recordedAt == request.time;
       allow update, delete: if false;

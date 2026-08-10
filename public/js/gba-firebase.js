@@ -327,6 +327,7 @@
 
   function updateProductRate(id, buyPerGram, sellPerGram) {
     var grams = STATIC_PRODUCTS[id] && STATIC_PRODUCTS[id].grams;
+    var name = STATIC_PRODUCTS[id] && STATIC_PRODUCTS[id].name;
     var margin = Math.round((sellPerGram - buyPerGram) * 100) / 100;
     var price = Math.round(sellPerGram * grams * 100) / 100;
     return db.collection("products").doc(id).set({
@@ -334,16 +335,11 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).then(function () {
       productsCache = null;
-      // Price Today has no separate manual entry — it's a derived rollup
-      // of the 5 bars' per-gram rates, so admins never enter "today's
-      // price" twice. Every product save re-averages all 5 bars' current
-      // Buy/Sell per gram and appends that as the day's history record.
-      return getProducts().then(function (products) {
-        var ids = Object.keys(products);
-        var avgBuy = ids.reduce(function (sum, pid) { return sum + (products[pid].buyPerGram || 0); }, 0) / ids.length;
-        var avgSell = ids.reduce(function (sum, pid) { return sum + (products[pid].sellPerGram || 0); }, 0) / ids.length;
-        return addPriceRecord(Math.round(avgSell * 100) / 100, Math.round(avgBuy * 100) / 100);
-      });
+      // Price Today has no separate manual entry — it's a derived record
+      // of whichever bar was just saved (its own per-gram Buy/Sell/weight),
+      // so admins never enter "today's price" twice and each weight's rate
+      // is tracked on its own instead of blended into one average.
+      return addPriceRecord(sellPerGram, buyPerGram, grams, name);
     });
   }
 
@@ -560,10 +556,10 @@
     return d;
   }
 
-  function addPriceRecord(sell, buy) {
+  function addPriceRecord(sell, buy, weight, productName) {
     var margin = Math.round((sell - buy) * 100) / 100;
     return db.collection("priceHistory").add({
-      sell: sell, buy: buy, margin: margin,
+      sell: sell, buy: buy, margin: margin, weight: weight, productName: productName || "",
       recordedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function (ref) { return ref.id; });
   }

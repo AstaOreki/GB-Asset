@@ -785,6 +785,7 @@ export default function HomePage() {
           <div className="price-table reveal">
             <div className="price-table-head">
               <span>Date</span>
+              <span>Weight (g)</span>
               <span>Buy Gold From GBA (RM/g)</span>
               <span>GBA Buys From You (RM/g)</span>
               <span>Margin (RM/g)</span>
@@ -808,6 +809,7 @@ export default function HomePage() {
                 historyRows.map((row) => (
                   <div className="price-row" key={row.docId}>
                     <span data-label="Date">{gba.fmtDateTime(row.recordedAt)}</span>
+                    <span data-label="Weight (g)">{row.weight ? `${row.weight}g` : "—"}</span>
                     <span data-label="Buy Gold From GBA (RM/g)">{gba.fmtRM(row.sell)}</span>
                     <span data-label="GBA Buys From You (RM/g)">{gba.fmtRM(row.buy)}</span>
                     <span data-label="Margin (RM/g)">{gba.fmtRM(row.margin)}</span>
