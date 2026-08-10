@@ -9,6 +9,7 @@ import { useRevealOnScroll } from "../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../hooks/useButtonRipple";
 import { useCartBadge } from "../hooks/useCartBadge";
 import AnnouncementBanner from "../components/AnnouncementBanner";
+import PriceChart from "../components/PriceChart";
 import "./page.css";
 
 /**
@@ -64,7 +65,10 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!gba) return;
-    setHistoryRows(null);
+    // Don't reset historyRows to null here — switching tabs keeps the
+    // previous period's rows on screen (per dataviz refetch guidance: hold
+    // the last frame, no flash back to a loading state) until the new
+    // range's snapshot arrives.
     setHistoryError(false);
     return gba.priceHistory.listen(
       activeRange,
@@ -772,6 +776,10 @@ export default function HomePage() {
               </button>
             ))}
           </div>
+
+          {gba && !historyError && historyRows && historyRows.length > 0 && (
+            <PriceChart rows={historyRows} rangeKey={activeRange} fmtRM={gba.fmtRM} />
+          )}
 
           <div className="price-table reveal">
             <div className="price-table-head">
