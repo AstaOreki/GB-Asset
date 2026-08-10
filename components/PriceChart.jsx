@@ -108,8 +108,10 @@ export default function PriceChart({ rows, rangeKey, fmtRM }) {
 
   const hovered = hoverIndex != null ? points[hoverIndex] : null;
   const last = points[points.length - 1];
+  const first = points[0];
   const tooltipLeft = hovered ? (xFor(hovered.date.getTime()) / CHART_W) * 100 : null;
   const tooltipAlignEnd = tooltipLeft != null && tooltipLeft > 65;
+  const trendSummary = `1g gold price trend: opened at ${fmtRM(first.sell)}, now ${fmtRM(last.sell)}.`;
 
   return (
     <div className="price-chart">
@@ -120,9 +122,12 @@ export default function PriceChart({ rows, rangeKey, fmtRM }) {
           <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span>
         </span>
       </div>
+      <p className="sr-only" id="price-chart-summary">{trendSummary}</p>
       <div className="price-chart-canvas">
         <svg
           ref={svgRef}
+          role="img"
+          aria-labelledby="price-chart-summary"
           viewBox={`0 0 ${CHART_W} ${CHART_H}`}
           preserveAspectRatio="xMidYMid meet"
           onPointerMove={handleMove}

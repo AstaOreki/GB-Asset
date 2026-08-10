@@ -11,6 +11,7 @@ import { useCartBadge } from "../hooks/useCartBadge";
 import AnnouncementBanner from "../components/AnnouncementBanner";
 import PriceChart from "../components/PriceChart";
 import ProfitCalculator from "../components/ProfitCalculator";
+import GoldPriceHeader from "../components/GoldPriceHeader";
 import "./page.css";
 
 /**
@@ -98,9 +99,32 @@ export default function HomePage() {
   const todayLow = todayRows && todayRows.length ? Math.min(...todayRows.map((r) => r.sell)) : null;
   const lastUpdate = todayRows && todayRows.length ? todayRows[0].recordedAt : null;
   // The 1g bar's current sell rate is the live "price per gram" the
-  // Gold Investment Calculator buys at.
+  // Gold Price header and Gold Investment Calculator both key off.
   const oneGramRow = currentRows && currentRows.find((r) => r.weight === 1);
   const pricePerGram = oneGramRow ? oneGramRow.sell : null;
+
+  // Daily % change for the Gold Price header — last 7 days of the 1g
+  // bar's history, compared against the most recent record from a
+  // different calendar day than today (yesterday's/last-known price).
+  const [oneGramWeekRows, setOneGramWeekRows] = useState(null);
+  useEffect(() => {
+    if (!gba) return;
+    return gba.priceHistory.listen(
+      "1w",
+      (rows) => setOneGramWeekRows(rows.filter((r) => r.weight === 1)),
+      () => setOneGramWeekRows([])
+    );
+  }, [gba]);
+  const todayCalendarDay = new Date().toDateString();
+  const previousDayRow =
+    oneGramWeekRows && oneGramWeekRows.find((r) => {
+      const d = r.recordedAt && r.recordedAt.toDate ? r.recordedAt.toDate() : null;
+      return d && d.toDateString() !== todayCalendarDay;
+    });
+  const percentChange =
+    pricePerGram != null && previousDayRow && previousDayRow.sell > 0
+      ? ((pricePerGram - previousDayRow.sell) / previousDayRow.sell) * 100
+      : null;
 
   // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
@@ -760,6 +784,8 @@ export default function HomePage() {
             <h2>Daily Gold Rate</h2>
             <p>Official Sell / Buy rates for each bar, 999.9 fine gold — updated daily and preserved as a full historical record.</p>
           </div>
+
+          <GoldPriceHeader pricePerGram={pricePerGram} percentChange={percentChange} fmtRM={gba && gba.fmtRM} />
 
           <div className="price-stats reveal-stagger">
             <div className="pstat-tile">

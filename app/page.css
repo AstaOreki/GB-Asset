@@ -368,6 +368,48 @@ body::after {
 }
 .price-today .wrap { position: relative; z-index: 1; }
 
+.gold-price-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px;
+  margin-top: 40px; padding: 28px 32px;
+  background: linear-gradient(160deg, rgba(251,248,241,.05), rgba(251,248,241,.02));
+  border: 1px solid rgba(212,175,55,.18); border-radius: 4px;
+}
+.gold-price-card { display: flex; flex-direction: column; gap: 6px; }
+.gold-price-label { font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); }
+.gold-price-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.gold-price-amount { font-family: var(--serif-accent); font-style: italic; font-size: clamp(32px,4vw,42px); color: var(--ivory); line-height: 1; }
+.gold-price-unit { font-size: 14px; color: var(--gray-soft); }
+.gold-price-change { font-family: var(--label); font-size: 13px; font-weight: 600; letter-spacing: .3px; }
+.gold-price-change.is-up { color: var(--gold-light); }
+.gold-price-change.is-down { color: var(--maison-red-bright); }
+.gold-price-change.is-flat { color: var(--gray-soft); }
+
+.gold-weight-toggle {
+  position: relative; display: grid; grid-template-columns: repeat(4,1fr); gap: 0;
+  border: 1px solid rgba(212,175,55,.28); border-radius: 6px; overflow: hidden;
+  background: rgba(251,248,241,.03); min-width: 280px;
+}
+.gold-weight-btn {
+  padding: 12px 18px; text-align: center; position: relative; z-index: 2;
+  font-family: var(--label); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gray-soft); transition: color .4s var(--ease);
+}
+.gold-weight-btn.active { color: var(--emerald-deep); }
+.gold-weight-indicator {
+  position: absolute; top: 0; left: 0; width: 25%; height: 100%;
+  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27);
+  transition: transform .45s var(--ease); z-index: 1;
+}
+.gold-weight-toggle[data-active="10"] .gold-weight-indicator { transform: translateX(100%); }
+.gold-weight-toggle[data-active="100"] .gold-weight-indicator { transform: translateX(200%); }
+.gold-weight-toggle[data-active="1000"] .gold-weight-indicator { transform: translateX(300%); }
+@media (max-width: 640px) {
+  .gold-price-header { flex-direction: column; align-items: stretch; padding: 22px 20px; gap: 20px; }
+  .gold-price-amount { font-size: clamp(26px,8vw,36px); }
+  .gold-weight-toggle { min-width: 0; width: 100%; }
+  .gold-weight-btn { padding: 11px 6px; font-size: 10px; letter-spacing: .3px; }
+}
+
 .price-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin: 40px 0 50px; }
 .pstat-tile {
   border: 1px solid rgba(212,175,55,.18); border-radius: 4px;
