@@ -488,6 +488,56 @@
     return db.collection("announcements").doc(docId).delete();
   }
 
+  // ---------------------------------------------------------- priceHistory
+  // "1d" is the calendar day so far (since local midnight); the others are
+  // rolling windows, per the Price Today spec.
+  function rangeStartDate(rangeKey) {
+    var now = new Date();
+    if (rangeKey === "1d") {
+      var startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
+      return startOfDay;
+    }
+    var d = new Date(now);
+    if (rangeKey === "1m") d.setDate(d.getDate() - 30);
+    else if (rangeKey === "6m") d.setMonth(d.getMonth() - 6);
+    else if (rangeKey === "1y") d.setFullYear(d.getFullYear() - 1);
+    else d.setDate(d.getDate() - 7); // "1w" and unknown keys fall back to a week
+    return d;
+  }
+
+  function addPriceRecord(sell, buy) {
+    var margin = Math.round((sell - buy) * 100) / 100;
+    return db.collection("priceHistory").add({
+      sell: sell, buy: buy, margin: margin,
+      recordedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function (ref) { return ref.id; });
+  }
+
+  // cb(records) on every update, newest first. errCb (if given) is called
+  // instead of cb([]) on a query error, so callers can show a real error
+  // state rather than an indistinguishable empty one.
+  function listenPriceHistory(rangeKey, cb, errCb) {
+    return db.collection("priceHistory")
+      .where("recordedAt", ">=", rangeStartDate(rangeKey))
+      .orderBy("recordedAt", "desc")
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) {
+          out.push(Object.assign({ docId: doc.id }, doc.data({ serverTimestamps: "estimate" })));
+        });
+        cb(out);
+      }, function (err) { if (errCb) errCb(err); else cb([]); });
+  }
+
+  // cb(record|null) — the single latest record, i.e. today's current rate.
+  function listenLatestPriceRecord(cb) {
+    return db.collection("priceHistory").orderBy("recordedAt", "desc").limit(1)
+      .onSnapshot(function (snap) {
+        cb(snap.empty ? null : Object.assign({ docId: snap.docs[0].id }, snap.docs[0].data({ serverTimestamps: "estimate" })));
+      }, function () { cb(null); });
+  }
+
   // ----------------------------------------------------------------- logs
   function addLog(actor, action, detail, status) {
     return db.collection("logs").add({
@@ -519,6 +569,16 @@
 
   function fmtRM(n) { return "RM " + Math.round(n).toLocaleString("en-MY"); }
 
+  function fmtDate(ts) {
+    var d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+    return d ? d.toLocaleDateString("en-MY", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  }
+
+  function fmtDateTime(ts) {
+    var d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+    return d ? d.toLocaleString("en-MY", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  }
+
   window.GBA = {
     auth: auth,
     db: db,
@@ -545,6 +605,8 @@
     getProducts: getProducts,
     updateProductPrice: updateProductPrice,
     fmtRM: fmtRM,
+    fmtDate: fmtDate,
+    fmtDateTime: fmtDateTime,
     cart: {
       read: readCart,
       write: writeCart,
@@ -571,6 +633,11 @@
       publish: publishAnnouncement,
       listen: listenAnnouncements,
       remove: deleteAnnouncement
+    },
+    priceHistory: {
+      add: addPriceRecord,
+      listen: listenPriceHistory,
+      listenLatest: listenLatestPriceRecord
     },
     logs: { add: addLog, listen: listenLogs },
     settings: { listen: listenSettings, update: updateSettings }

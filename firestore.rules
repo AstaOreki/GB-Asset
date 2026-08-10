@@ -83,6 +83,22 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // -------------------------------------------------------- priceHistory
+    // Public storefront reads the full immutable rate history for "Price
+    // Today". Only admins may append a new record via the dashboard; past
+    // records can never be edited or deleted — this is what makes the
+    // history trustworthy.
+    match /priceHistory/{recordId} {
+      allow read: if true;
+      allow create: if isAdmin() &&
+                       request.resource.data.keys().hasOnly(['sell', 'buy', 'margin', 'recordedAt']) &&
+                       request.resource.data.sell is number && request.resource.data.sell > 0 &&
+                       request.resource.data.buy is number && request.resource.data.buy > 0 &&
+                       request.resource.data.margin == request.resource.data.sell - request.resource.data.buy &&
+                       request.resource.data.recordedAt == request.time;
+      allow update, delete: if false;
+    }
+
     // ----------------------------------------------------------- settings
     // Storefront reads system-wide flags (e.g. maintenance mode); only
     // admins can change them.

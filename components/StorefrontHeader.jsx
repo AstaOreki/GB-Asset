@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: "Pricing", hash: "#pricing" },
   { label: "About Us", hash: "#heritage" },
   { label: "Services", hash: "#services" },
-  { label: "Featured Products", hash: "#products" },
+  { label: "Price Today", hash: "#products" },
   { label: "Contact Us", hash: "#contact" },
   { label: "Location", hash: "#location" },
 ];

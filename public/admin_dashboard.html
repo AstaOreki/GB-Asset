@@ -171,6 +171,10 @@ tailwind.config = {
 <span class="material-symbols-outlined">dashboard</span>
 <span class="font-nav-link text-nav-link uppercase">Overview</span>
 </button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="price-today">
+<span class="material-symbols-outlined">paid</span>
+<span class="font-nav-link text-nav-link uppercase">Price Today</span>
+</button>
 <button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="sales-report">
 <span class="material-symbols-outlined">receipt_long</span>
 <span class="font-nav-link text-nav-link uppercase">Sales Report</span>
@@ -356,6 +360,70 @@ tailwind.config = {
 </table>
 </div>
 </section>
+</section>
+<!-- ================= PRICE TODAY ================= -->
+<section class="view-section" id="view-price-today">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-5 space-y-8">
+<div class="bg-surface-container-high p-8 rounded-lg border border-outline-variant/30">
+<p class="font-label-caps text-label-caps text-gray-muted uppercase mb-4">Current Rate (per gram, 999.9)</p>
+<div class="grid grid-cols-2 gap-6">
+<div>
+<p class="font-label-caps text-[10px] text-gray-muted uppercase mb-1">Sell</p>
+<p class="font-headline-sm text-headline-sm text-primary" id="current-sell">—</p>
+</div>
+<div>
+<p class="font-label-caps text-[10px] text-gray-muted uppercase mb-1">Buy</p>
+<p class="font-headline-sm text-headline-sm text-primary" id="current-buy">—</p>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-gray-muted">Margin: <span id="current-margin">—</span></span>
+<span class="font-body-sm text-[11px] text-gray-muted" id="current-updated">No rate recorded yet.</span>
+</div>
+</div>
+<section class="glass-panel border border-outline-variant p-8 rounded-lg shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-gold-deep/5 blur-[60px] rounded-full -mr-16 -mt-16"></div>
+<div class="mb-6">
+<h2 class="font-headline-sm text-headline-sm text-gold-light mb-2">Update Today's Rate</h2>
+<p class="font-body-sm text-body-sm text-gray-muted">Saving appends a new, permanent record to the price history — past records are never overwritten.</p>
+</div>
+<form class="space-y-6" id="rate-form">
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Sell Price (RM)</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 transition-all outline-none" id="field-sell-price" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Buy Price (RM)</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 transition-all outline-none" id="field-buy-price" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-gray-muted">Margin: <span class="text-on-surface" id="field-margin-preview">—</span></p>
+<button class="w-full bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link py-4 rounded-lg shine-effect transition-transform active:scale-[0.98] uppercase disabled:opacity-50" id="save-rate-btn" type="submit">Save Rate</button>
+<p class="hidden font-body-sm text-body-sm text-error" id="rate-form-error"></p>
+</form>
+</section>
+</div>
+<div class="lg:col-span-7 space-y-8">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Recent Rate History</h2>
+<section class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 border-b border-outline-variant">
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">SELL</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">BUY</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">MARGIN</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-[13px] divide-y divide-outline-variant/30" id="price-history-table-body"></tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
 </section>
 <!-- ================= SALES REPORT ================= -->
 <section class="view-section space-y-gutter" id="view-sales-report">
@@ -730,7 +798,9 @@ tailwind.config = {
         logs: [],
         settings: { systemMode: false, marketLink: true },
         products: {},
-        loaded: { orders: false, consultations: false, announcements: false, logs: false },
+        priceHistory: [],
+        latestRate: null,
+        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false },
     };
     let ui = {
         orderFilters: { status: 'All' },
@@ -898,7 +968,27 @@ tailwind.config = {
         });
         GBA.logs.listen(logs => { state.logs = logs; state.loaded.logs = true; renderLogs(); });
         GBA.settings.listen(settings => { state.settings = settings; renderLogs(); });
+        GBA.priceHistory.listenLatest(record => { state.latestRate = record; renderLatestRate(); });
+        GBA.priceHistory.listen('1m', records => { state.priceHistory = records; state.loaded.priceHistory = true; renderPriceHistoryTable(); });
         loadProducts();
+    }
+
+    function renderLatestRate() {
+        const r = state.latestRate;
+        document.getElementById('current-sell').textContent = r ? GBA.fmtRM(r.sell) : '—';
+        document.getElementById('current-buy').textContent = r ? GBA.fmtRM(r.buy) : '—';
+        document.getElementById('current-margin').textContent = r ? GBA.fmtRM(r.margin) : '—';
+        document.getElementById('current-updated').textContent = r ? 'Updated ' + GBA.fmtDateTime(r.recordedAt) : 'No rate recorded yet.';
+    }
+
+    function renderPriceHistoryTable() {
+        document.getElementById('price-history-table-body').innerHTML = state.priceHistory.map(r => `
+            <tr>
+                <td class="px-6 py-4 text-on-surface">${GBA.fmtDateTime(r.recordedAt)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.sell)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.buy)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.margin)}</td>
+            </tr>`).join('') || `<tr><td colspan="4" class="px-6 py-10 text-center text-gray-muted">${state.loaded.priceHistory ? 'No rate records yet.' : 'Loading…'}</td></tr>`;
     }
 
     function loadProducts() {
@@ -971,7 +1061,7 @@ tailwind.config = {
     document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', closeSidebar));
 
     // ---------- NAVIGATION ----------
-    const viewTitles = { overview: 'Overview', 'sales-report': 'Sales Report', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements' };
+    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements' };
     function setView(view) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById('view-' + view).classList.add('active');
@@ -1595,6 +1685,46 @@ tailwind.config = {
         }
         btn.disabled = false; btn.textContent = 'Publish Announcement';
     });
+    function updateMarginPreview() {
+        const sell = parseFloat(document.getElementById('field-sell-price').value);
+        const buy = parseFloat(document.getElementById('field-buy-price').value);
+        const preview = document.getElementById('field-margin-preview');
+        preview.textContent = (sell > 0 && buy > 0) ? GBA.fmtRM(sell - buy) : '—';
+    }
+    document.getElementById('field-sell-price').addEventListener('input', updateMarginPreview);
+    document.getElementById('field-buy-price').addEventListener('input', updateMarginPreview);
+
+    document.getElementById('rate-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errorEl = document.getElementById('rate-form-error');
+        errorEl.classList.add('hidden');
+        const sell = parseFloat(document.getElementById('field-sell-price').value);
+        const buy = parseFloat(document.getElementById('field-buy-price').value);
+        if (!(sell > 0) || !(buy > 0)) {
+            errorEl.textContent = 'Enter valid Sell and Buy prices.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        if (buy > sell) {
+            errorEl.textContent = 'Buy price cannot be higher than Sell price.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        const btn = document.getElementById('save-rate-btn');
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+            await GBA.priceHistory.add(sell, buy);
+            addLog(adminActor, 'Price Today Updated', `Sell ${GBA.fmtRM(sell)} / Buy ${GBA.fmtRM(buy)}`, 'SUCCESS');
+            showToast("Today's rate saved.");
+            document.getElementById('rate-form').reset();
+            updateMarginPreview();
+        } catch (err) {
+            errorEl.textContent = 'Could not save — please try again.';
+            errorEl.classList.remove('hidden');
+        }
+        btn.disabled = false; btn.textContent = 'Save Rate';
+    });
+
     document.getElementById('ann-filter-btn').addEventListener('click', () => {
         ui.annFilterCritical = !ui.annFilterCritical;
         document.getElementById('ann-filter-btn').classList.toggle('text-gold-light', ui.annFilterCritical);

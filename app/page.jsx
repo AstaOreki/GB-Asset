@@ -26,6 +26,14 @@ const PRICE_CARDS = [
   { id: "bar-1g", weight: "1 GM", alt: "1 GM Gold Bar", img: "image/gold_1g.png", staticPrice: "RM 559", containerStyle: { width: "65px" } },
 ];
 
+const PRICE_RANGES = [
+  { key: "1d", label: "1 Day" },
+  { key: "1w", label: "1 Week" },
+  { key: "1m", label: "1 Month" },
+  { key: "6m", label: "6 Months" },
+  { key: "1y", label: "1 Year" },
+];
+
 export default function HomePage() {
   const gba = useGBA();
   const { isAuthed, authReady } = useAuthAwareNav();
@@ -47,6 +55,35 @@ export default function HomePage() {
       setPrices(next);
     });
   }, [gba]);
+
+  // -------- PRICE TODAY (gold rate history, from Firestore "priceHistory") --------
+  const [activeRange, setActiveRange] = useState("1d");
+  const [historyRows, setHistoryRows] = useState(null); // null = loading, [] = empty
+  const [historyError, setHistoryError] = useState(false);
+  const [todayRows, setTodayRows] = useState(null); // always "1d" — feeds the stats row
+
+  useEffect(() => {
+    if (!gba) return;
+    setHistoryRows(null);
+    setHistoryError(false);
+    return gba.priceHistory.listen(
+      activeRange,
+      (rows) => setHistoryRows(rows),
+      () => {
+        setHistoryError(true);
+        setHistoryRows([]);
+      }
+    );
+  }, [gba, activeRange]);
+
+  useEffect(() => {
+    if (!gba) return;
+    return gba.priceHistory.listen("1d", setTodayRows);
+  }, [gba]);
+
+  const todayHigh = todayRows && todayRows.length ? Math.max(...todayRows.map((r) => r.sell)) : null;
+  const todayLow = todayRows && todayRows.length ? Math.min(...todayRows.map((r) => r.sell)) : null;
+  const lastUpdate = todayRows && todayRows.length ? todayRows[0].recordedAt : null;
 
   // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
@@ -699,55 +736,75 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="showcase" id="products">
+      <section className="price-today" id="products">
         <div className="wrap">
           <div className="section-head on-dark reveal">
-            <div className="eyebrow">Featured Products</div>
-            <h2>The Bullion Collection</h2>
-            <p>Precision-cast gold bars, each individually certified for weight and purity.</p>
+            <div className="eyebrow">Price Today</div>
+            <h2>Daily Gold Rate</h2>
+            <p>Official Sell / Buy rates per gram, 999.9 fine gold — updated daily and preserved as a full historical record.</p>
           </div>
-          <div className="showcase-grid reveal-stagger">
-            <div className="show-card">
-              <div className="show-media">
-                <div className="gold-bar-container" style={{ width: "90px" }}>
-                  <div className="glint-overlay"></div>
-                  <img alt="1 Kilo Bar" className="gold-bar-img" src="image/gold_1kg.png" />
-                </div>
-              </div>
-              <div className="show-body">
-                <div className="tag">Signature Bar</div>
-                <h3>1 Kilo Gold Bar</h3>
-                <p>Our most sought-after bar for serious investors and institutions.</p>
-                <div className="sprice">RM 537,893</div>
-              </div>
+
+          <div className="price-stats reveal-stagger">
+            <div className="pstat-tile">
+              <span className="pstat-label">Today&apos;s High</span>
+              <span className="pstat-value">{todayHigh != null ? gba.fmtRM(todayHigh) : "—"}</span>
             </div>
-            <div className="show-card">
-              <div className="show-media">
-                <div className="gold-bar-container" style={{ width: "113px" }}>
-                  <div className="glint-overlay"></div>
-                  <img alt="100 GM Bar" className="gold-bar-img" src="image/gold_100g.png" />
-                </div>
-              </div>
-              <div className="show-body">
-                <div className="tag">Best Seller</div>
-                <h3>100 GM Wholesale Bar</h3>
-                <p>The balanced choice — accessible entry into serious gold ownership.</p>
-                <div className="sprice">RM 53,832</div>
-              </div>
+            <div className="pstat-tile">
+              <span className="pstat-label">Today&apos;s Low</span>
+              <span className="pstat-value">{todayLow != null ? gba.fmtRM(todayLow) : "—"}</span>
             </div>
-            <div className="show-card">
-              <div className="show-media">
-                <div className="gold-bar-container" style={{ width: "110px" }}>
-                  <div className="glint-overlay"></div>
-                  <img alt="10 GM Bar" className="gold-bar-img" src="image/gold_10g.png" />
+            <div className="pstat-tile">
+              <span className="pstat-label">Last Update</span>
+              <span className="pstat-value pstat-value-sm">{lastUpdate ? gba.fmtDateTime(lastUpdate) : "—"}</span>
+            </div>
+          </div>
+
+          <div className="price-tabs reveal" data-active={activeRange}>
+            <div className="price-tab-indicator"></div>
+            {PRICE_RANGES.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                className={`price-tab-btn${activeRange === r.key ? " active" : ""}`}
+                onClick={() => setActiveRange(r.key)}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="price-table reveal">
+            <div className="price-table-head">
+              <span>Date</span>
+              <span>Sell Price</span>
+              <span>Buy Price</span>
+              <span>Margin</span>
+            </div>
+            <div className="price-table-body">
+              {historyError ? (
+                <div className="price-table-empty is-error">
+                  <h3>Something went wrong</h3>
+                  <p>We couldn&apos;t load rate history right now. Please try again shortly.</p>
                 </div>
-              </div>
-              <div className="show-body">
-                <div className="tag">Starter Collection</div>
-                <h3>10 GM Gift Bar</h3>
-                <p>A refined introduction to gold — ideal for milestone gifting.</p>
-                <div className="sprice">RM 5,579</div>
-              </div>
+              ) : historyRows === null ? (
+                <div className="price-table-empty">
+                  <h3>Loading rates…</h3>
+                </div>
+              ) : historyRows.length === 0 ? (
+                <div className="price-table-empty">
+                  <h3>No rate records for this period</h3>
+                  <p>Daily gold rates are updated by our team — check back soon.</p>
+                </div>
+              ) : (
+                historyRows.map((row) => (
+                  <div className="price-row" key={row.docId}>
+                    <span data-label="Date">{gba.fmtDateTime(row.recordedAt)}</span>
+                    <span data-label="Sell Price">{gba.fmtRM(row.sell)}</span>
+                    <span data-label="Buy Price">{gba.fmtRM(row.buy)}</span>
+                    <span data-label="Margin">{gba.fmtRM(row.margin)}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

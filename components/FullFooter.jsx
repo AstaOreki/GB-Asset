@@ -76,7 +76,7 @@ export default function FullFooter() {
               <Link href="/#services">Services</Link>
             </li>
             <li>
-              <Link href="/#products">Featured Products</Link>
+              <Link href="/#products">Price Today</Link>
             </li>
             <li>
               <Link href="/#contact">Contact Us</Link>
@@ -92,7 +92,7 @@ export default function FullFooter() {
             <span className="ic">☎</span> +60 12-240 0600
           </div>
           <div className="contact-line">
-            <span className="ic">✉</span> sales@gbaasset.com
+            <span className="ic">✉</span> sales@gbagold.my
           </div>
           <div className="contact-line">
             <span className="ic">◎</span> Kuala Lumpur, Malaysia
