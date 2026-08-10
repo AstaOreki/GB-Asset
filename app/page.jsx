@@ -785,9 +785,9 @@ export default function HomePage() {
           <div className="price-table reveal">
             <div className="price-table-head">
               <span>Date</span>
-              <span>Sell Price</span>
-              <span>Buy Price</span>
-              <span>Margin</span>
+              <span>Sell Price (RM/g)</span>
+              <span>Buy Price (RM/g)</span>
+              <span>Margin (RM/g)</span>
             </div>
             <div className="price-table-body">
               {historyError ? (
@@ -808,9 +808,9 @@ export default function HomePage() {
                 historyRows.map((row) => (
                   <div className="price-row" key={row.docId}>
                     <span data-label="Date">{gba.fmtDateTime(row.recordedAt)}</span>
-                    <span data-label="Sell Price">{gba.fmtRM(row.sell)}</span>
-                    <span data-label="Buy Price">{gba.fmtRM(row.buy)}</span>
-                    <span data-label="Margin">{gba.fmtRM(row.margin)}</span>
+                    <span data-label="Sell Price (RM/g)">{gba.fmtRM(row.sell)}</span>
+                    <span data-label="Buy Price (RM/g)">{gba.fmtRM(row.buy)}</span>
+                    <span data-label="Margin (RM/g)">{gba.fmtRM(row.margin)}</span>
                   </div>
                 ))
               )}

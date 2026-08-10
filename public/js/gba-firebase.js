@@ -330,8 +330,21 @@
     var margin = Math.round((sellPerGram - buyPerGram) * 100) / 100;
     var price = Math.round(sellPerGram * grams * 100) / 100;
     return db.collection("products").doc(id).set({
-      buyPerGram: buyPerGram, sellPerGram: sellPerGram, margin: margin, price: price
-    }, { merge: true }).then(function () { productsCache = null; });
+      buyPerGram: buyPerGram, sellPerGram: sellPerGram, margin: margin, price: price,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(function () {
+      productsCache = null;
+      // Price Today has no separate manual entry — it's a derived rollup
+      // of the 5 bars' per-gram rates, so admins never enter "today's
+      // price" twice. Every product save re-averages all 5 bars' current
+      // Buy/Sell per gram and appends that as the day's history record.
+      return getProducts().then(function (products) {
+        var ids = Object.keys(products);
+        var avgBuy = ids.reduce(function (sum, pid) { return sum + (products[pid].buyPerGram || 0); }, 0) / ids.length;
+        var avgSell = ids.reduce(function (sum, pid) { return sum + (products[pid].sellPerGram || 0); }, 0) / ids.length;
+        return addPriceRecord(Math.round(avgSell * 100) / 100, Math.round(avgBuy * 100) / 100);
+      });
+    });
   }
 
   // ------------------------------------------------------------------ cart

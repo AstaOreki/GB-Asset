@@ -346,7 +346,21 @@ tailwind.config = {
 <h3 class="font-headline-sm text-headline-sm text-primary">Product Pricing</h3>
 <a class="font-label-caps text-gray-muted hover:text-primary transition-colors flex items-center gap-1" href="https://www.mkspamp.com.my/pricing" rel="noopener" target="_blank">MKS PAMP Reference <span class="material-symbols-outlined text-[16px]">open_in_new</span></a>
 </div>
-<div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6" id="pricing-cards"></div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-ui-data text-gray-muted border-b border-outline-variant/20">
+<th class="px-8 py-4 font-normal">DATE</th>
+<th class="px-8 py-4 font-normal">WEIGHT</th>
+<th class="px-8 py-4 font-normal text-right">BUY PRICE</th>
+<th class="px-8 py-4 font-normal text-right">SELL PRICE</th>
+<th class="px-8 py-4 font-normal text-right">MARGIN</th>
+<th class="px-8 py-4 font-normal text-right">ACTION</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-[13px]" id="pricing-table-body"></tbody>
+</table>
+</div>
 </section>
 </section>
 <!-- ================= PRICE TODAY ================= -->
@@ -370,28 +384,11 @@ tailwind.config = {
 <span class="font-body-sm text-[11px] text-gray-muted" id="current-updated">No rate recorded yet.</span>
 </div>
 </div>
-<section class="glass-panel border border-outline-variant p-8 rounded-lg shadow-2xl relative overflow-hidden">
-<div class="absolute top-0 right-0 w-32 h-32 bg-gold-deep/5 blur-[60px] rounded-full -mr-16 -mt-16"></div>
-<div class="mb-6">
-<h2 class="font-headline-sm text-headline-sm text-gold-light mb-2">Update Today's Rate</h2>
-<p class="font-body-sm text-body-sm text-gray-muted">Saving appends a new, permanent record to the price history — past records are never overwritten.</p>
+<div class="glass-panel border border-outline-variant p-8 rounded-lg">
+<h2 class="font-headline-sm text-headline-sm text-gold-light mb-2">Calculated automatically</h2>
+<p class="font-body-sm text-body-sm text-gray-muted">Price Today isn't entered here — it's the average per-gram Buy/Sell across all 5 bars in Product Pricing below. Save any bar's rate there and a new history record appends automatically, so you only enter prices once.</p>
+<button class="mt-6 font-label-caps text-gold-light hover:text-primary transition-colors flex items-center gap-1" data-view-link="overview">Go to Product Pricing <span class="material-symbols-outlined text-[16px]">arrow_forward</span></button>
 </div>
-<form class="space-y-6" id="rate-form">
-<div class="grid grid-cols-2 gap-4">
-<div class="space-y-1">
-<label class="font-label-caps text-label-caps text-gold-pale uppercase">Sell Price (RM)</label>
-<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 transition-all outline-none" id="field-sell-price" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
-</div>
-<div class="space-y-1">
-<label class="font-label-caps text-label-caps text-gold-pale uppercase">Buy Price (RM)</label>
-<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 transition-all outline-none" id="field-buy-price" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
-</div>
-</div>
-<p class="font-body-sm text-body-sm text-gray-muted">Margin: <span class="text-on-surface" id="field-margin-preview">—</span></p>
-<button class="w-full bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link py-4 rounded-lg shine-effect transition-transform active:scale-[0.98] uppercase disabled:opacity-50" id="save-rate-btn" type="submit">Save Rate</button>
-<p class="hidden font-body-sm text-body-sm text-error" id="rate-form-error"></p>
-</form>
-</section>
 </div>
 <div class="lg:col-span-7 space-y-8">
 <h2 class="font-headline-sm text-headline-sm text-on-surface">Recent Rate History</h2>
@@ -995,47 +992,33 @@ tailwind.config = {
     function productMarginPreview(id) {
         const buy = parseFloat(document.querySelector(`[data-buy-input="${id}"]`).value);
         const sell = parseFloat(document.querySelector(`[data-sell-input="${id}"]`).value);
-        const grams = state.products[id].grams;
         const marginEl = document.querySelector(`[data-margin-preview="${id}"]`);
-        const totalEl = document.querySelector(`[data-total-preview="${id}"]`);
-        if (sell > 0 && buy > 0) {
-            marginEl.textContent = GBA.fmtRM(sell - buy) + ' / g';
-            totalEl.textContent = GBA.fmtRM(sell * grams);
-        } else {
-            marginEl.textContent = '—';
-            totalEl.textContent = '—';
-        }
+        marginEl.textContent = (sell > 0 && buy > 0) ? GBA.fmtRM(sell - buy) + ' / g' : '—';
     }
 
     function renderPricing() {
         const products = state.products || {};
-        document.getElementById('pricing-cards').innerHTML = Object.keys(products).map(id => {
+        document.getElementById('pricing-table-body').innerHTML = Object.keys(products).map(id => {
             const p = products[id];
             return `
-            <div class="glass-panel rounded-lg p-6 border border-outline-variant/30">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h4 class="font-headline-sm text-headline-sm text-on-surface">${escapeHtml(p.name)}</h4>
-                        <p class="font-body-sm text-[12px] text-gray-muted">AU ${escapeHtml(p.purity)} • ${p.grams}g</p>
-                    </div>
-                    <p class="font-headline-sm text-headline-sm text-primary" data-total-preview="${id}">${GBA.fmtRM(Number(p.sellPerGram || 0) * p.grams)}</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="font-label-caps text-[10px] text-gray-muted uppercase">Buy Price / g</label>
-                        <input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-2 px-2 outline-none font-ui-data" data-buy-input="${id}" type="number" min="0" step="0.01" value="${Number(p.buyPerGram || 0)}"/>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="font-label-caps text-[10px] text-gray-muted uppercase">Sell Price / g</label>
-                        <input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-2 px-2 outline-none font-ui-data" data-sell-input="${id}" type="number" min="0" step="0.01" value="${Number(p.sellPerGram || 0)}"/>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center justify-between">
-                    <p class="font-body-sm text-[12px] text-gray-muted">Margin: <span class="text-on-surface" data-margin-preview="${id}">${GBA.fmtRM(Number(p.margin || 0))} / g</span></p>
+            <tr class="group hover:bg-surface-container-high/40 transition-all">
+                <td class="px-8 py-5 font-body-sm text-gray-muted">${p.updatedAt ? GBA.fmtDateTime(p.updatedAt) : 'Never'}</td>
+                <td class="px-8 py-5 font-body-sm text-on-surface">
+                    <div>${escapeHtml(p.name)}</div>
+                    <div class="text-gray-muted text-[12px]">${p.grams}g</div>
+                </td>
+                <td class="px-8 py-5 text-right">
+                    <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-buy-input="${id}" type="number" min="0" step="0.01" value="${Number(p.buyPerGram || 0)}"/>
+                </td>
+                <td class="px-8 py-5 text-right">
+                    <input class="w-28 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface text-right py-1 px-2 outline-none font-ui-data" data-sell-input="${id}" type="number" min="0" step="0.01" value="${Number(p.sellPerGram || 0)}"/>
+                </td>
+                <td class="px-8 py-5 text-right font-body-sm text-on-surface" data-margin-preview="${id}">${GBA.fmtRM(Number(p.margin || 0))} / g</td>
+                <td class="px-8 py-5 text-right">
                     <button class="font-label-caps text-gold-light hover:text-primary transition-colors" data-save-rate="${id}">Save</button>
-                </div>
-            </div>`;
-        }).join('') || `<p class="text-center text-gray-muted py-10">No products found.</p>`;
+                </td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="6" class="px-8 py-10 text-center text-gray-muted">No products found.</td></tr>`;
 
         document.querySelectorAll('[data-buy-input], [data-sell-input]').forEach(input => {
             input.addEventListener('input', () => productMarginPreview(input.getAttribute('data-buy-input') || input.getAttribute('data-sell-input')));
@@ -1706,46 +1689,6 @@ tailwind.config = {
         }
         btn.disabled = false; btn.textContent = 'Publish Announcement';
     });
-    function updateMarginPreview() {
-        const sell = parseFloat(document.getElementById('field-sell-price').value);
-        const buy = parseFloat(document.getElementById('field-buy-price').value);
-        const preview = document.getElementById('field-margin-preview');
-        preview.textContent = (sell > 0 && buy > 0) ? GBA.fmtRM(sell - buy) : '—';
-    }
-    document.getElementById('field-sell-price').addEventListener('input', updateMarginPreview);
-    document.getElementById('field-buy-price').addEventListener('input', updateMarginPreview);
-
-    document.getElementById('rate-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const errorEl = document.getElementById('rate-form-error');
-        errorEl.classList.add('hidden');
-        const sell = parseFloat(document.getElementById('field-sell-price').value);
-        const buy = parseFloat(document.getElementById('field-buy-price').value);
-        if (!(sell > 0) || !(buy > 0)) {
-            errorEl.textContent = 'Enter valid Sell and Buy prices.';
-            errorEl.classList.remove('hidden');
-            return;
-        }
-        if (buy > sell) {
-            errorEl.textContent = 'Buy price cannot be higher than Sell price.';
-            errorEl.classList.remove('hidden');
-            return;
-        }
-        const btn = document.getElementById('save-rate-btn');
-        btn.disabled = true; btn.textContent = 'Saving…';
-        try {
-            await GBA.priceHistory.add(sell, buy);
-            addLog(adminActor, 'Price Today Updated', `Sell ${GBA.fmtRM(sell)} / Buy ${GBA.fmtRM(buy)}`, 'SUCCESS');
-            showToast("Today's rate saved.");
-            document.getElementById('rate-form').reset();
-            updateMarginPreview();
-        } catch (err) {
-            errorEl.textContent = 'Could not save — please try again.';
-            errorEl.classList.remove('hidden');
-        }
-        btn.disabled = false; btn.textContent = 'Save Rate';
-    });
-
     document.getElementById('ann-filter-btn').addEventListener('click', () => {
         ui.annFilterCritical = !ui.annFilterCritical;
         document.getElementById('ann-filter-btn').classList.toggle('text-gold-light', ui.annFilterCritical);
