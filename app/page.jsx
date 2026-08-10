@@ -753,7 +753,7 @@ export default function HomePage() {
           <div className="section-head on-dark reveal">
             <div className="eyebrow">Price Today</div>
             <h2>Daily Gold Rate</h2>
-            <p>Official Sell / Buy rates per gram, 999.9 fine gold — updated daily and preserved as a full historical record.</p>
+            <p>Official Sell / Buy rates for each bar, 999.9 fine gold — updated daily and preserved as a full historical record.</p>
           </div>
 
           <div className="price-stats reveal-stagger">
@@ -794,9 +794,9 @@ export default function HomePage() {
             <div className="price-table-head">
               <span>Date</span>
               <span>Weight (g)</span>
-              <span>Buy Gold From GBA (RM/g)</span>
-              <span>GBA Buys From You (RM/g)</span>
-              <span>Margin (RM/g)</span>
+              <span>Buy Gold From GBA</span>
+              <span>GBA Buys From You</span>
+              <span>Margin</span>
             </div>
             <div className="price-table-body">
               {currentRows === null ? (
@@ -813,9 +813,9 @@ export default function HomePage() {
                   <div className="price-row" key={row.productId || row.docId}>
                     <span data-label="Date">{gba.fmtDateTime(row.recordedAt)}</span>
                     <span data-label="Weight (g)">{row.weight ? `${row.weight}g` : "—"}</span>
-                    <span data-label="Buy Gold From GBA (RM/g)">{gba.fmtRM(row.sell)}</span>
-                    <span data-label="GBA Buys From You (RM/g)">{gba.fmtRM(row.buy)}</span>
-                    <span data-label="Margin (RM/g)">{gba.fmtRM(row.margin)}</span>
+                    <span data-label="Buy Gold From GBA">{gba.fmtRM(row.sell)}</span>
+                    <span data-label="GBA Buys From You">{gba.fmtRM(row.buy)}</span>
+                    <span data-label="Margin">{gba.fmtRM(row.margin)}</span>
                   </div>
                 ))
               )}

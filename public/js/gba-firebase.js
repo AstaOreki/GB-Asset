@@ -337,11 +337,10 @@
       productsCache = null;
       // Price Today has no separate manual entry — it's a derived record
       // of whichever bar was just saved, so admins never enter "today's
-      // price" twice. Price Today itself tracks a per-gram rate, so derive
-      // that here (total ÷ weight) rather than asking the admin to.
-      var sellPerGram = grams ? Math.round((sellPrice / grams) * 100) / 100 : sellPrice;
-      var buyPerGram = grams ? Math.round((buyPrice / grams) * 100) / 100 : buyPrice;
-      return upsertPriceRecord(id, sellPerGram, buyPerGram, grams, name);
+      // price" twice. It shows the exact same total sell/buy as Product
+      // Pricing (no per-gram scaling) so the two can never show different
+      // numbers for the same bar.
+      return upsertPriceRecord(id, sellPrice, buyPrice, grams, name);
     });
   }
 
