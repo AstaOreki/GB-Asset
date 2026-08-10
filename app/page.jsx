@@ -790,6 +790,7 @@ export default function HomePage() {
             <PriceChart rows={historyRows} rangeKey={activeRange} fmtRM={gba.fmtRM} />
           )}
 
+          <h3 className="price-table-title reveal">Daily Price</h3>
           <div className="price-table reveal">
             <div className="price-table-head">
               <span>Date</span>

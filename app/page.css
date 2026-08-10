@@ -431,6 +431,10 @@ body::after {
 .price-chart-empty { padding: 50px 20px; text-align: center; }
 .price-chart-empty p { font-size: 13.5px; color: var(--gray-soft); }
 
+.price-table-title {
+  font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--ivory);
+  margin: 0 0 14px;
+}
 .price-table {
   background: linear-gradient(160deg, rgba(251,248,241,.05), rgba(251,248,241,.02));
   border: 1px solid rgba(212,175,55,.18); border-radius: 4px; overflow: hidden;
