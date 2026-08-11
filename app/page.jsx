@@ -136,34 +136,35 @@ export default function HomePage() {
   const oneGramRow = currentRows && currentRows.find((r) => r.weight === 1);
   const pricePerGram = oneGramRow ? oneGramRow.sell : null;
 
-  // Daily % change for the Gold Price header — last 7 days of the 1g
+  // Daily % change for the Gold Price header — last 7 days of the SELECTED
   // bar's history, compared against the most recent record from a
   // different calendar day than today (yesterday's/last-known price).
-  const [oneGramWeekRows, setOneGramWeekRows] = useState(null);
+  // Per-bar, because the header now shows that bar's own price and each
+  // bar is priced independently, so the 1g bar's movement isn't
+  // necessarily the 1kg bar's.
+  const [weekRows, setWeekRows] = useState(null);
   useEffect(() => {
     if (!gba) return;
-    return gba.priceHistory.listen(
-      "1w",
-      (rows) => setOneGramWeekRows(rows.filter((r) => r.weight === 1)),
-      () => setOneGramWeekRows([])
-    );
+    return gba.priceHistory.listen("1w", (rows) => setWeekRows(rows), () => setWeekRows([]));
   }, [gba]);
+  const selectedRow = currentRows && currentRows.find((r) => r.weight === chartWeight);
+  const selectedWeekRows = weekRows ? weekRows.filter((r) => r.weight === chartWeight) : null;
   // Compare against the newest record from a day BEFORE the current
   // price's own day — not simply "not today". The current price carries
   // forward from whenever it was last set, so if nothing was saved today
   // both sides used to resolve to the same record and the change always
   // read 0.00%, hiding the real movement.
-  const currentPriceDay = toJsDate(oneGramRow && oneGramRow.recordedAt);
+  const currentPriceDay = toJsDate(selectedRow && selectedRow.recordedAt);
   const currentPriceDayStr = currentPriceDay ? currentPriceDay.toDateString() : new Date().toDateString();
   const previousDayRow =
-    oneGramWeekRows &&
-    oneGramWeekRows.find((r) => {
+    selectedWeekRows &&
+    selectedWeekRows.find((r) => {
       const d = toJsDate(r.recordedAt);
       return d && d.toDateString() !== currentPriceDayStr && (!currentPriceDay || d < currentPriceDay);
     });
   const percentChange =
-    pricePerGram != null && previousDayRow && previousDayRow.sell > 0
-      ? ((pricePerGram - previousDayRow.sell) / previousDayRow.sell) * 100
+    selectedRow && previousDayRow && previousDayRow.sell > 0
+      ? ((selectedRow.sell - previousDayRow.sell) / previousDayRow.sell) * 100
       : null;
 
   // The selected bar's own recorded history for the selected period —
@@ -832,6 +833,7 @@ export default function HomePage() {
           </div>
 
           <GoldPriceHeader
+            rates={currentRows}
             pricePerGram={pricePerGram}
             percentChange={percentChange}
             selectedGrams={chartWeight}
@@ -892,7 +894,7 @@ export default function HomePage() {
             <PriceChart rows={chartWeightRows} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
           )}
 
-          <ProfitCalculator pricePerGram={pricePerGram} fmtRM={gba && gba.fmtRM} />
+          <ProfitCalculator rates={currentRows} pricePerGram={pricePerGram} />
 
           <h3 className="price-table-title reveal">Daily Price</h3>
           <div className="price-table reveal">

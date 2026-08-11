@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ratePerGramFor } from "../lib/goldPricing";
 
 const PERCENT_PRESETS = [5, 10, 15, 20];
 
@@ -20,14 +21,18 @@ function handleNonNegativeChange(setter) {
 }
 
 /**
- * Gold Investment Calculator — what a given gold quantity (grams) is worth
- * at today's live 1g rate, and what that could be worth at an assumed
- * future % change. `pricePerGram` is the 1g bar's current Sell rate (what
- * a customer pays to buy), passed down from the Price Today section so
- * this never fetches/derives/hardcodes its own price — it always reflects
- * whatever the admin has entered for today.
+ * Gold Investment Calculator — what a given gold quantity (grams) is
+ * worth at today's live rates, and what that could be worth at an assumed
+ * future % change. `rates` is the live per-bar current-rates feed from the
+ * Price Today section, so this never fetches/derives/hardcodes its own
+ * price — it always reflects whatever the admin has entered for today.
+ *
+ * The rate used is the one for the bar tier the entered quantity actually
+ * qualifies for, NOT a flat 1g rate multiplied out: the admin prices each
+ * bar independently, so 1,000 g at the 1g rate quoted a number that
+ * contradicted the 1kg bar's own price shown in the table below.
  */
-export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) {
+export default function ProfitCalculator({ rates, pricePerGram }) {
   const [gramsInput, setGramsInput] = useState("");
   const [selectedPercent, setSelectedPercent] = useState(10);
   const [isCustom, setIsCustom] = useState(false);
@@ -35,11 +40,15 @@ export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) 
 
   const grams = parseFloat(gramsInput);
   const percent = isCustom ? parseFloat(customPercent) : selectedPercent;
-  const hasPrice = typeof pricePerGram === "number" && pricePerGram > 0;
+  // The tier rate for what was actually entered; before anything is typed
+  // the headline quotes the smallest bar's rate.
+  const appliedRate = ratePerGramFor(rates, grams > 0 ? grams : 1) ?? (typeof pricePerGram === "number" ? pricePerGram : null);
+  const headlineRate = ratePerGramFor(rates, 1) ?? (typeof pricePerGram === "number" ? pricePerGram : null);
+  const hasPrice = typeof appliedRate === "number" && appliedRate > 0;
   const hasValidInputs =
     gramsInput !== "" && !isNaN(grams) && grams > 0 && !isNaN(percent) && (!isCustom || customPercent !== "") && hasPrice;
 
-  const currentValue = hasValidInputs ? grams * pricePerGram : null;
+  const currentValue = hasValidInputs ? grams * appliedRate : null;
   const futureValue = hasValidInputs ? currentValue * (1 + percent / 100) : null;
   const estimatedProfit = hasValidInputs ? futureValue - currentValue : null;
   const isLoss = estimatedProfit != null && estimatedProfit < 0;
@@ -55,7 +64,9 @@ export default function ProfitCalculator({ pricePerGram, fmtRM: fmtLivePrice }) 
         <h3>Gold Investment Calculator</h3>
         <p>
           See what your gold is worth at today&apos;s live rate
-          {hasPrice ? ` (${fmtLivePrice ? fmtLivePrice(pricePerGram) : fmtRM(pricePerGram)}/g)` : ""}, and what it could be worth later.
+          {/* 2dp, not whole ringgit — a 537.893/g rate shown as "RM538"
+              implies RM538,000 at 1kg instead of the true RM537,893. */}
+          {hasPrice ? ` (${fmtRM(hasValidInputs ? appliedRate : headlineRate)}/g)` : ""}, and what it could be worth later.
         </p>
       </div>
 
