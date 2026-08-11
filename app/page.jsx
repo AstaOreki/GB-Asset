@@ -687,10 +687,6 @@ export default function HomePage() {
               <p>Assistance with eligible gold redemption and resale processes, where applicable.</p>
             </div>
           </div>
-
-          {/* Same component and the same live per-bar rates it read in the
-              Price Today section — only its position on the page moved. */}
-          <ProfitCalculator rates={currentRows} pricePerGram={pricePerGram} />
         </div>
       </section>
 
@@ -912,6 +908,8 @@ export default function HomePage() {
           {gba && !chartError && chartWeightRows && (
             <PriceChart rows={chartWeightRows} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
           )}
+
+          <ProfitCalculator rates={currentRows} pricePerGram={pricePerGram} />
 
           <h3 className="price-table-title reveal">Daily Price</h3>
           <div className="price-table reveal">
