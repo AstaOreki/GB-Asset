@@ -594,6 +594,42 @@ body::after {
   .profit-result-final span:last-child { font-size: 20px; }
 }
 
+/* --- White treatment for the Investment Calculator only. Every selector
+   is prefixed with .invest-calc so the shared .field rules keep applying
+   unchanged in the enquiry form, login, checkout and profile. Colors
+   only — no box model, spacing, size or typography — so the layout and
+   responsive behavior stay identical to the dark version. */
+.invest-calc { background: #FFFFFF; border-color: rgba(212,175,55,.4); }
+.invest-calc-head h3 { color: var(--charcoal); }
+.invest-calc-head p { color: #6E6A60; }
+/* Gold accents keep their hue but need a deeper tone on white:
+   --gold-light is 1.54:1 against #FFFFFF, effectively invisible.
+   #8E6820 is the same gold at 5.06:1; #A67C27 at 3.79:1 clears the 3:1
+   large-text threshold for the 24px profit figure. */
+.invest-calc .invest-percent-label { color: #8E6820; }
+.invest-calc .field input,
+.invest-calc .field select,
+.invest-calc .field textarea {
+  color: var(--charcoal);
+  border-bottom-color: rgba(20,20,22,.16);
+}
+.invest-calc .field input:focus,
+.invest-calc .field select:focus,
+.invest-calc .field textarea:focus { border-color: var(--gold); }
+.invest-calc .field label { color: #6E6A60; }
+.invest-calc .field input:focus + label,
+.invest-calc .field input:not(:placeholder-shown) + label { color: #8E6820; }
+/* :not(.active) so the selected pill keeps its gold gradient exactly —
+   an unguarded rule here would tie on specificity and win by order. */
+.invest-calc .invest-percent-btn:not(.active) { background: #FFFFFF; color: #6E6A60; }
+.invest-calc .invest-percent-btn:not(.active):hover { border-color: var(--gold); color: var(--charcoal); }
+.invest-calc .invest-calc-results { background: rgba(20,20,22,.03); border-color: rgba(212,175,55,.3); }
+.invest-calc .profit-result-row { color: #6E6A60; border-bottom-color: rgba(212,175,55,.28); }
+.invest-calc .profit-result-row span:last-child { color: var(--charcoal); }
+.invest-calc .profit-result-final { border-top-color: rgba(212,175,55,.5); }
+.invest-calc .profit-result-final span:first-child { color: #8E6820; }
+.invest-calc .profit-result-final.is-profit span:last-child { color: #A67C27; }
+
 /* ============ INVESTMENT BENEFITS ============ */
 .benefits {
   background:
