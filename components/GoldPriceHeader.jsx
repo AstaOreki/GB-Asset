@@ -1,7 +1,5 @@
 "use client";
 
-import { priceFor } from "../lib/goldPricing";
-
 const WEIGHTS = [
   { grams: 1, label: "1g", unit: "gram" },
   { grams: 10, label: "10g", unit: "10g" },
@@ -9,6 +7,12 @@ const WEIGHTS = [
   { grams: 100, label: "100g", unit: "100g" },
   { grams: 1000, label: "1kg", unit: "kg" },
 ];
+
+// The one calculation everything here derives from — never store or fetch
+// a separate price per weight, always scale the live 1g rate.
+export function calculateGoldPrice(pricePerGram, weightInGrams) {
+  return pricePerGram * weightInGrams;
+}
 
 // 2dp, matching the Investment Calculator directly below. Rounding to
 // whole ringgit made the scaled figures fail to reconcile — a 598.50/g
@@ -21,31 +25,19 @@ function fmtRM2(n) {
 
 /**
  * Focal "current gold price" card + weight toggle for the Price Today
- * section. Purely a display widget over the live per-bar rates —
+ * section. Purely a display widget over the 1g bar's live rate —
  * selecting a weight only changes what's shown here, it never touches
  * Product Pricing's independent per-bar prices or any stored data.
- *
- * The price shown is the selected bar's OWN live price, not the 1g rate
- * multiplied out: the admin prices each bar independently, so scaling 1g
- * made this card disagree with the bar price in the table below it.
  *
  * The selected weight is controlled by the parent so this toggle and the
  * chart's weight selector are always the same choice; they previously
  * held separate state and could disagree (header on 1kg, chart on 1g).
  */
-export default function GoldPriceHeader({ rates, pricePerGram, percentChange, selectedGrams = 1, onSelectWeight }) {
+export default function GoldPriceHeader({ pricePerGram, percentChange, selectedGrams = 1, onSelectWeight }) {
   const selectedWeight = WEIGHTS.find((w) => w.grams === selectedGrams) || WEIGHTS[0];
 
-  // Fall back to scaling the 1g rate only if the selected bar has no live
-  // rate at all, so the card still shows something rather than "—".
-  const tierPrice = priceFor(rates, selectedWeight.grams);
-  const displayPrice =
-    tierPrice != null
-      ? tierPrice
-      : typeof pricePerGram === "number" && pricePerGram > 0
-        ? pricePerGram * selectedWeight.grams
-        : null;
-  const hasPrice = displayPrice != null && displayPrice > 0;
+  const hasPrice = typeof pricePerGram === "number" && pricePerGram > 0;
+  const displayPrice = hasPrice ? calculateGoldPrice(pricePerGram, selectedWeight.grams) : null;
   const hasChange = typeof percentChange === "number" && !isNaN(percentChange);
   const direction = !hasChange || percentChange === 0 ? "flat" : percentChange > 0 ? "up" : "down";
   const arrow = direction === "up" ? "▲" : direction === "down" ? "▼" : "—";
