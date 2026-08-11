@@ -127,11 +127,19 @@ export default function HomePage() {
       () => setOneGramWeekRows([])
     );
   }, [gba]);
-  const todayCalendarDay = new Date().toDateString();
+  // Compare against the newest record from a day BEFORE the current
+  // price's own day — not simply "not today". The current price carries
+  // forward from whenever it was last set, so if nothing was saved today
+  // both sides used to resolve to the same record and the change always
+  // read 0.00%, hiding the real movement.
+  const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
+  const currentPriceDay = toJsDate(oneGramRow && oneGramRow.recordedAt);
+  const currentPriceDayStr = currentPriceDay ? currentPriceDay.toDateString() : new Date().toDateString();
   const previousDayRow =
-    oneGramWeekRows && oneGramWeekRows.find((r) => {
-      const d = r.recordedAt && r.recordedAt.toDate ? r.recordedAt.toDate() : null;
-      return d && d.toDateString() !== todayCalendarDay;
+    oneGramWeekRows &&
+    oneGramWeekRows.find((r) => {
+      const d = toJsDate(r.recordedAt);
+      return d && d.toDateString() !== currentPriceDayStr && (!currentPriceDay || d < currentPriceDay);
     });
   const percentChange =
     pricePerGram != null && previousDayRow && previousDayRow.sell > 0
@@ -803,7 +811,12 @@ export default function HomePage() {
             <p>Official Sell / Buy rates for each bar, 999.9 fine gold — updated daily and preserved as a full historical record.</p>
           </div>
 
-          <GoldPriceHeader pricePerGram={pricePerGram} percentChange={percentChange} fmtRM={gba && gba.fmtRM} />
+          <GoldPriceHeader
+            pricePerGram={pricePerGram}
+            percentChange={percentChange}
+            selectedGrams={chartWeight}
+            onSelectWeight={setChartWeight}
+          />
 
           <div className="price-stats reveal-stagger">
             <div className="pstat-tile">

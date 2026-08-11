@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 const WEIGHTS = [
   { grams: 1, label: "1g", unit: "gram" },
   { grams: 10, label: "10g", unit: "10g" },
@@ -16,14 +14,27 @@ export function calculateGoldPrice(pricePerGram, weightInGrams) {
   return pricePerGram * weightInGrams;
 }
 
+// 2dp, matching the Investment Calculator directly below. Rounding to
+// whole ringgit made the scaled figures fail to reconcile — a 598.50/g
+// rate displayed as "RM 599" implies RM 29,950 at 50g, not the true
+// RM 29,925.
+function fmtRM2(n) {
+  const sign = n < 0 ? "-" : "";
+  return `RM${sign}${Math.abs(n).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 /**
- * Focal "current gold price" card + 1g/10g/100g/1kg weight toggle for the
- * Price Today section. Purely a display widget over the 1g bar's live
- * rate — selecting a weight only changes what's shown here, it never
- * touches Product Pricing's independent per-bar prices or any stored data.
+ * Focal "current gold price" card + weight toggle for the Price Today
+ * section. Purely a display widget over the 1g bar's live rate —
+ * selecting a weight only changes what's shown here, it never touches
+ * Product Pricing's independent per-bar prices or any stored data.
+ *
+ * The selected weight is controlled by the parent so this toggle and the
+ * chart's weight selector are always the same choice; they previously
+ * held separate state and could disagree (header on 1kg, chart on 1g).
  */
-export default function GoldPriceHeader({ pricePerGram, percentChange, fmtRM }) {
-  const [selectedWeight, setSelectedWeight] = useState(WEIGHTS[0]);
+export default function GoldPriceHeader({ pricePerGram, percentChange, selectedGrams = 1, onSelectWeight }) {
+  const selectedWeight = WEIGHTS.find((w) => w.grams === selectedGrams) || WEIGHTS[0];
 
   const hasPrice = typeof pricePerGram === "number" && pricePerGram > 0;
   const displayPrice = hasPrice ? calculateGoldPrice(pricePerGram, selectedWeight.grams) : null;
@@ -36,7 +47,7 @@ export default function GoldPriceHeader({ pricePerGram, percentChange, fmtRM }) 
       <div className="gold-price-card">
         <span className="gold-price-label">Gold Price (999.9)</span>
         <div className="gold-price-value">
-          <span className="gold-price-amount">{hasPrice && fmtRM ? fmtRM(displayPrice) : "—"}</span>
+          <span className="gold-price-amount">{hasPrice ? fmtRM2(displayPrice) : "—"}</span>
           <span className="gold-price-unit">/ {selectedWeight.unit}</span>
         </div>
         <span className={`gold-price-change is-${direction}`}>
@@ -53,7 +64,7 @@ export default function GoldPriceHeader({ pricePerGram, percentChange, fmtRM }) 
             aria-pressed={selectedWeight.grams === w.grams}
             aria-label={`Show price per ${w.label}`}
             className={`gold-weight-btn${selectedWeight.grams === w.grams ? " active" : ""}`}
-            onClick={() => setSelectedWeight(w)}
+            onClick={() => onSelectWeight && onSelectWeight(w.grams)}
           >
             {w.label}
           </button>

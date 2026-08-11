@@ -587,10 +587,16 @@
   // cb(records) on every update, newest first. errCb (if given) is called
   // instead of cb([]) on a query error, so callers can show a real error
   // state rather than an indistinguishable empty one.
+  // Capped so the read cost can't grow without bound as history builds up:
+  // "1 Year" across 5 bars would otherwise be ~1,800 docs fetched by every
+  // visitor on every range switch. 400 is the most recent ~80 days of all
+  // five bars, and the chart only plots one weight at a time, so it has
+  // far more points than it can usefully draw.
   function listenPriceHistory(rangeKey, cb, errCb) {
     return db.collection("priceHistory")
       .where("recordedAt", ">=", rangeStartDate(rangeKey))
       .orderBy("recordedAt", "desc")
+      .limit(400)
       .onSnapshot(function (snap) {
         var out = [];
         snap.forEach(function (doc) {
@@ -608,28 +614,34 @@
       }, function () { cb(null); });
   }
 
-  // cb(records) — the current price for every bar, carrying forward each
-  // bar's most recent entry even if it wasn't touched today (so "today"
-  // always shows all 5 bars, not just whichever ones changed today).
-  // Reads the most recent 50 records and keeps the first (newest) one seen
-  // per productId — with one upsert per bar per day, 50 comfortably covers
-  // several weeks even if a bar goes untouched for a while. Legacy
-  // records from before per-bar tracking have no productId and are
-  // skipped rather than wrongly claiming a "current" slot.
+  // cb(records) — the current price for every bar, in the row shape the
+  // Price Today table/stats expect.
+  //
+  // Reads `products` rather than priceHistory: every save writes the
+  // bar's current buyPrice/sellPrice there, so it is already the
+  // authoritative "current rate" and is exactly 5 docs. The old version
+  // scanned the 50 most recent priceHistory docs and kept the newest per
+  // bar, which meant a bar left untouched while the others updated daily
+  // fell out of the window and vanished from the table and stats
+  // entirely — silently, since a missing bar looks the same as one that
+  // never had a price.
   function listenCurrentRates(cb) {
-    return db.collection("priceHistory").orderBy("recordedAt", "desc").limit(50)
-      .onSnapshot(function (snap) {
-        var seen = {};
-        var out = [];
-        snap.forEach(function (doc) {
-          var data = doc.data({ serverTimestamps: "estimate" });
-          if (data.productId && !seen[data.productId]) {
-            seen[data.productId] = true;
-            out.push(Object.assign({ docId: doc.id }, data));
-          }
-        });
-        cb(out);
-      }, function () { cb([]); });
+    return db.collection("products").onSnapshot(function (snap) {
+      var merged = mergeProducts(snap);
+      cb(Object.keys(merged).map(function (id) {
+        var p = merged[id];
+        return {
+          docId: id,
+          productId: id,
+          productName: p.name,
+          weight: p.grams,
+          sell: p.sellPrice,
+          buy: p.buyPrice,
+          margin: p.margin,
+          recordedAt: p.updatedAt || null
+        };
+      }));
+    }, function () { cb([]); });
   }
 
   // ----------------------------------------------------------------- logs
