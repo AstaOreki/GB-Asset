@@ -558,7 +558,9 @@ body::after {
 .invest-calc {
   background: #FCFBF8;
   border: 1px solid rgba(212,175,55,.28); border-radius: 4px;
-  padding: 30px 32px 26px; margin-bottom: 24px;
+  /* 30px top matches the services grid's own gap — it follows that grid
+     directly, which sets no bottom margin of its own. */
+  padding: 30px 32px 26px; margin: 30px 0 24px;
 }
 .invest-calc-head h3 { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--charcoal); }
 .invest-calc-head p { margin-top: 6px; font-size: 13px; color: #6E6A60; line-height: 1.6; }
