@@ -540,14 +540,20 @@
   }
 
   // ---------------------------------------------------------- priceHistory
-  // "1d" is the calendar day so far (since local midnight); the others are
-  // rolling windows, per the Price Today spec.
+  // "1d" starts at the beginning of YESTERDAY, not today. Each bar only
+  // gets one upserted record per calendar day, so a since-midnight-today
+  // window can hold at most one point — never the two a trend line needs,
+  // which left the 1 Day chart permanently stuck on "not enough data".
+  // Starting a day earlier plots yesterday -> today, which is exactly what
+  // a one-day movement chart should show anyway. The others are rolling
+  // windows, per the Price Today spec.
   function rangeStartDate(rangeKey) {
     var now = new Date();
     if (rangeKey === "1d") {
-      var startOfDay = new Date(now);
-      startOfDay.setHours(0, 0, 0, 0);
-      return startOfDay;
+      var startOfYesterday = new Date(now);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      startOfYesterday.setHours(0, 0, 0, 0);
+      return startOfYesterday;
     }
     var d = new Date(now);
     if (rangeKey === "1m") d.setDate(d.getDate() - 30);

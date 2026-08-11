@@ -41,17 +41,20 @@ function niceTicks(min, max, count) {
   return ticks;
 }
 
-function axisLabel(date, rangeKey) {
-  if (rangeKey === "1d") return date.toLocaleTimeString("en-MY", { hour: "numeric", minute: "2-digit" });
+// Every range now plots at most one point per calendar day (one upserted
+// record per bar per day), so dates read correctly across all of them —
+// "1d" used to format as clock times, which showed two near-identical
+// timestamps once it started spanning yesterday -> today.
+function axisLabel(date) {
   return date.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
 }
 
 /**
  * Sell/Buy rate trend line chart for the given (already range-filtered)
  * `rows` — newest-first, same shape as the Price Today table's rows
- * ({ sell, buy, recordedAt }). `rangeKey` only affects axis-tick formatting.
+ * ({ sell, buy, recordedAt }).
  */
-export default function PriceChart({ rows, rangeKey, fmtRM }) {
+export default function PriceChart({ rows, fmtRM }) {
   const svgRef = useRef(null);
   const [hoverIndex, setHoverIndex] = useState(null);
 
@@ -151,7 +154,7 @@ export default function PriceChart({ rows, rangeKey, fmtRM }) {
           {points.length <= 14 &&
             [0, points.length - 1].map((i) => (
               <text key={i} x={xFor(points[i].date.getTime())} y={CHART_H - 10} className="price-chart-axis-label" textAnchor={i === 0 ? "start" : "end"}>
-                {axisLabel(points[i].date, rangeKey)}
+                {axisLabel(points[i].date)}
               </text>
             ))}
 

@@ -820,7 +820,7 @@ export default function HomePage() {
               line made the chart zigzag between unrelated price levels instead
               of showing a real trend. */}
           {gba && !chartError && chartRows && chartRows.filter((r) => r.weight === 1).length > 0 && (
-            <PriceChart rows={chartRows.filter((r) => r.weight === 1)} rangeKey={activeRange} fmtRM={gba.fmtRM} />
+            <PriceChart rows={chartRows.filter((r) => r.weight === 1)} fmtRM={gba.fmtRM} />
           )}
 
           <ProfitCalculator pricePerGram={pricePerGram} fmtRM={gba && gba.fmtRM} />
