@@ -31,6 +31,11 @@ function handleNonNegativeChange(setter) {
  * qualifies for, NOT a flat 1g rate multiplied out: the admin prices each
  * bar independently, so 1,000 g at the 1g rate quoted a number that
  * contradicted the 1kg bar's own price shown in the table below.
+ *
+ * Layout reads as one story rather than a results table: what you hold →
+ * what it's worth now → what it becomes → the payoff. The two middle
+ * figures sit either side of an arrow because they ARE the progression;
+ * repeating them under it would just be the same numbers twice.
  */
 export default function ProfitCalculator({ rates, pricePerGram }) {
   const [gramsInput, setGramsInput] = useState("");
@@ -52,6 +57,12 @@ export default function ProfitCalculator({ rates, pricePerGram }) {
   const futureValue = hasValidInputs ? currentValue * (1 + percent / 100) : null;
   const estimatedProfit = hasValidInputs ? futureValue - currentValue : null;
   const isLoss = estimatedProfit != null && estimatedProfit < 0;
+  // Signed on the payoff figure only — the sign is the point of the number
+  // there, whereas the rows above are plain values.
+  const payoff =
+    estimatedProfit == null
+      ? "—"
+      : `${estimatedProfit > 0 ? "+" : estimatedProfit < 0 ? "-" : ""}${fmtRM(Math.abs(estimatedProfit))}`;
 
   function selectPreset(p) {
     setSelectedPercent(p);
@@ -72,62 +83,99 @@ export default function ProfitCalculator({ rates, pricePerGram }) {
 
       <div className="invest-calc-body">
         <div className="invest-calc-inputs">
-          <div className="field">
-            <input
-              inputMode="decimal"
-              min="0"
-              placeholder=" "
-              step="0.01"
-              type="number"
-              value={gramsInput}
-              onChange={handleNonNegativeChange(setGramsInput)}
-            />
-            <label>Gold Quantity (g)</label>
+          <div className="invest-qty">
+            <label className="invest-input-label" htmlFor="investGrams">
+              Gold Quantity (g)
+            </label>
+            {/* Underline only, no box — the unit sits inside the same rule
+                so the figure and its "g" read as one value. */}
+            <div className="invest-input-line">
+              <input
+                className="invest-qty-input"
+                id="investGrams"
+                inputMode="decimal"
+                min="0"
+                placeholder=" "
+                step="0.01"
+                type="number"
+                value={gramsInput}
+                onChange={handleNonNegativeChange(setGramsInput)}
+              />
+              <span className="invest-input-unit" aria-hidden="true">g</span>
+            </div>
           </div>
 
           <div className="invest-percent-block">
-            <span className="invest-percent-label">If gold value grows by</span>
-            <div className="invest-percent-group">
+            <span className="invest-percent-label" id="investGrowthLabel">
+              If gold value grows by
+            </span>
+            <div className="invest-percent-group" role="group" aria-labelledby="investGrowthLabel">
               {PERCENT_PRESETS.map((p) => (
                 <button
                   key={p}
                   type="button"
+                  aria-pressed={!isCustom && selectedPercent === p}
                   className={`invest-percent-btn${!isCustom && selectedPercent === p ? " active" : ""}`}
                   onClick={() => selectPreset(p)}
                 >
                   {p}%
                 </button>
               ))}
-              <button type="button" className={`invest-percent-btn${isCustom ? " active" : ""}`} onClick={() => setIsCustom(true)}>
+              <button
+                type="button"
+                aria-pressed={isCustom}
+                className={`invest-percent-btn${isCustom ? " active" : ""}`}
+                onClick={() => setIsCustom(true)}
+              >
                 Custom
               </button>
             </div>
             {isCustom && (
-              <div className="field invest-custom-field">
-                <input inputMode="decimal" placeholder=" " step="0.01" type="number" value={customPercent} onChange={(e) => setCustomPercent(e.target.value)} />
-                <label>Custom Percentage (%)</label>
+              <div className="invest-qty invest-custom-field">
+                <label className="invest-input-label" htmlFor="investCustomPercent">
+                  Custom Percentage (%)
+                </label>
+                <div className="invest-input-line">
+                  <input
+                    className="invest-qty-input is-compact"
+                    id="investCustomPercent"
+                    inputMode="decimal"
+                    placeholder=" "
+                    step="0.01"
+                    type="number"
+                    value={customPercent}
+                    onChange={(e) => setCustomPercent(e.target.value)}
+                  />
+                  <span className="invest-input-unit" aria-hidden="true">%</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
         <div className="invest-calc-results">
-          <div className="profit-result-row">
-            <span>Gold Purchased</span>
-            <span>{hasValidInputs ? `${grams.toLocaleString("en-MY")} g` : "—"}</span>
+          <div className="invest-stat">
+            <span className="invest-stat-label">Gold Purchased</span>
+            <span className="invest-stat-value">{hasValidInputs ? `${grams.toLocaleString("en-MY")} g` : "—"}</span>
           </div>
-          <div className="profit-result-row">
-            <span>Current Gold Value</span>
-            <span>{hasValidInputs ? fmtRM(currentValue) : "—"}</span>
+
+          <div className="invest-progression">
+            <div className="invest-stat">
+              <span className="invest-stat-label">Current Gold Value</span>
+              <span className="invest-stat-value">{hasValidInputs ? fmtRM(currentValue) : "—"}</span>
+            </div>
+            <span className="invest-progression-arrow" aria-hidden="true">→</span>
+            <div className="invest-stat">
+              <span className="invest-stat-label">Projected Future Value</span>
+              <span className="invest-stat-value">{hasValidInputs ? fmtRM(futureValue) : "—"}</span>
+            </div>
           </div>
-          <div className="profit-result-row">
-            <span>Projected Future Value</span>
-            <span>{hasValidInputs ? fmtRM(futureValue) : "—"}</span>
+
+          <div className={`invest-payoff${hasValidInputs ? (isLoss ? " is-loss" : " is-profit") : ""}`}>
+            <span className="invest-payoff-label">Estimated {isLoss ? "Loss" : "Profit"}</span>
+            <span className="invest-payoff-value">{payoff}</span>
           </div>
-          <div className={`profit-result-row profit-result-final${hasValidInputs ? (isLoss ? " is-loss" : " is-profit") : ""}`}>
-            <span>Estimated {isLoss ? "Loss" : "Profit"}</span>
-            <span>{hasValidInputs ? fmtRM(estimatedProfit) : "—"}</span>
-          </div>
+
           <p className="invest-calc-footnote">Projection based on your selected annual growth rate.</p>
           {!hasPrice && <p className="invest-calc-note">Live gold price unavailable right now — please check back shortly.</p>}
         </div>

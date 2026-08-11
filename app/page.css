@@ -547,114 +547,126 @@ body::after {
 }
 
 /* ============ GOLD INVESTMENT CALCULATOR ============ */
+/* Self-contained: every class here starts with .invest- and is used only
+   by components/ProfitCalculator.jsx. The calculator no longer borrows
+   the shared .field styles, so nothing in this section can reach the
+   enquiry form, login, checkout or profile.
+
+   Two gold tones carry the whole thing: #8E6820 (5.06:1 on white) for
+   small labels, #A67C27 (3.79:1) for the payoff figure at display size.
+   --gold-light is 1.54:1 on white and is used nowhere here. */
 .invest-calc {
-  background: linear-gradient(160deg, rgba(251,248,241,.05), rgba(251,248,241,.02));
-  border: 1px solid rgba(212,175,55,.18); border-radius: 4px;
-  padding: 30px 32px; margin-bottom: 24px;
+  background: #FCFBF8;
+  border: 1px solid rgba(212,175,55,.28); border-radius: 4px;
+  padding: 30px 32px 26px; margin-bottom: 24px;
 }
-.invest-calc-head h3 { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--ivory); }
-.invest-calc-head p { margin-top: 6px; font-size: 13px; color: var(--gray-soft); line-height: 1.6; }
-.invest-calc-body { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; margin-top: 26px; }
-.invest-calc-inputs .field:first-child { margin-top: 0; }
-.invest-percent-block { margin-top: 28px; }
-.invest-percent-label { display: block; font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; }
+.invest-calc-head h3 { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--charcoal); }
+.invest-calc-head p { margin-top: 6px; font-size: 13px; color: #6E6A60; line-height: 1.6; }
+.invest-calc-body { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: start; margin-top: 30px; }
+
+/* ---- Left: the two things the user actually sets ---- */
+.invest-input-label {
+  display: block; font-family: var(--label); font-size: 11px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #8E6820; margin-bottom: 10px;
+}
+/* Underline only, no box. The unit sits on the same baseline as the
+   figure so "1000" and "g" read as a single value rather than a field
+   with a suffix bolted on. */
+.invest-input-line {
+  display: flex; align-items: baseline; gap: 8px;
+  border-bottom: 1.5px solid rgba(20,20,22,.2); padding-bottom: 8px;
+  transition: border-color .25s var(--ease);
+}
+.invest-input-line:focus-within { border-bottom-color: var(--gold); }
+.invest-qty-input {
+  flex: 1; min-width: 0;
+  background: transparent; border: none; padding: 0;
+  font-family: var(--body); font-size: 34px; font-weight: 500; letter-spacing: -.5px;
+  font-variant-numeric: tabular-nums; color: var(--charcoal);
+}
+.invest-qty-input:focus { outline: none; }
+.invest-qty-input.is-compact { font-size: 22px; }
+.invest-input-unit { font-family: var(--label); font-size: 15px; font-weight: 600; color: #8E6820; }
+
+.invest-percent-block { margin-top: 34px; }
+.invest-percent-label {
+  display: block; font-family: var(--label); font-size: 11px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #8E6820; margin-bottom: 14px;
+}
 .invest-percent-group { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Substantial enough to read as a control, not a tag. Flat gold when
+   selected — a gradient here would fight the flat surfaces around it. */
 .invest-percent-btn {
-  padding: 9px 16px; border: 1px solid rgba(212,175,55,.3); border-radius: 20px;
-  font-family: var(--label); font-size: 12px; font-weight: 600; letter-spacing: .5px;
-  color: var(--gray-soft); background: rgba(251,248,241,.03);
-  transition: all .3s var(--ease);
+  padding: 13px 20px; min-width: 68px;
+  border: 1px solid rgba(212,175,55,.35); border-radius: 6px;
+  font-family: var(--label); font-size: 13px; font-weight: 600; letter-spacing: .4px;
+  color: #6E6A60; background: #FFFFFF;
+  transition: background .25s var(--ease), border-color .25s var(--ease), color .25s var(--ease);
 }
-.invest-percent-btn:hover { border-color: var(--gold-light); color: var(--ivory); }
-.invest-percent-btn.active { background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27); border-color: transparent; color: var(--emerald-deep); }
-.invest-custom-field { margin-top: 18px; max-width: 220px; }
-.invest-calc-results {
-  background: rgba(0,0,0,.15); border: 1px solid rgba(212,175,55,.12); border-radius: 4px; padding: 26px 28px;
+.invest-percent-btn:hover { background: rgba(212,175,55,.08); border-color: var(--gold); color: var(--charcoal); }
+.invest-percent-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.invest-percent-btn.active,
+.invest-percent-btn.active:hover { background: var(--gold); border-color: var(--gold); color: var(--charcoal); }
+.invest-custom-field { margin-top: 20px; max-width: 220px; }
+
+/* ---- Right: what it becomes ---- */
+/* White on the warm card, no border: separated by tone so the two halves
+   read as one surface rather than two boxes. */
+.invest-calc-results { background: #FFFFFF; border-radius: 4px; padding: 28px 30px; }
+.invest-stat { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.invest-stat-label {
+  font-family: var(--label); font-size: 10.5px; letter-spacing: 1.4px;
+  text-transform: uppercase; color: #7A756A;
 }
-.invest-calc-note { margin-top: 16px; font-size: 12px; color: var(--maison-red-bright); line-height: 1.6; }
+.invest-stat-value {
+  font-family: var(--body); font-size: 19px; font-weight: 500;
+  font-variant-numeric: tabular-nums; color: var(--charcoal);
+  overflow-wrap: anywhere;
+}
+/* Current and Projected ARE the progression — placing them either side of
+   the arrow says it without repeating both figures underneath. */
+.invest-progression {
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: end;
+  margin-top: 28px;
+}
+.invest-progression-arrow { font-size: 17px; line-height: 1; color: #A67C27; padding-bottom: 3px; }
+/* The payoff. One hairline above it is the only divider in the panel, so
+   it marks the row that matters instead of competing with three others. */
+.invest-payoff {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 32px; padding-top: 22px; border-top: 1px solid rgba(212,175,55,.3);
+}
+.invest-payoff-label {
+  font-family: var(--label); font-size: 11px; letter-spacing: 1.4px;
+  text-transform: uppercase; color: #8E6820;
+}
+/* Display serif, matching the section title — the one typographic
+   flourish in the panel, which is what makes it read as the conclusion
+   rather than just a bigger number. */
+.invest-payoff-value {
+  font-family: var(--display); font-size: 40px; font-weight: 600;
+  letter-spacing: -1px; line-height: 1.05; color: #A67C27; overflow-wrap: anywhere;
+}
+.invest-payoff.is-loss .invest-payoff-value { color: var(--maison-red-bright); }
+.invest-calc-footnote {
+  /* #7A756A is the lightest gray still readable at 11px (4.59:1). */
+  margin-top: 20px; font-size: 11px; line-height: 1.5; color: #7A756A;
+}
+.invest-calc-note { margin-top: 12px; font-size: 12px; color: var(--maison-red-bright); line-height: 1.6; }
+
 @media (max-width: 900px) { .invest-calc-body { grid-template-columns: 1fr; gap: 32px; } }
-@media (max-width: 640px) {
-  .invest-calc { padding: 22px 20px; }
-  .invest-calc-results { padding: 20px 20px; }
-}
-
-.profit-result-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-  padding: 14px 0; border-bottom: 1px solid rgba(212,175,55,.1);
-  font-size: 14px; color: var(--gray-soft);
-}
-.profit-result-row:first-child { padding-top: 0; }
-.profit-result-row span:last-child { font-family: var(--serif-accent); font-style: italic; font-size: 16px; color: var(--ivory); }
-.profit-result-final { border-bottom: none; margin-top: 6px; padding-top: 20px; border-top: 1px solid rgba(212,175,55,.22); }
-.profit-result-final span:first-child { font-family: var(--label); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-light); }
-.profit-result-final span:last-child { font-size: 24px; font-weight: 500; }
-.profit-result-final.is-profit span:last-child { color: var(--gold-light); }
-.profit-result-final.is-loss span:last-child { color: var(--maison-red-bright); }
-@media (max-width: 640px) {
-  .profit-result-final span:last-child { font-size: 20px; }
-}
-
-/* --- White treatment for the Investment Calculator only. Every selector
-   is prefixed with .invest-calc so the shared .field rules keep applying
-   unchanged in the enquiry form, login, checkout and profile. Colors
-   only — no box model, spacing, size or typography — so the layout and
-   responsive behavior stay identical to the dark version. */
-.invest-calc {
-  background: #FCFBF8; border-color: rgba(212,175,55,.4);
-  /* ~13% less bottom padding (30 -> 26) — trims the dead space under the
-     percentage pills without moving the results panel or the grid. */
-  padding-bottom: 26px;
-}
-.invest-calc-head h3 { color: var(--charcoal); }
-.invest-calc-head p { color: #6E6A60; }
-/* Gold accents keep their hue but need a deeper tone on white:
-   --gold-light is 1.54:1 against #FFFFFF, effectively invisible.
-   #8E6820 is the same gold at 5.06:1; #A67C27 at 3.79:1 clears the 3:1
-   large-text threshold for the 24px profit figure. */
-.invest-calc .invest-percent-label { color: #8E6820; }
-/* A touch more definition on the underline — still the minimalist rule,
-   no box. The native number spinner is left alone. */
-.invest-calc .field input,
-.invest-calc .field select,
-.invest-calc .field textarea {
-  color: var(--charcoal);
-  border-bottom-color: rgba(20,20,22,.24);
-}
-.invest-calc .field input:focus,
-.invest-calc .field select:focus,
-.invest-calc .field textarea:focus { border-color: var(--gold); }
-.invest-calc .field label { color: #6E6A60; }
-.invest-calc .field input:focus + label,
-.invest-calc .field input:not(:placeholder-shown) + label { color: #8E6820; }
-/* :not(.active) so the selected pill keeps its gold gradient exactly —
-   an unguarded rule here would tie on specificity and win by order. */
-.invest-calc .invest-percent-btn:not(.active) { background: #FFFFFF; color: #6E6A60; }
-.invest-calc .invest-percent-btn:not(.active):hover {
-  background: rgba(212,175,55,.08); border-color: var(--gold); color: var(--charcoal);
-}
-/* Panel sits white against the warm off-white card — separated by tone
-   rather than a heavy border. */
-.invest-calc .invest-calc-results { background: #FFFFFF; border-color: rgba(20,20,22,.07); }
-.invest-calc .profit-result-row { color: #6E6A60; border-bottom-color: rgba(20,20,22,.07); }
-/* One consistent type style for every figure — the shared rule sets an
-   italic serif, which read as a different typeface inside the panel. */
-.invest-calc .profit-result-row span:last-child {
-  color: var(--charcoal); font-family: var(--body); font-style: normal;
-}
-.invest-calc .profit-result-final { border-top-color: rgba(212,175,55,.35); }
-.invest-calc .profit-result-final span:first-child { color: #8E6820; }
-/* The one figure that should carry the panel: ~25% larger than the 24px
-   it was, in the richer gold. Still clears 3:1 on white at this size. */
-.invest-calc .profit-result-final span:last-child { font-size: 30px; font-weight: 600; }
-.invest-calc .profit-result-final.is-profit span:last-child { color: #A67C27; }
-.invest-calc .invest-calc-footnote {
-  /* Muted, but #7A756A is the lightest gray still readable at 11px
-     (4.59:1); anything softer drops under AA. */
-  margin-top: 14px; font-size: 11px; line-height: 1.5; color: #7A756A;
+/* Between 900 and 1100 the panel is still half-width but no longer wide
+   enough for two currency figures side by side, so the progression turns
+   vertical and the arrow turns with it. */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .invest-progression { grid-template-columns: 1fr; gap: 18px; }
+  .invest-progression-arrow { transform: rotate(90deg); width: 17px; padding: 0; }
 }
 @media (max-width: 640px) {
-  .invest-calc { padding-bottom: 19px; }
-  .invest-calc .profit-result-final span:last-child { font-size: 25px; }
+  .invest-calc { padding: 22px 20px 19px; }
+  .invest-calc-results { padding: 22px 20px; }
+  .invest-qty-input { font-size: 28px; }
+  .invest-payoff-value { font-size: 32px; }
 }
 
 /* ============ INVESTMENT BENEFITS ============ */
