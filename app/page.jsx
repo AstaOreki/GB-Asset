@@ -937,7 +937,12 @@ export default function HomePage() {
                     <span data-label="Weight (g)">{row.weight ? `${row.weight}g` : "—"}</span>
                     <span data-label="Buy Gold From GBA">{gba.fmtRM(row.sell)}</span>
                     <span data-label="GBA Buys From You">{gba.fmtRM(row.buy)}</span>
-                    <span data-label="Margin">{gba.fmtMarginPercent(row.sell, row.buy)}</span>
+                    {/* Percentage plus the flat ringgit spread it works out
+                        to — same RM formatting as the two price columns. */}
+                    <span data-label="Margin">
+                      {gba.fmtMarginPercent(row.sell, row.buy)}
+                      {row.buy > 0 && typeof row.sell === "number" ? ` (${gba.fmtRM(row.sell - row.buy)})` : ""}
+                    </span>
                   </div>
                 ))
               )}
