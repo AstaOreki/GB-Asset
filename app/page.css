@@ -420,6 +420,28 @@ body::after {
 .pstat-value { display: block; margin-top: 10px; font-family: var(--serif-accent); font-style: italic; font-size: 24px; color: var(--ivory); }
 .pstat-value-sm { font-size: 15px; font-style: normal; }
 
+.chart-weight-block { margin-bottom: 16px; }
+.chart-weight-label {
+  display: block; margin-bottom: 10px;
+  font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light);
+}
+.chart-weight-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.chart-weight-btn {
+  padding: 9px 18px; border: 1px solid rgba(212,175,55,.3); border-radius: 20px;
+  font-family: var(--label); font-size: 12px; font-weight: 600; letter-spacing: .5px;
+  color: var(--gray-soft); background: rgba(251,248,241,.03);
+  transition: all .3s var(--ease);
+}
+.chart-weight-btn:hover { border-color: var(--gold-light); color: var(--ivory); }
+.chart-weight-btn.active {
+  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27);
+  border-color: transparent; color: var(--emerald-deep);
+}
+@media (max-width: 640px) {
+  .chart-weight-group { gap: 8px; }
+  .chart-weight-btn { padding: 8px 13px; font-size: 11px; letter-spacing: .3px; }
+}
+
 .price-tabs {
   position: relative;
   display: grid; grid-template-columns: repeat(5,1fr);

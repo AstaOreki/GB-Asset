@@ -37,6 +37,17 @@ const PRICE_RANGES = [
   { key: "1y", label: "1 Year" },
 ];
 
+// Each bar's real recorded prices are already stored per weight in
+// priceHistory (the admin sets each bar independently), so charting a
+// weight is a filter over existing data — never a multiplied 1g estimate.
+const CHART_WEIGHTS = [
+  { grams: 1, label: "1g" },
+  { grams: 10, label: "10g" },
+  { grams: 50, label: "50g" },
+  { grams: 100, label: "100g" },
+  { grams: 1000, label: "1kg" },
+];
+
 export default function HomePage() {
   const gba = useGBA();
   const { isAuthed, authReady } = useAuthAwareNav();
@@ -62,6 +73,7 @@ export default function HomePage() {
 
   // -------- PRICE TODAY (gold rate history, from Firestore "priceHistory") --------
   const [activeRange, setActiveRange] = useState("1d");
+  const [chartWeight, setChartWeight] = useState(1);
   // The table always shows exactly one row per bar (5 rows) — whichever
   // price is current, carried forward from its last update — not a growing
   // log, so it's driven by the carry-forward feed regardless of which tab
@@ -125,6 +137,12 @@ export default function HomePage() {
     pricePerGram != null && previousDayRow && previousDayRow.sell > 0
       ? ((pricePerGram - previousDayRow.sell) / previousDayRow.sell) * 100
       : null;
+
+  // The selected bar's own recorded history for the selected period —
+  // priceHistory already stores real per-weight prices, so this is a
+  // filter over existing data, never a scaled 1g estimate.
+  const chartWeightRows = chartRows ? chartRows.filter((r) => r.weight === chartWeight) : null;
+  const chartWeightLabel = (CHART_WEIGHTS.find((w) => w.grams === chartWeight) || CHART_WEIGHTS[0]).label;
 
   // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
@@ -802,6 +820,23 @@ export default function HomePage() {
             </div>
           </div>
 
+          <div className="chart-weight-block reveal">
+            <span className="chart-weight-label">Gold Weight</span>
+            <div className="chart-weight-group" role="group" aria-label="Gold weight for the price trend chart">
+              {CHART_WEIGHTS.map((w) => (
+                <button
+                  key={w.grams}
+                  type="button"
+                  aria-pressed={chartWeight === w.grams}
+                  className={`chart-weight-btn${chartWeight === w.grams ? " active" : ""}`}
+                  onClick={() => setChartWeight(w.grams)}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="price-tabs reveal" data-active={activeRange}>
             <div className="price-tab-indicator"></div>
             {PRICE_RANGES.map((r) => (
@@ -816,11 +851,12 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Charted on the 1g bar specifically — mixing all 5 weights into one
-              line made the chart zigzag between unrelated price levels instead
-              of showing a real trend. */}
-          {gba && !chartError && chartRows && chartRows.filter((r) => r.weight === 1).length > 0 && (
-            <PriceChart rows={chartRows.filter((r) => r.weight === 1)} fmtRM={gba.fmtRM} />
+          {/* One weight at a time — mixing weights into one line made the
+              chart zigzag between unrelated price levels instead of showing
+              a real trend. Each weight's own recorded prices are used, never
+              a scaled 1g figure. */}
+          {gba && !chartError && chartWeightRows && (
+            <PriceChart rows={chartWeightRows} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
           )}
 
           <ProfitCalculator pricePerGram={pricePerGram} fmtRM={gba && gba.fmtRM} />

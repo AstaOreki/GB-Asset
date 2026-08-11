@@ -50,11 +50,13 @@ function axisLabel(date) {
 }
 
 /**
- * Sell/Buy rate trend line chart for the given (already range-filtered)
- * `rows` — newest-first, same shape as the Price Today table's rows
- * ({ sell, buy, recordedAt }).
+ * Sell/Buy rate trend line chart for the given (already weight- and
+ * range-filtered) `rows` — newest-first, same shape as the Price Today
+ * table's rows ({ sell, buy, recordedAt }). `weightLabel` is the selected
+ * bar ("1g", "10g", …) and only labels the title/tooltip; the values
+ * plotted are that bar's own recorded prices, never a scaled figure.
  */
-export default function PriceChart({ rows, fmtRM }) {
+export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
   const svgRef = useRef(null);
   const [hoverIndex, setHoverIndex] = useState(null);
 
@@ -66,12 +68,22 @@ export default function PriceChart({ rows, fmtRM }) {
       .sort((a, b) => a.date - b.date);
   }, [rows]);
 
-  if (!rows || rows.length === 0) return null; // caller already shows loading/empty state
-
+  // Fewer than 2 points can't form a line — show why rather than
+  // vanishing, since a weight/period combination may legitimately have no
+  // recorded prices yet.
   if (points.length < 2) {
     return (
-      <div className="price-chart-empty">
-        <p>Not enough data yet to plot a trend for this period — check back after the next update.</p>
+      <div className="price-chart">
+        <div className="price-chart-legend">
+          <span className="price-chart-title">{weightLabel} Gold Price Trend</span>
+        </div>
+        <div className="price-chart-empty">
+          <p>
+            {points.length === 0
+              ? `No ${weightLabel} price records for this period yet.`
+              : `Not enough ${weightLabel} data yet to plot a trend for this period — check back after the next update.`}
+          </p>
+        </div>
       </div>
     );
   }
@@ -114,12 +126,12 @@ export default function PriceChart({ rows, fmtRM }) {
   const first = points[0];
   const tooltipLeft = hovered ? (xFor(hovered.date.getTime()) / CHART_W) * 100 : null;
   const tooltipAlignEnd = tooltipLeft != null && tooltipLeft > 65;
-  const trendSummary = `1g gold price trend: opened at ${fmtRM(first.sell)}, now ${fmtRM(last.sell)}.`;
+  const trendSummary = `${weightLabel} gold price trend: opened at ${fmtRM(first.sell)}, now ${fmtRM(last.sell)}.`;
 
   return (
     <div className="price-chart">
       <div className="price-chart-legend">
-        <span className="price-chart-title">1g Gold Price Trend</span>
+        <span className="price-chart-title">{weightLabel} Gold Price Trend</span>
         <span className="price-chart-keys">
           <span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span>
           <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span>
@@ -174,7 +186,9 @@ export default function PriceChart({ rows, fmtRM }) {
             className={`price-chart-tooltip${tooltipAlignEnd ? " align-end" : ""}`}
             style={{ left: `${tooltipLeft}%` }}
           >
-            <div className="price-chart-tooltip-date">{hovered.date.toLocaleString("en-MY", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
+            <div className="price-chart-tooltip-date">
+              {weightLabel} · {hovered.date.toLocaleString("en-MY", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+            </div>
             <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span><b>{fmtRM(hovered.sell)}</b></div>
             <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span><b>{fmtRM(hovered.buy)}</b></div>
           </div>
