@@ -128,6 +128,7 @@ export default function ProfitCalculator({ rates, pricePerGram }) {
             <span>Estimated {isLoss ? "Loss" : "Profit"}</span>
             <span>{hasValidInputs ? fmtRM(estimatedProfit) : "—"}</span>
           </div>
+          <p className="invest-calc-footnote">Projection based on your selected annual growth rate.</p>
           {!hasPrice && <p className="invest-calc-note">Live gold price unavailable right now — please check back shortly.</p>}
         </div>
       </div>

@@ -599,7 +599,12 @@ body::after {
    unchanged in the enquiry form, login, checkout and profile. Colors
    only — no box model, spacing, size or typography — so the layout and
    responsive behavior stay identical to the dark version. */
-.invest-calc { background: #FFFFFF; border-color: rgba(212,175,55,.4); }
+.invest-calc {
+  background: #FCFBF8; border-color: rgba(212,175,55,.4);
+  /* ~13% less bottom padding (30 -> 26) — trims the dead space under the
+     percentage pills without moving the results panel or the grid. */
+  padding-bottom: 26px;
+}
 .invest-calc-head h3 { color: var(--charcoal); }
 .invest-calc-head p { color: #6E6A60; }
 /* Gold accents keep their hue but need a deeper tone on white:
@@ -607,11 +612,13 @@ body::after {
    #8E6820 is the same gold at 5.06:1; #A67C27 at 3.79:1 clears the 3:1
    large-text threshold for the 24px profit figure. */
 .invest-calc .invest-percent-label { color: #8E6820; }
+/* A touch more definition on the underline — still the minimalist rule,
+   no box. The native number spinner is left alone. */
 .invest-calc .field input,
 .invest-calc .field select,
 .invest-calc .field textarea {
   color: var(--charcoal);
-  border-bottom-color: rgba(20,20,22,.16);
+  border-bottom-color: rgba(20,20,22,.24);
 }
 .invest-calc .field input:focus,
 .invest-calc .field select:focus,
@@ -622,13 +629,33 @@ body::after {
 /* :not(.active) so the selected pill keeps its gold gradient exactly —
    an unguarded rule here would tie on specificity and win by order. */
 .invest-calc .invest-percent-btn:not(.active) { background: #FFFFFF; color: #6E6A60; }
-.invest-calc .invest-percent-btn:not(.active):hover { border-color: var(--gold); color: var(--charcoal); }
-.invest-calc .invest-calc-results { background: rgba(20,20,22,.03); border-color: rgba(212,175,55,.3); }
-.invest-calc .profit-result-row { color: #6E6A60; border-bottom-color: rgba(212,175,55,.28); }
-.invest-calc .profit-result-row span:last-child { color: var(--charcoal); }
-.invest-calc .profit-result-final { border-top-color: rgba(212,175,55,.5); }
+.invest-calc .invest-percent-btn:not(.active):hover {
+  background: rgba(212,175,55,.08); border-color: var(--gold); color: var(--charcoal);
+}
+/* Panel sits white against the warm off-white card — separated by tone
+   rather than a heavy border. */
+.invest-calc .invest-calc-results { background: #FFFFFF; border-color: rgba(20,20,22,.07); }
+.invest-calc .profit-result-row { color: #6E6A60; border-bottom-color: rgba(20,20,22,.07); }
+/* One consistent type style for every figure — the shared rule sets an
+   italic serif, which read as a different typeface inside the panel. */
+.invest-calc .profit-result-row span:last-child {
+  color: var(--charcoal); font-family: var(--body); font-style: normal;
+}
+.invest-calc .profit-result-final { border-top-color: rgba(212,175,55,.35); }
 .invest-calc .profit-result-final span:first-child { color: #8E6820; }
+/* The one figure that should carry the panel: ~25% larger than the 24px
+   it was, in the richer gold. Still clears 3:1 on white at this size. */
+.invest-calc .profit-result-final span:last-child { font-size: 30px; font-weight: 600; }
 .invest-calc .profit-result-final.is-profit span:last-child { color: #A67C27; }
+.invest-calc .invest-calc-footnote {
+  /* Muted, but #7A756A is the lightest gray still readable at 11px
+     (4.59:1); anything softer drops under AA. */
+  margin-top: 14px; font-size: 11px; line-height: 1.5; color: #7A756A;
+}
+@media (max-width: 640px) {
+  .invest-calc { padding-bottom: 19px; }
+  .invest-calc .profit-result-final span:last-child { font-size: 25px; }
+}
 
 /* ============ INVESTMENT BENEFITS ============ */
 .benefits {
