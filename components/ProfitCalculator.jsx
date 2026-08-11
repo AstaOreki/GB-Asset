@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ratePerGramFor } from "../lib/goldPricing";
+import { ratePerGramFor, tierFor } from "../lib/goldPricing";
 
 const PERCENT_PRESETS = [5, 10, 15, 20];
 
@@ -47,6 +47,13 @@ export default function ProfitCalculator({ rates, pricePerGram }) {
   const hasPrice = typeof appliedRate === "number" && appliedRate > 0;
   const hasValidInputs =
     gramsInput !== "" && !isNaN(grams) && grams > 0 && !isNaN(percent) && (!isCustom || customPercent !== "") && hasPrice;
+
+  // The admin's own margin on the bar this quantity is priced from, shown
+  // for information only — it is deliberately NOT subtracted from the
+  // projection, which stays a straight Sell-price-times-growth figure.
+  // Same % markup over Buy that Product Pricing and the table below show.
+  const tier = tierFor(rates, grams > 0 ? grams : 1);
+  const marginPercent = tier && tier.buy > 0 ? ((tier.sell - tier.buy) / tier.buy) * 100 : null;
 
   const currentValue = hasValidInputs ? grams * appliedRate : null;
   const futureValue = hasValidInputs ? currentValue * (1 + percent / 100) : null;
@@ -123,6 +130,10 @@ export default function ProfitCalculator({ rates, pricePerGram }) {
           <div className="profit-result-row">
             <span>Projected Future Value</span>
             <span>{hasValidInputs ? fmtRM(futureValue) : "—"}</span>
+          </div>
+          <div className="profit-result-row">
+            <span>GBA Margin</span>
+            <span>{hasValidInputs && marginPercent != null ? `${marginPercent.toFixed(2)}%` : "—"}</span>
           </div>
           <div className={`profit-result-row profit-result-final${hasValidInputs ? (isLoss ? " is-loss" : " is-profit") : ""}`}>
             <span>Estimated {isLoss ? "Loss" : "Profit"}</span>
