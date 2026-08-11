@@ -385,7 +385,7 @@ body::after {
 .gold-price-change.is-flat { color: var(--gray-soft); }
 
 .gold-weight-toggle {
-  position: relative; display: grid; grid-template-columns: repeat(4,1fr); gap: 0;
+  position: relative; display: grid; grid-template-columns: repeat(5,1fr); gap: 0;
   border: 1px solid rgba(212,175,55,.28); border-radius: 6px; overflow: hidden;
   background: rgba(251,248,241,.03); min-width: 280px;
 }
@@ -396,13 +396,14 @@ body::after {
 }
 .gold-weight-btn.active { color: var(--emerald-deep); }
 .gold-weight-indicator {
-  position: absolute; top: 0; left: 0; width: 25%; height: 100%;
+  position: absolute; top: 0; left: 0; width: 20%; height: 100%;
   background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27);
   transition: transform .45s var(--ease); z-index: 1;
 }
 .gold-weight-toggle[data-active="10"] .gold-weight-indicator { transform: translateX(100%); }
-.gold-weight-toggle[data-active="100"] .gold-weight-indicator { transform: translateX(200%); }
-.gold-weight-toggle[data-active="1000"] .gold-weight-indicator { transform: translateX(300%); }
+.gold-weight-toggle[data-active="50"] .gold-weight-indicator { transform: translateX(200%); }
+.gold-weight-toggle[data-active="100"] .gold-weight-indicator { transform: translateX(300%); }
+.gold-weight-toggle[data-active="1000"] .gold-weight-indicator { transform: translateX(400%); }
 @media (max-width: 640px) {
   .gold-price-header { flex-direction: column; align-items: stretch; padding: 22px 20px; gap: 20px; }
   .gold-price-amount { font-size: clamp(26px,8vw,36px); }

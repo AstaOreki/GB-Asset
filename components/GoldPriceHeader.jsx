@@ -5,6 +5,7 @@ import { useState } from "react";
 const WEIGHTS = [
   { grams: 1, label: "1g", unit: "gram" },
   { grams: 10, label: "10g", unit: "10g" },
+  { grams: 50, label: "50g", unit: "50g" },
   { grams: 100, label: "100g", unit: "100g" },
   { grams: 1000, label: "1kg", unit: "kg" },
 ];
