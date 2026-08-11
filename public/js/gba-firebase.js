@@ -628,6 +628,11 @@
   function listenCurrentRates(cb) {
     return db.collection("products").onSnapshot(function (snap) {
       var merged = mergeProducts(snap);
+      // Which bars actually have a saved doc — the rest fall back to the
+      // static catalogue price, which callers shouldn't present as a
+      // real, admin-set rate.
+      var saved = {};
+      snap.forEach(function (doc) { saved[doc.id] = true; });
       cb(Object.keys(merged).map(function (id) {
         var p = merged[id];
         return {
@@ -638,7 +643,8 @@
           sell: p.sellPrice,
           buy: p.buyPrice,
           margin: p.margin,
-          recordedAt: p.updatedAt || null
+          recordedAt: p.updatedAt || null,
+          hasRecord: !!saved[id]
         };
       }));
     }, function () { cb([]); });

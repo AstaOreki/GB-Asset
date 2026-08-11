@@ -37,6 +37,8 @@ const PRICE_RANGES = [
   { key: "1y", label: "1 Year" },
 ];
 
+const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
+
 // Each bar's real recorded prices are already stored per weight in
 // priceHistory (the admin sets each bar independently), so charting a
 // weight is a filter over existing data — never a multiplied 1g estimate.
@@ -107,9 +109,28 @@ export default function HomePage() {
   }, [gba, activeRange]);
 
   const todayRows = currentRows;
-  const todayHigh = todayRows && todayRows.length ? Math.max(...todayRows.map((r) => r.sell)) : null;
-  const todayLow = todayRows && todayRows.length ? Math.min(...todayRows.map((r) => r.sell)) : null;
-  const lastUpdate = todayRows && todayRows.length ? todayRows[0].recordedAt : null;
+  // Per-gram, not the raw total: comparing whole-bar prices across
+  // different weights only ever reported "1kg is the biggest number and
+  // 1g the smallest", which measures bar size rather than the rate.
+  const perGramRates =
+    todayRows && todayRows.length
+      ? todayRows.filter((r) => r.weight > 0 && typeof r.sell === "number").map((r) => r.sell / r.weight)
+      : [];
+  const todayHigh = perGramRates.length ? Math.max(...perGramRates) : null;
+  const todayLow = perGramRates.length ? Math.min(...perGramRates) : null;
+  // The newest timestamp across all bars — rows arrive in catalogue
+  // order, so the first row is just the 1kg bar, not the latest save.
+  const lastUpdate =
+    todayRows && todayRows.length
+      ? todayRows.reduce((latest, r) => {
+          const d = toJsDate(r.recordedAt);
+          const l = toJsDate(latest);
+          return d && (!l || d > l) ? r.recordedAt : latest;
+        }, null)
+      : null;
+  // A bar with no Firestore doc yet falls back to the static catalogue
+  // price, so "we have rows" alone doesn't mean any rate was ever set.
+  const hasAnyRate = !!(todayRows && todayRows.some((r) => r.hasRecord));
   // The 1g bar's current sell rate is the live "price per gram" the
   // Gold Price header and Gold Investment Calculator both key off.
   const oneGramRow = currentRows && currentRows.find((r) => r.weight === 1);
@@ -132,7 +153,6 @@ export default function HomePage() {
   // forward from whenever it was last set, so if nothing was saved today
   // both sides used to resolve to the same record and the change always
   // read 0.00%, hiding the real movement.
-  const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
   const currentPriceDay = toJsDate(oneGramRow && oneGramRow.recordedAt);
   const currentPriceDayStr = currentPriceDay ? currentPriceDay.toDateString() : new Date().toDateString();
   const previousDayRow =
@@ -820,11 +840,11 @@ export default function HomePage() {
 
           <div className="price-stats reveal-stagger">
             <div className="pstat-tile">
-              <span className="pstat-label">Today&apos;s High</span>
+              <span className="pstat-label">Today&apos;s High (per g)</span>
               <span className="pstat-value">{todayHigh != null ? gba.fmtRM(todayHigh) : "—"}</span>
             </div>
             <div className="pstat-tile">
-              <span className="pstat-label">Today&apos;s Low</span>
+              <span className="pstat-label">Today&apos;s Low (per g)</span>
               <span className="pstat-value">{todayLow != null ? gba.fmtRM(todayLow) : "—"}</span>
             </div>
             <div className="pstat-tile">
@@ -888,7 +908,7 @@ export default function HomePage() {
                 <div className="price-table-empty">
                   <h3>Loading rates…</h3>
                 </div>
-              ) : currentRows.length === 0 ? (
+              ) : currentRows.length === 0 || !hasAnyRate ? (
                 <div className="price-table-empty">
                   <h3>No rates set yet</h3>
                   <p>Daily gold rates are updated by our team — check back soon.</p>
