@@ -745,6 +745,35 @@ body::after {
 }
 .submit-sub { text-align: center; font-size: 11.5px; color: var(--gray-soft); margin-top: 16px; }
 
+/* --- White treatment for the enquiry form only. Scoped to #consultForm so
+   the shared .glass-card / .field / .submit-* rules above keep applying
+   unchanged on /login, /checkout, /profile and the admin pages. Colors
+   only — no box model, spacing, size or typography is touched, so the
+   layout stays pixel-identical to the dark version. */
+#consultForm { background: #FFFFFF; }
+/* Gold card border and the gold submit button are deliberately left as
+   they are: the accent carries over onto the white surface. */
+#consultForm .field input,
+#consultForm .field select,
+#consultForm .field textarea {
+  color: var(--charcoal);
+  border-bottom-color: rgba(20,20,22,.16);
+}
+#consultForm .field textarea { border-color: rgba(20,20,22,.16); }
+#consultForm .field input:focus,
+#consultForm .field select:focus,
+#consultForm .field textarea:focus { border-color: var(--gold); }
+#consultForm .field label { color: #6E6A60; }
+/* The floated label needs a deeper gold than --gold-light, which is only
+   1.54:1 on white. #8E6820 is the same hue at 5.06:1, readable at 10px. */
+#consultForm .field input:focus + label,
+#consultForm .field input:not(:placeholder-shown) + label,
+#consultForm .field select:focus + label,
+#consultForm .field select:not([data-empty="true"]) + label,
+#consultForm .field textarea:focus ~ label,
+#consultForm .field textarea:not(:placeholder-shown) ~ label { color: #8E6820; }
+#consultForm .submit-sub { color: #6E6A60; }
+
 /* ============ TRUST STRIP (clean single-row, footer-adjacent) ============ */
 .strip { background: var(--emerald-deep); padding: 0 0 90px; position: relative; }
 .trust-strip-inner {
