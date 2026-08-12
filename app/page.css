@@ -62,6 +62,21 @@ body::after {
   transform: translate(-50%,-50%) rotate(45deg);
 }
 
+/* ============ DEDICATED SUB-PAGES (/about, /services) ============ */
+/* These pages open straight into a content section rather than the hero,
+   so they need to clear the fixed header themselves. The section's own
+   130px top padding already covers the ~90px header; this adds the same
+   breathing room the hero gives the homepage. */
+.subpage > section:first-child { padding-top: 190px; }
+@media (max-width: 900px) { .subpage > section:first-child { padding-top: 160px; } }
+@media (max-width: 640px) { .subpage > section:first-child { padding-top: 130px; } }
+/* An h1 where the homepage had an h2 — same size and weight, so the
+   sections look identical while each page still has one top-level heading.
+   No h1 exists inside these blocks on the homepage, so this changes
+   nothing there. */
+.section-head h1 { font-size: clamp(28px,3.4vw,42px); color: var(--ivory); margin-top: 14px; }
+.heritage-text h1 { font-size: clamp(28px,3.2vw,40px); color: var(--ivory); margin-top: 14px; }
+
 /* ============ SECTION HEAD ============ */
 .section-head { text-align: center; max-width: 640px; margin: 0 auto 64px; }
 .section-head h2 { font-size: clamp(28px,3.4vw,42px); color: var(--ivory); margin-top: 14px; }
@@ -922,7 +937,9 @@ body::after {
 @media (max-width: 900px) { .pvm-grid { grid-template-columns: 1fr; gap: 56px; } .pvm-col:not(:last-child)::after { display: none; } }
 
 /* ============ CORE VALUES — T.R.U.S.T ============ */
-.core-values { padding: 110px 0; background: var(--emerald-deep); text-align: center; position: relative; }
+/* 130px like every other full section — this was the one desktop outlier
+   at 110px, which made the gap above it read shorter than the rest. */
+.core-values { padding: 130px 0; background: var(--emerald-deep); text-align: center; position: relative; }
 .trust-word { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin-top: 56px; }
 .trust-letter { max-width: 170px; transition: transform .4s var(--ease); }
 .trust-letter:hover { transform: translateY(-6px); }
@@ -1002,9 +1019,37 @@ body::after {
   .price-grid { gap: 14px; }
   .consult-inner { padding: 0 4px; }
   .glass-card { padding: 30px 24px; }
-  .heritage { padding: 90px 0; }
-  .showcase, .benefits, .consult { padding: 90px 0; }
   .dashboard { padding: 100px 0 50px; }
+  /* Every full-width section drops to the same 90px on phones. Only
+     .heritage, .benefits and .consult used to be listed here, so the rest
+     kept their desktop 130px and the vertical rhythm visibly jumped
+     between sections on mobile. */
+  .heritage,
+  .services,
+  .pvm,
+  .core-values,
+  .why-choose,
+  .price-today,
+  .benefits,
+  .consult,
+  .store-location { padding: 90px 0; }
+  .promise-banner { padding: 70px 0; }
+  .strip { padding: 0 0 60px; }
+  /* Section headings carried a 64px gap designed for desktop. */
+  .section-head { margin-bottom: 44px; }
+}
+
+/* ============ TOUCH TARGETS ============ */
+/* Phone-only: these controls sit between 29px and 41px tall, under the 44px
+   minimum comfortable tap target. min-height leaves the padding, font and
+   desktop rendering untouched — buttons centre their content already, so
+   they simply get taller on small screens. */
+@media (max-width: 640px) {
+  .buy-btn,
+  .chart-weight-btn,
+  .gold-weight-btn,
+  .price-tab-btn,
+  .invest-percent-btn { min-height: 44px; }
 }
 @media (max-width: 420px) {
   .price-grid { grid-template-columns: 1fr 1fr; gap: 12px; }

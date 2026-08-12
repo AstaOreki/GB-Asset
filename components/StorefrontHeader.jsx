@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuthAwareNav } from "../hooks/useAuthAwareNav";
 import { useCartBadge } from "../hooks/useCartBadge";
 import { useScrollProgress } from "../hooks/useScrollProgress";
 
+/**
+ * `href` = its own route, always a <Link> and highlighted when you are on
+ * it. `hash` = a section of the homepage, so it is an in-page anchor on "/"
+ * and a cross-page "/#anchor" link everywhere else.
+ */
 const NAV_ITEMS = [
-  { label: "Home", hash: "#top" },
+  { label: "Home", href: "/" },
   { label: "Pricing", hash: "#pricing" },
-  { label: "About Us", hash: "#heritage" },
-  { label: "Services", hash: "#services" },
+  { label: "About Us", href: "/about" },
+  { label: "Services", href: "/services" },
   { label: "Price Today", hash: "#products" },
   { label: "Contact Us", hash: "#contact" },
   { label: "Location", hash: "#location" },
@@ -20,10 +26,13 @@ const NAV_ITEMS = [
  * Storefront header: logo + nav-links + cart badge + auth button.
  *
  * @param {{ variant?: "home" | string }} props
- *   variant === "home"  -> in-page `#anchor` hrefs, "Home" link gets
- *                          `.active`. Use on "/" only.
- *   any other value     -> cross-page `/#anchor` hrefs, no `.active` link.
- *                          Use on /cart, /checkout, etc.
+ *   variant === "home"  -> in-page `#anchor` hrefs. Use on "/" only.
+ *   any other value     -> cross-page `/#anchor` hrefs.
+ *                          Use on /about, /services, /cart, /checkout, etc.
+ *
+ * The `.active` link is derived from the current pathname, so Home, About Us
+ * and Services each highlight on their own page without the caller having
+ * to say which one it is.
  *
  * Renders its own `.scroll-progress` bar (driven by useScrollProgress),
  * a cart badge (driven by useCartBadge), and a login/logout button
@@ -32,10 +41,33 @@ const NAV_ITEMS = [
  */
 export default function StorefrontHeader({ variant }) {
   const isHome = variant === "home";
+  const pathname = usePathname();
   const { scrolled, progress } = useScrollProgress();
   const { count } = useCartBadge();
   const { isAuthed, user } = useAuthAwareNav();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // One place decides how a nav item renders, so the desktop bar and the
+  // mobile drawer can never drift apart.
+  const renderNav = (item) => {
+    const active = item.href && pathname === item.href ? "active" : undefined;
+    if (item.href) {
+      return (
+        <Link key={item.label} className={active} href={item.href}>
+          {item.label}
+        </Link>
+      );
+    }
+    return isHome ? (
+      <a key={item.label} href={item.hash}>
+        {item.label}
+      </a>
+    ) : (
+      <Link key={item.label} href={`/${item.hash}`}>
+        {item.label}
+      </Link>
+    );
+  };
 
   const authLabel = isAuthed
     ? `Hi, ${user?.displayName || (user?.email ? user.email.split("@")[0] : "")}`
@@ -62,19 +94,7 @@ export default function StorefrontHeader({ variant }) {
               GB <span>ASSET</span>
             </div>
           </Link>
-          <nav className="nav-links">
-            {NAV_ITEMS.map((item) =>
-              isHome ? (
-                <a key={item.hash} className={item.label === "Home" ? "active" : undefined} href={item.hash}>
-                  {item.label}
-                </a>
-              ) : (
-                <Link key={item.hash} href={`/${item.hash}`}>
-                  {item.label}
-                </Link>
-              )
-            )}
-          </nav>
+          <nav className="nav-links">{NAV_ITEMS.map(renderNav)}</nav>
           <div className="nav-right">
             <Link className="cart-link" href="/cart" aria-label="View cart">
               <svg viewBox="0 0 24 24">
@@ -111,17 +131,7 @@ export default function StorefrontHeader({ variant }) {
       </header>
       <div className={`mobile-nav-drawer${menuOpen ? " open" : ""}`}>
         <nav onClick={() => setMenuOpen(false)}>
-          {NAV_ITEMS.map((item) =>
-            isHome ? (
-              <a key={item.hash} className={item.label === "Home" ? "active" : undefined} href={item.hash}>
-                {item.label}
-              </a>
-            ) : (
-              <Link key={item.hash} href={`/${item.hash}`}>
-                {item.label}
-              </Link>
-            )
-          )}
+          {NAV_ITEMS.map(renderNav)}
           <a className="drawer-auth-link" href={authHref}>
             {authLabel}
           </a>

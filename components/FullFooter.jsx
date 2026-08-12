@@ -6,7 +6,8 @@ import Link from "next/link";
  * Three-column footer used on index ("/"), /cart and /checkout.
  * Takes no props.
  *
- * Quick Links use cross-page `/#anchor` hrefs so they work from any route.
+ * Quick Links use cross-page `/#anchor` hrefs so they work from any route;
+ * About Us and Services point at their own routes.
  * The Privacy Policy link points to `/privacy-policy` (a real Next.js
  * route) — this fixes the pre-existing dead `href="#"` bug that
  * cart.html/checkout.html had, per the approved migration plan. The
@@ -70,10 +71,10 @@ export default function FullFooter() {
               <Link href="/#pricing">Pricing</Link>
             </li>
             <li>
-              <Link href="/#heritage">About Us</Link>
+              <Link href="/about">About Us</Link>
             </li>
             <li>
-              <Link href="/#services">Services</Link>
+              <Link href="/services">Services</Link>
             </li>
             <li>
               <Link href="/#products">Price Today</Link>

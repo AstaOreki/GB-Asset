@@ -105,7 +105,7 @@ main {
 .toggle-eye svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 
 .submit-btn {
-  margin-top: 28px; width: 100%; padding: 16px;
+  margin-top: 34px; width: 100%; padding: 17px;
   background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27);
   color: var(--emerald-deep); font-family: var(--label); font-weight: 700; font-size: 12px;
   letter-spacing: 2px; text-transform: uppercase; border-radius: 3px;
