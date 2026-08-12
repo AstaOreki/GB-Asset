@@ -18,7 +18,9 @@ import { useScrollProgress } from "../hooks/useScrollProgress";
  * put the two price links at opposite ends of the bar.
  */
 const NAV_ITEMS = [
-  { label: "Home", href: "/" },
+  // Both: on "/" it scrolls back to the hero, from anywhere else it
+  // navigates home. Route-only made it a no-op on the homepage itself.
+  { label: "Home", href: "/", hash: "#top" },
   { label: "About Us", href: "/about" },
   { label: "Services", href: "/services" },
   { label: "Pricing", hash: "#pricing" },
@@ -56,6 +58,16 @@ export default function StorefrontHeader({ variant }) {
   // mobile drawer can never drift apart.
   const renderNav = (item) => {
     const active = item.href && pathname === item.href ? "active" : undefined;
+    // An item with a hash points at a homepage section, so while we are on
+    // the homepage it stays a plain anchor and scrolls. This is checked
+    // first so Home — which has both — scrolls here and routes elsewhere.
+    if (item.hash && isHome) {
+      return (
+        <a key={item.label} className={active} href={item.hash}>
+          {item.label}
+        </a>
+      );
+    }
     if (item.href) {
       return (
         <Link key={item.label} className={active} href={item.href}>
@@ -63,11 +75,7 @@ export default function StorefrontHeader({ variant }) {
         </Link>
       );
     }
-    return isHome ? (
-      <a key={item.label} href={item.hash}>
-        {item.label}
-      </a>
-    ) : (
+    return (
       <Link key={item.label} href={`/${item.hash}`}>
         {item.label}
       </Link>
