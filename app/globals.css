@@ -247,6 +247,9 @@ nav.nav-links a {
   font-family: var(--label); font-size: 11.5px; font-weight: 600;
   letter-spacing: 2px; text-transform: uppercase; color: var(--gray-soft);
   position: relative; padding-bottom: 6px; white-space: nowrap;
+  /* .35s to match the underline sweep below — the two used to run at .35s
+     and .45s, so the label finished lighting up while the gold rule was
+     still drawing, and the hover read as two separate movements. */
   transition: color .35s var(--ease), text-shadow .35s var(--ease);
 }
 /* Between the hamburger breakpoint and full desktop width, the default
@@ -262,7 +265,7 @@ nav.nav-links a::after {
   background: var(--gold-light);
   box-shadow: 0 0 0 rgba(212, 175, 55, 0);
   transform: scaleX(0); transform-origin: right;
-  transition: transform .45s var(--ease), box-shadow .45s var(--ease);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
 }
 nav.nav-links a:hover, nav.nav-links a.active { color: var(--ivory); text-shadow: 0 0 14px rgba(212, 175, 55, .5); }
 nav.nav-links a:hover::after, nav.nav-links a.active::after { transform: scaleX(1); transform-origin: left; box-shadow: 0 0 10px rgba(212, 175, 55, .75); }

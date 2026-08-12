@@ -11,12 +11,17 @@ import { useScrollProgress } from "../hooks/useScrollProgress";
  * `href` = its own route, always a <Link> and highlighted when you are on
  * it. `hash` = a section of the homepage, so it is an in-page anchor on "/"
  * and a cross-page "/#anchor" link everywhere else.
+ *
+ * Ordered so the three destinations that are real pages come first, then
+ * the homepage sections in the order you meet them scrolling down. Pricing
+ * and Price Today used to be split apart by About Us and Services, which
+ * put the two price links at opposite ends of the bar.
  */
 const NAV_ITEMS = [
   { label: "Home", href: "/" },
-  { label: "Pricing", hash: "#pricing" },
   { label: "About Us", href: "/about" },
   { label: "Services", href: "/services" },
+  { label: "Pricing", hash: "#pricing" },
   { label: "Price Today", hash: "#products" },
   { label: "Contact Us", hash: "#contact" },
   { label: "Location", hash: "#location" },
