@@ -38,7 +38,12 @@ export default function PriceCompare({ records, weight, weightLabel, todayKey, f
   const arrow = result ? (result.direction === "up" ? "▲" : result.direction === "down" ? "▼" : "—") : "—";
 
   return (
-    <div className="price-compare reveal">
+    /* No `reveal` class here on purpose. useRevealOnScroll collects
+       ".reveal" elements once, on mount, and never rescans — this panel
+       only renders after the Firestore history arrives, so it was never
+       observed and stayed at opacity 0 forever. Everything else carrying
+       `reveal` is in the initial tree, so it is unaffected. */
+    <div className="price-compare">
       <div className="pcmp-head">
         <h3>Compare Two Dates</h3>
         <p>How the {weightLabel} price moved between any two days on record.</p>
