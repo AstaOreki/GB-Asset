@@ -40,10 +40,12 @@ const PRICE_RANGES = [
   { key: "1y", label: "1 Year" },
 ];
 
-// How many days back each tab covers. "1d" is 0 — today only — because a
-// single real price is a valid answer now that the chart plots one point
-// instead of refusing to draw.
-const RANGE_DAYS = { "1d": 0, "1w": 6, "1m": 29, "6m": 182, "1y": 364 };
+// How many days back each tab covers. "1d" spans yesterday -> today so the
+// day's movement is actually visible. On a day the admin didn't save,
+// today carries yesterday's price forward and the line still draws (flat,
+// which is the truth); if today is the very first record ever, the chart
+// renders it as a single point rather than refusing to draw.
+const RANGE_DAYS = { "1d": 1, "1w": 6, "1m": 29, "6m": 182, "1y": 364 };
 
 const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
 
