@@ -10,7 +10,6 @@ import { useButtonRipple } from "../hooks/useButtonRipple";
 import { useCartBadge } from "../hooks/useCartBadge";
 import AnnouncementBanner from "../components/AnnouncementBanner";
 import PriceChart from "../components/PriceChart";
-import PriceCalendar from "../components/PriceCalendar";
 import PriceCompare from "../components/PriceCompare";
 import ProfitCalculator from "../components/ProfitCalculator";
 import GoldPriceHeader from "../components/GoldPriceHeader";
@@ -775,26 +774,17 @@ export default function HomePage() {
             <PriceChart series={chartSeries} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
           )}
 
-          {/* Both panels are pure history. With nothing recorded for this
-              bar there is nothing for them to show, so they stay out of the
-              page entirely rather than rendering an empty shell. */}
+          {/* Pure history — with nothing recorded for this bar there is
+              nothing to show, so it stays out of the page entirely rather
+              than rendering an empty shell. */}
           {gba && hasHistoryForWeight && (
-            <>
-              <PriceCalendar
-                records={historyRows}
-                weight={chartWeight}
-                weightLabel={chartWeightLabel}
-                todayKey={gba.priceHistory.todayKey()}
-                fmtRM={gba.fmtRM}
-              />
-              <PriceCompare
-                records={historyRows}
-                weight={chartWeight}
-                weightLabel={chartWeightLabel}
-                todayKey={gba.priceHistory.todayKey()}
-                fmtRM={gba.fmtRM}
-              />
-            </>
+            <PriceCompare
+              records={historyRows}
+              weight={chartWeight}
+              weightLabel={chartWeightLabel}
+              todayKey={gba.priceHistory.todayKey()}
+              fmtRM={gba.fmtRM}
+            />
           )}
 
           <ProfitCalculator rates={currentRows} pricePerGram={pricePerGram} />
