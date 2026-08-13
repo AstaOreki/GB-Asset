@@ -215,6 +215,12 @@ export default function HomePage() {
   // fills the rest by carrying the previous price forward and tags each
   // day so nothing invented can be mistaken for a real update.
   const chartWeightLabel = (CHART_WEIGHTS.find((w) => w.grams === chartWeight) || CHART_WEIGHTS[0]).label;
+  // Is there any recorded price at all for the selected bar? Drives whether
+  // the calendar and comparison panels render — an empty calendar is worse
+  // than no calendar.
+  const hasHistoryForWeight = !!(
+    historyRows && historyRows.some((r) => r.weight === chartWeight && typeof r.sell === "number")
+  );
   const chartSeries = useMemo(() => {
     if (!chartRows || !gba) return null;
     const today = gba.priceHistory.todayKey();
@@ -767,24 +773,26 @@ export default function HomePage() {
             <PriceChart series={chartSeries} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
           )}
 
-          {gba && historyRows && (
-            <PriceCalendar
-              records={historyRows}
-              weight={chartWeight}
-              weightLabel={chartWeightLabel}
-              todayKey={gba.priceHistory.todayKey()}
-              fmtRM={gba.fmtRM}
-            />
-          )}
-
-          {gba && historyRows && (
-            <PriceCompare
-              records={historyRows}
-              weight={chartWeight}
-              weightLabel={chartWeightLabel}
-              todayKey={gba.priceHistory.todayKey()}
-              fmtRM={gba.fmtRM}
-            />
+          {/* Both panels are pure history. With nothing recorded for this
+              bar there is nothing for them to show, so they stay out of the
+              page entirely rather than rendering an empty shell. */}
+          {gba && hasHistoryForWeight && (
+            <>
+              <PriceCalendar
+                records={historyRows}
+                weight={chartWeight}
+                weightLabel={chartWeightLabel}
+                todayKey={gba.priceHistory.todayKey()}
+                fmtRM={gba.fmtRM}
+              />
+              <PriceCompare
+                records={historyRows}
+                weight={chartWeight}
+                weightLabel={chartWeightLabel}
+                todayKey={gba.priceHistory.todayKey()}
+                fmtRM={gba.fmtRM}
+              />
+            </>
           )}
 
           <ProfitCalculator rates={currentRows} pricePerGram={pricePerGram} />

@@ -553,8 +553,9 @@ body::after {
 .pcal-cell b { font-family: var(--label); font-size: 11px; font-weight: 700; color: var(--gray-soft); }
 .pcal-cell em { font-family: var(--body); font-style: normal; font-size: 11px; color: var(--ivory); }
 .pcal-cell.is-pad { border: none; background: none; min-height: 0; }
-.pcal-cell.is-empty { opacity: .45; }
-.pcal-cell.is-empty em { color: var(--gray); font-size: 10px; }
+/* No price for this day: the date, and nothing else. */
+.pcal-cell.is-empty { opacity: .3; border-color: rgba(212,175,55,.07); }
+.pcal-none { margin: 18px 0 4px; font-size: 12.5px; color: var(--gray); }
 /* Admin-set days carry the gold; carried days stay quiet, so a glance
    shows how often the price actually moved. */
 .pcal-cell.is-admin { border-color: rgba(212,175,55,.45); background: rgba(212,175,55,.07); }

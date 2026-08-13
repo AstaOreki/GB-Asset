@@ -68,13 +68,15 @@ export default function PriceCalendar({ records, weight, weightLabel, todayKey, 
         </div>
       </div>
 
-      <div className="pcal-legend">
-        <span className="pcal-key"><i className="is-admin" />Admin updated</span>
-        <span className="pcal-key"><i className="is-carried" />Carried forward</span>
-        {withPrice > 0 && (
+      {/* The legend only means anything once there is something to label. */}
+      {withPrice > 0 && (
+        <div className="pcal-legend">
+          <span className="pcal-key"><i className="is-admin" />Admin updated</span>
+          {withPrice > adminCount && <span className="pcal-key"><i className="is-carried" />Carried forward</span>}
           <span className="pcal-count">{adminCount} of {withPrice} days set by an admin</span>
-        )}
-      </div>
+        </div>
+      )}
+      {withPrice === 0 && <p className="pcal-none">No prices recorded in {MONTHS[month]} {year}.</p>}
 
       <div className="pcal-grid" role="grid" aria-label={`Gold prices for ${MONTHS[month]} ${year}`}>
         {WEEKDAYS.map((d) => (
@@ -85,12 +87,13 @@ export default function PriceCalendar({ records, weight, weightLabel, todayKey, 
           const day = byDay.get(key);
           const num = keyToDate(key).getUTCDate();
           const isToday = key === todayKey;
-          const isFuture = key > todayKey;
+          // A day with no price shows the date and nothing else. Spelling
+          // out "No price" on every future day just filled the month with
+          // noise the reader has to skip past.
           if (!day) {
             return (
               <span key={key} className={`pcal-cell is-empty${isToday ? " is-today" : ""}`} role="gridcell">
                 <b>{num}</b>
-                <em>{isFuture ? "—" : "No price"}</em>
               </span>
             );
           }
@@ -126,7 +129,7 @@ export default function PriceCalendar({ records, weight, weightLabel, todayKey, 
           </div>
         </div>
       ) : (
-        <p className="pcal-hint">Select a day to see its full rate.</p>
+        withPrice > 0 && <p className="pcal-hint">Select a day to see its full rate.</p>
       )}
     </div>
   );
