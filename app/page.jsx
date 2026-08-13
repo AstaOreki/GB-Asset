@@ -13,7 +13,7 @@ import PriceChart from "../components/PriceChart";
 import PriceCompare from "../components/PriceCompare";
 import ProfitCalculator from "../components/ProfitCalculator";
 import GoldPriceHeader from "../components/GoldPriceHeader";
-import { dailySeries } from "../lib/priceSeries";
+import { dailySeries, priceOn } from "../lib/priceSeries";
 import "./page.css";
 
 /**
@@ -144,23 +144,50 @@ export default function HomePage() {
     );
   }, [gba]);
 
+  // The immutable audit trail — every individual save. Today's High/Low read
+  // from this because it is the only place several updates on the same day
+  // survive; priceHistory keeps just that day's latest price.
+  const [updateRows, setUpdateRows] = useState(null);
+  useEffect(() => {
+    if (!gba) return;
+    return gba.priceHistory.listenUpdates(200, (rows) => setUpdateRows(rows), () => setUpdateRows([]));
+  }, [gba]);
+
+  // The price in force today for the selected bar, carried forward from its
+  // last update if nothing was saved today.
+  const chartSeriesToday = useMemo(() => {
+    if (!historyRows || !gba) return null;
+    return priceOn(historyRows, chartWeight, gba.priceHistory.todayKey());
+  }, [historyRows, gba, chartWeight]);
+
   const todayRows = currentRows;
-  // Per-gram, not the raw total: comparing whole-bar prices across
-  // different weights only ever reported "1kg is the biggest number and
-  // 1g the smallest", which measures bar size rather than the rate.
-  const perGramRates =
-    todayRows && todayRows.length
-      ? todayRows.filter((r) => r.weight > 0 && typeof r.sell === "number").map((r) => r.sell / r.weight)
+  // Today's High/Low for the SELECTED bar — the highest and lowest price the
+  // admin actually set for it today.
+  //
+  // These used to be the best and worst per-gram rate across ALL five bars,
+  // multiplied up to the selected weight. That produced figures no one ever
+  // entered: at 1kg it read RM621,000 because the 1g bar happens to carry
+  // the richest per-gram rate, while the card above showed the real 1kg
+  // price. Now every figure here is a price the admin typed for this bar.
+  const todayPricesForWeight =
+    updateRows && gba
+      ? updateRows
+          .filter((r) => r.weight === chartWeight && r.date === gba.priceHistory.todayKey() && typeof r.sell === "number")
+          .map((r) => r.sell)
       : [];
-  const todayHighPerGram = perGramRates.length ? Math.max(...perGramRates) : null;
-  const todayLowPerGram = perGramRates.length ? Math.min(...perGramRates) : null;
-  // The High/Low tiles follow the same weight selection as the Gold Price
-  // card: the best and worst per-gram rate the admin has set across all
-  // bars, shown at the selected weight. Both bounds come from real
-  // Product Pricing values, and the card's own price — that bar's actual
-  // price — always falls between them.
-  const todayHigh = todayHighPerGram != null ? todayHighPerGram * chartWeight : null;
-  const todayLow = todayLowPerGram != null ? todayLowPerGram * chartWeight : null;
+  // No save for this bar today: the price in force is the one carried
+  // forward, so the day's high and low are both that single figure.
+  const carriedToday = chartSeriesToday && chartSeriesToday.sell;
+  const todayHigh = todayPricesForWeight.length
+    ? Math.max(...todayPricesForWeight)
+    : carriedToday != null
+      ? carriedToday
+      : null;
+  const todayLow = todayPricesForWeight.length
+    ? Math.min(...todayPricesForWeight)
+    : carriedToday != null
+      ? carriedToday
+      : null;
   // The newest timestamp across all bars — rows arrive in catalogue
   // order, so the first row is just the 1kg bar, not the latest save.
   const lastUpdate =
