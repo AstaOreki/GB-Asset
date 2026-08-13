@@ -335,12 +335,17 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).then(function () {
       productsCache = null;
-      // Price Today has no separate manual entry — it's a derived record
-      // of whichever bar was just saved, so admins never enter "today's
-      // price" twice. It shows the exact same total sell/buy as Product
-      // Pricing (no per-gram scaling) so the two can never show different
-      // numbers for the same bar.
-      return upsertPriceRecord(id, sellPrice, buyPrice, grams, name);
+      // Two writes, on purpose:
+      //   priceHistory — today's doc for this bar, overwritten if the admin
+      //     saves again today, so it always holds the day's latest price.
+      //   priceUpdates — a new immutable doc every single time, so no save
+      //     is ever lost even when several land on the same day.
+      // The audit append must not be able to silently fail while the daily
+      // record succeeds, so both are awaited together.
+      return Promise.all([
+        upsertPriceRecord(id, sellPrice, buyPrice, grams, name),
+        appendPriceUpdate(id, sellPrice, buyPrice, grams, name)
+      ]).then(function (r) { return r[0]; });
     });
   }
 
@@ -564,7 +569,31 @@
   }
 
   function pad2(n) { return n < 10 ? "0" + n : "" + n; }
-  function dateKeyFor(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+
+  // Every calendar day in this system is a MALAYSIA day (UTC+8), not the
+  // viewer's day. Without this a customer in London loading the site at
+  // 20:00 their time sees "today" as the previous date, and an admin
+  // saving at 01:00 MYT would have filed it under the day before. Shift
+  // the instant into UTC+8 and then read the ordinary local getters off
+  // the shifted Date.
+  var MY_OFFSET_MS = 8 * 60 * 60 * 1000;
+  function toMY(d) {
+    var t = (d instanceof Date ? d : new Date(d));
+    return new Date(t.getTime() + t.getTimezoneOffset() * 60000 + MY_OFFSET_MS);
+  }
+  function dateKeyFor(d) {
+    var m = toMY(d);
+    return m.getFullYear() + "-" + pad2(m.getMonth() + 1) + "-" + pad2(m.getDate());
+  }
+  function todayKey() { return dateKeyFor(new Date()); }
+  // Shift a MY date key by n days, staying on date keys so the result can
+  // never drift across a DST boundary of the viewer's own zone.
+  function shiftKey(key, days) {
+    var p = key.split("-");
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.getUTCFullYear() + "-" + pad2(d.getUTCMonth() + 1) + "-" + pad2(d.getUTCDate());
+  }
 
   // One doc per bar per calendar day (id "{productId}_{YYYY-MM-DD}"),
   // upserted — saving the same bar again the same day overwrites that
@@ -575,13 +604,41 @@
   // is deleted, today's edits just land in today's doc.
   function upsertPriceRecord(productId, sell, buy, weight, productName) {
     var margin = Math.round((sell - buy) * 100) / 100;
-    var dateKey = dateKeyFor(new Date());
+    var dateKey = todayKey();
     var docId = productId + "_" + dateKey;
     return db.collection("priceHistory").doc(docId).set({
       sell: sell, buy: buy, margin: margin, weight: weight, productName: productName || "",
       productId: productId, date: dateKey,
       recordedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).then(function () { return docId; });
+  }
+
+  // The permanent audit trail: one APPENDED doc per save, auto-id, never
+  // updated and never deletable (enforced in firestore.rules). Save the
+  // same bar five times today and five docs exist forever.
+  //
+  // This is deliberately separate from priceHistory above, which keeps one
+  // doc per bar per day holding that day's LATEST price — the daily layer
+  // the calendar and graph read. Together: priceUpdates answers "every
+  // change ever made", priceHistory answers "what was the price on day X".
+  // Carried-forward days are never written to either; they are derived at
+  // read time, so a gap in the data stays a gap in the data.
+  function appendPriceUpdate(productId, sell, buy, weight, productName) {
+    var margin = Math.round((sell - buy) * 100) / 100;
+    return db.collection("priceUpdates").add({
+      productId: productId,
+      productName: productName || "",
+      weight: weight,
+      sell: sell,
+      buy: buy,
+      margin: margin,
+      // Stored so the calendar/compare never has to re-derive it, and so a
+      // later change to bar weights can't retroactively alter old records.
+      pricePerGram: weight > 0 ? Math.round((sell / weight) * 100) / 100 : 0,
+      date: todayKey(),
+      updatedBy: (currentUser && (currentUser.email || currentUser.uid)) || "unknown",
+      recordedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 
   // cb(records) on every update, newest first. errCb (if given) is called
@@ -597,6 +654,53 @@
       .where("recordedAt", ">=", rangeStartDate(rangeKey))
       .orderBy("recordedAt", "desc")
       .limit(400)
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) {
+          out.push(Object.assign({ docId: doc.id }, doc.data({ serverTimestamps: "estimate" })));
+        });
+        cb(out);
+      }, function (err) { if (errCb) errCb(err); else cb([]); });
+  }
+
+  // How many daily docs to pull for each view. One doc per bar per day, so
+  // 5 bars x N days. Generous enough that the carry-forward walk always
+  // has a record from BEFORE the window to seed itself with — without one,
+  // a month where the admin never saved would render blank instead of
+  // carrying the previous price in.
+  var HISTORY_LIMITS = { "1d": 200, "1w": 300, "1m": 500, "6m": 1500, "1y": 2500, calendar: 900 };
+
+  /**
+   * Every daily record on or before `endKey`, newest first.
+   *
+   * Deliberately NOT filtered to the start of the window: the consumer
+   * needs the most recent record before it too, or a period with no saves
+   * of its own has nothing to carry forward from. Filtering and the
+   * carry-forward walk both happen in lib/priceSeries.js.
+   *
+   * Ordered by the `date` string rather than `recordedAt` so the ordering
+   * matches the Malaysia calendar day the record belongs to.
+   */
+  function listenDailyHistory(endKey, limitN, cb, errCb) {
+    return db.collection("priceHistory")
+      .where("date", "<=", endKey)
+      .orderBy("date", "desc")
+      .limit(limitN || 500)
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) {
+          out.push(Object.assign({ docId: doc.id }, doc.data({ serverTimestamps: "estimate" })));
+        });
+        cb(out);
+      }, function (err) { if (errCb) errCb(err); else cb([]); });
+  }
+
+  // The raw immutable audit trail, newest first — every save ever made,
+  // including several on the same day. Powers the admin's update history.
+  function listenPriceUpdates(limitN, cb, errCb) {
+    return db.collection("priceUpdates")
+      .orderBy("recordedAt", "desc")
+      .limit(limitN || 100)
       .onSnapshot(function (snap) {
         var out = [];
         snap.forEach(function (doc) {
@@ -759,7 +863,13 @@
     priceHistory: {
       listen: listenPriceHistory,
       listenLatest: listenLatestPriceRecord,
-      listenCurrent: listenCurrentRates
+      listenCurrent: listenCurrentRates,
+      listenDaily: listenDailyHistory,
+      listenUpdates: listenPriceUpdates,
+      limits: HISTORY_LIMITS,
+      todayKey: todayKey,
+      dateKeyFor: dateKeyFor,
+      shiftKey: shiftKey
     },
     logs: { add: addLog, listen: listenLogs },
     settings: { listen: listenSettings, update: updateSettings }

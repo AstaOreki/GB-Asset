@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import StorefrontHeader from "../components/StorefrontHeader";
 import FullFooter from "../components/FullFooter";
 import { useGBA } from "../hooks/useGBA";
@@ -10,8 +10,11 @@ import { useButtonRipple } from "../hooks/useButtonRipple";
 import { useCartBadge } from "../hooks/useCartBadge";
 import AnnouncementBanner from "../components/AnnouncementBanner";
 import PriceChart from "../components/PriceChart";
+import PriceCalendar from "../components/PriceCalendar";
+import PriceCompare from "../components/PriceCompare";
 import ProfitCalculator from "../components/ProfitCalculator";
 import GoldPriceHeader from "../components/GoldPriceHeader";
+import { dailySeries } from "../lib/priceSeries";
 import "./page.css";
 
 /**
@@ -36,6 +39,11 @@ const PRICE_RANGES = [
   { key: "6m", label: "6 Months" },
   { key: "1y", label: "1 Year" },
 ];
+
+// How many days back each tab covers. "1d" is 0 — today only — because a
+// single real price is a valid answer now that the chart plots one point
+// instead of refusing to draw.
+const RANGE_DAYS = { "1d": 0, "1w": 6, "1m": 29, "6m": 182, "1y": 364 };
 
 const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
 
@@ -104,9 +112,15 @@ export default function HomePage() {
     // previous period's line on screen (per dataviz refetch guidance: hold
     // the last frame, no flash back to a loading state) until the new
     // range's snapshot arrives.
+    //
+    // Fetches records up to today WITHOUT trimming to the start of the
+    // period: the carry-forward walk needs the most recent record from
+    // before the window, or a period with no saves of its own would render
+    // empty even though a price was in force throughout it.
     setChartError(false);
-    return gba.priceHistory.listen(
-      activeRange,
+    return gba.priceHistory.listenDaily(
+      gba.priceHistory.todayKey(),
+      gba.priceHistory.limits[activeRange] || 500,
       (rows) => setChartRows(rows),
       () => {
         setChartError(true);
@@ -114,6 +128,20 @@ export default function HomePage() {
       }
     );
   }, [gba, activeRange]);
+
+  // One month either side of the viewed month is already covered by the
+  // calendar feed's own window, so the calendar and comparison panels share
+  // a single wider listener rather than opening one each.
+  const [historyRows, setHistoryRows] = useState(null);
+  useEffect(() => {
+    if (!gba) return;
+    return gba.priceHistory.listenDaily(
+      gba.priceHistory.todayKey(),
+      gba.priceHistory.limits.calendar,
+      (rows) => setHistoryRows(rows),
+      () => setHistoryRows([])
+    );
+  }, [gba]);
 
   const todayRows = currentRows;
   // Per-gram, not the raw total: comparing whole-bar prices across
@@ -182,11 +210,17 @@ export default function HomePage() {
       ? ((selectedRow.sell - previousDayRow.sell) / previousDayRow.sell) * 100
       : null;
 
-  // The selected bar's own recorded history for the selected period —
-  // priceHistory already stores real per-weight prices, so this is a
-  // filter over existing data, never a scaled 1g estimate.
-  const chartWeightRows = chartRows ? chartRows.filter((r) => r.weight === chartWeight) : null;
+  // The selected bar's applicable price for every day of the period.
+  // priceHistory only stores days an admin actually saved; dailySeries
+  // fills the rest by carrying the previous price forward and tags each
+  // day so nothing invented can be mistaken for a real update.
   const chartWeightLabel = (CHART_WEIGHTS.find((w) => w.grams === chartWeight) || CHART_WEIGHTS[0]).label;
+  const chartSeries = useMemo(() => {
+    if (!chartRows || !gba) return null;
+    const today = gba.priceHistory.todayKey();
+    const start = gba.priceHistory.shiftKey(today, -(RANGE_DAYS[activeRange] ?? 7));
+    return dailySeries(chartRows, chartWeight, start, today);
+  }, [chartRows, gba, activeRange, chartWeight]);
 
   // -------- ADD TO CART (requires an account — redirects to /login otherwise) --------
   const [cartStatus, setCartStatus] = useState({});
@@ -729,8 +763,28 @@ export default function HomePage() {
               chart zigzag between unrelated price levels instead of showing
               a real trend. Each weight's own recorded prices are used, never
               a scaled 1g figure. */}
-          {gba && !chartError && chartWeightRows && (
-            <PriceChart rows={chartWeightRows} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
+          {gba && !chartError && chartSeries && (
+            <PriceChart series={chartSeries} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
+          )}
+
+          {gba && historyRows && (
+            <PriceCalendar
+              records={historyRows}
+              weight={chartWeight}
+              weightLabel={chartWeightLabel}
+              todayKey={gba.priceHistory.todayKey()}
+              fmtRM={gba.fmtRM}
+            />
+          )}
+
+          {gba && historyRows && (
+            <PriceCompare
+              records={historyRows}
+              weight={chartWeight}
+              weightLabel={chartWeightLabel}
+              todayKey={gba.priceHistory.todayKey()}
+              fmtRM={gba.fmtRM}
+            />
           )}
 
           <ProfitCalculator rates={currentRows} pricePerGram={pricePerGram} />

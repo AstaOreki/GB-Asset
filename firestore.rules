@@ -107,6 +107,30 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // -------------------------------------------------------- priceUpdates
+    // The permanent audit trail: one doc per admin save, auto-id, appended
+    // forever. Unlike priceHistory (one doc per bar per day, rewritten as
+    // the admin edits that day) nothing here is ever modified — `update`
+    // and `delete` are both denied outright, so several saves on the same
+    // day all survive and a past record cannot be altered by changing
+    // today's price. Public read so the storefront can show the update
+    // history alongside the calendar.
+    match /priceUpdates/{updateId} {
+      allow read: if true;
+      allow create: if isAdmin() &&
+                       request.resource.data.keys().hasOnly(['sell', 'buy', 'margin', 'weight', 'pricePerGram', 'productName', 'productId', 'date', 'updatedBy', 'recordedAt']) &&
+                       request.resource.data.sell is number && request.resource.data.sell > 0 &&
+                       request.resource.data.buy is number && request.resource.data.buy > 0 &&
+                       request.resource.data.weight is number && request.resource.data.weight > 0 &&
+                       request.resource.data.date is string &&
+                       // Same +/-0.01 tolerance as priceHistory: exact float
+                       // equality rejects ordinary decimal rates.
+                       request.resource.data.margin >= (request.resource.data.sell - request.resource.data.buy) - 0.01 &&
+                       request.resource.data.margin <= (request.resource.data.sell - request.resource.data.buy) + 0.01 &&
+                       request.resource.data.recordedAt == request.time;
+      allow update, delete: if false;
+    }
+
     // ----------------------------------------------------------- settings
     // Storefront reads system-wide flags (e.g. maintenance mode); only
     // admins can change them.

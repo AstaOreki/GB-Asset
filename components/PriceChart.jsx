@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { formatKey } from "../lib/priceSeries";
 
 // Chart-specific series steps (not the site's text/UI gold token) — chosen
 // because they clear the dataviz skill's dark-mode categorical checks
@@ -20,14 +21,13 @@ const CHART_W = 800;
 const CHART_H = 300;
 const PAD = { top: 20, right: 20, bottom: 34, left: 64 };
 
-function toDate(ts) {
-  return ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null;
-}
-
 function niceTicks(min, max, count) {
   if (min === max) {
-    min -= 1;
-    max += 1;
+    // A flat series (one point, or a price that never moved) still needs a
+    // readable axis around the value rather than a zero-height range.
+    const pad = Math.max(Math.abs(min) * 0.01, 1);
+    min -= pad;
+    max += pad;
   }
   const span = max - min;
   const rawStep = span / count;
@@ -41,55 +41,39 @@ function niceTicks(min, max, count) {
   return ticks;
 }
 
-// Every range now plots at most one point per calendar day (one upserted
-// record per bar per day), so dates read correctly across all of them —
-// "1d" used to format as clock times, which showed two near-identical
-// timestamps once it started spanning yesterday -> today.
-function axisLabel(date) {
-  return date.toLocaleDateString("en-MY", { day: "numeric", month: "short" });
-}
-
 /**
- * Sell/Buy rate trend line chart for the given (already weight- and
- * range-filtered) `rows` — newest-first, same shape as the Price Today
- * table's rows ({ sell, buy, recordedAt }). `weightLabel` is the selected
- * bar ("1g", "10g", …) and only labels the title/tooltip; the values
- * plotted are that bar's own recorded prices, never a scaled figure.
+ * Sell/Buy trend for one bar weight over the selected period.
+ *
+ * `series` comes from lib/priceSeries.dailySeries — one entry per calendar
+ * day, already carried forward across days the admin didn't save, each
+ * tagged `source: "admin" | "carried"`. Days the admin actually set a price
+ * get a visible marker; carried days are just part of the line, so the
+ * shape of the chart never implies a price movement that didn't happen.
+ *
+ * A single day renders as a labelled point, not an error — one real price
+ * is a legitimate answer for "what is the price today", and demanding two
+ * before showing anything is what made the 1 Day view look broken.
  */
-export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
+export default function PriceChart({ series, weightLabel = "1g", fmtRM }) {
   const svgRef = useRef(null);
   const [hoverIndex, setHoverIndex] = useState(null);
 
-  const points = useMemo(() => {
-    if (!rows) return [];
-    return rows
-      .map((r) => ({ ...r, date: toDate(r.recordedAt) }))
-      .filter((r) => r.date)
-      .sort((a, b) => a.date - b.date);
-  }, [rows]);
+  const points = useMemo(() => (series || []).filter((p) => p && typeof p.sell === "number"), [series]);
 
-  // Fewer than 2 points can't form a line — show why rather than
-  // vanishing, since a weight/period combination may legitimately have no
-  // recorded prices yet.
-  if (points.length < 2) {
+  if (points.length === 0) {
     return (
       <div className="price-chart">
         <div className="price-chart-legend">
           <span className="price-chart-title">{weightLabel} Gold Price Trend</span>
         </div>
         <div className="price-chart-empty">
-          <p>
-            {points.length === 0
-              ? `No ${weightLabel} price records for this period yet.`
-              : `Not enough ${weightLabel} data yet to plot a trend for this period — check back after the next update.`}
-          </p>
+          <p>No {weightLabel} price has been recorded yet — the trend starts once the first price is set.</p>
         </div>
       </div>
     );
   }
 
-  const minX = points[0].date.getTime();
-  const maxX = points[points.length - 1].date.getTime();
+  const single = points.length === 1;
   const values = points.flatMap((p) => [p.sell, p.buy]);
   const yTicks = niceTicks(Math.min(...values), Math.max(...values), 4);
   const minY = yTicks[0];
@@ -98,11 +82,10 @@ export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
   const innerW = CHART_W - PAD.left - PAD.right;
   const innerH = CHART_H - PAD.top - PAD.bottom;
 
-  const xFor = (t) => PAD.left + (maxX === minX ? innerW / 2 : ((t - minX) / (maxX - minX)) * innerW);
+  const xAt = (i) => (single ? PAD.left + innerW / 2 : PAD.left + (i / (points.length - 1)) * innerW);
   const yFor = (v) => PAD.top + innerH - ((v - minY) / (maxY - minY)) * innerH;
 
-  const linePath = (key) =>
-    points.map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(p.date.getTime())} ${yFor(p[key])}`).join(" ");
+  const linePath = (key) => points.map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(i)} ${yFor(p[key])}`).join(" ");
 
   function handleMove(e) {
     const svg = svgRef.current;
@@ -112,7 +95,7 @@ export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
     let nearest = 0;
     let best = Infinity;
     points.forEach((p, i) => {
-      const d = Math.abs(xFor(p.date.getTime()) - px);
+      const d = Math.abs(xAt(i) - px);
       if (d < best) {
         best = d;
         nearest = i;
@@ -122,11 +105,15 @@ export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
   }
 
   const hovered = hoverIndex != null ? points[hoverIndex] : null;
+  const hoveredX = hoverIndex != null ? xAt(hoverIndex) : null;
   const last = points[points.length - 1];
   const first = points[0];
-  const tooltipLeft = hovered ? (xFor(hovered.date.getTime()) / CHART_W) * 100 : null;
+  const tooltipLeft = hoveredX != null ? (hoveredX / CHART_W) * 100 : null;
   const tooltipAlignEnd = tooltipLeft != null && tooltipLeft > 65;
-  const trendSummary = `${weightLabel} gold price trend: opened at ${fmtRM(first.sell)}, now ${fmtRM(last.sell)}.`;
+  const adminDays = points.filter((p) => p.source === "admin").length;
+  const trendSummary = single
+    ? `${weightLabel} gold price on ${formatKey(first.date)}: ${fmtRM(first.sell)}.`
+    : `${weightLabel} gold price trend: opened at ${fmtRM(first.sell)} on ${formatKey(first.date)}, now ${fmtRM(last.sell)}. ${adminDays} of ${points.length} days were set by an admin; the rest carry the previous price forward.`;
 
   return (
     <div className="price-chart">
@@ -135,6 +122,7 @@ export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
         <span className="price-chart-keys">
           <span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span>
           <span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span>
+          <span className="price-chart-key"><i className="is-hollow" />Carried forward</span>
         </span>
       </div>
       <p className="sr-only" id="price-chart-summary">{trendSummary}</p>
@@ -157,40 +145,64 @@ export default function PriceChart({ rows, weightLabel = "1g", fmtRM }) {
             </g>
           ))}
 
-          <path d={linePath("buy")} className="price-chart-line" style={{ stroke: BUY_COLOR }} vectorEffect="non-scaling-stroke" />
-          <path d={linePath("sell")} className="price-chart-line" style={{ stroke: SELL_COLOR }} vectorEffect="non-scaling-stroke" />
+          {!single && (
+            <>
+              <path d={linePath("buy")} className="price-chart-line" style={{ stroke: BUY_COLOR }} vectorEffect="non-scaling-stroke" />
+              <path d={linePath("sell")} className="price-chart-line" style={{ stroke: SELL_COLOR }} vectorEffect="non-scaling-stroke" />
+            </>
+          )}
 
-          <circle cx={xFor(last.date.getTime())} cy={yFor(last.buy)} r="4" fill={BUY_COLOR} className="price-chart-end-dot" />
-          <circle cx={xFor(last.date.getTime())} cy={yFor(last.sell)} r="4" fill={SELL_COLOR} className="price-chart-end-dot" />
+          {/* Admin-set days get a filled marker so the line never implies a
+              movement on a day that only carried the previous price. Capped
+              because a year of daily saves would be 365 dots of mush. */}
+          {points.length <= 60 &&
+            points.map((p, i) =>
+              p.source === "admin" ? (
+                <g key={p.date}>
+                  <circle cx={xAt(i)} cy={yFor(p.sell)} r="3" fill={SELL_COLOR} />
+                  <circle cx={xAt(i)} cy={yFor(p.buy)} r="3" fill={BUY_COLOR} />
+                </g>
+              ) : null
+            )}
+
+          <circle cx={xAt(points.length - 1)} cy={yFor(last.buy)} r={single ? 6 : 4} fill={BUY_COLOR} className="price-chart-end-dot" />
+          <circle cx={xAt(points.length - 1)} cy={yFor(last.sell)} r={single ? 6 : 4} fill={SELL_COLOR} className="price-chart-end-dot" />
+
+          {/* One point has no trend to read off the shape, so label it. */}
+          {single && (
+            <text x={xAt(0)} y={yFor(last.sell) - 16} className="price-chart-point-label" textAnchor="middle">
+              {fmtRM(last.sell)}
+            </text>
+          )}
 
           {points.length <= 14 &&
-            [0, points.length - 1].map((i) => (
-              <text key={i} x={xFor(points[i].date.getTime())} y={CHART_H - 10} className="price-chart-axis-label" textAnchor={i === 0 ? "start" : "end"}>
-                {axisLabel(points[i].date)}
+            [...new Set([0, points.length - 1])].map((i) => (
+              <text
+                key={i}
+                x={xAt(i)}
+                y={CHART_H - 10}
+                className="price-chart-axis-label"
+                textAnchor={single ? "middle" : i === 0 ? "start" : "end"}
+              >
+                {formatKey(points[i].date)}
               </text>
             ))}
 
-          {hovered && (
-            <line
-              x1={xFor(hovered.date.getTime())}
-              x2={xFor(hovered.date.getTime())}
-              y1={PAD.top}
-              y2={CHART_H - PAD.bottom}
-              className="price-chart-crosshair"
-            />
+          {hovered && !single && (
+            <line x1={hoveredX} x2={hoveredX} y1={PAD.top} y2={CHART_H - PAD.bottom} className="price-chart-crosshair" />
           )}
         </svg>
 
         {hovered && (
-          <div
-            className={`price-chart-tooltip${tooltipAlignEnd ? " align-end" : ""}`}
-            style={{ left: `${tooltipLeft}%` }}
-          >
+          <div className={`price-chart-tooltip${tooltipAlignEnd ? " align-end" : ""}`} style={{ left: `${tooltipLeft}%` }}>
             <div className="price-chart-tooltip-date">
-              {weightLabel} · {hovered.date.toLocaleString("en-MY", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+              {weightLabel} · {formatKey(hovered.date, { day: "2-digit", month: "short", year: "numeric" })}
             </div>
             <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: SELL_COLOR }} />{SELL_LABEL}</span><b>{fmtRM(hovered.sell)}</b></div>
             <div className="price-chart-tooltip-row"><span className="price-chart-key"><i style={{ background: BUY_COLOR }} />{BUY_LABEL}</span><b>{fmtRM(hovered.buy)}</b></div>
+            <div className="price-chart-tooltip-note">
+              {hovered.source === "admin" ? "Set by admin this day" : `Carried forward from ${formatKey(hovered.sourceDate)}`}
+            </div>
           </div>
         )}
       </div>

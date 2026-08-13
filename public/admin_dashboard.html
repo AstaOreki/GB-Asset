@@ -411,6 +411,30 @@ tailwind.config = {
 </table>
 </div>
 </section>
+
+<!-- The permanent audit trail. Recent Rate History above shows one row per
+     bar per day (the day's final price); this shows every individual save,
+     so several updates on the same day all appear. Nothing here can be
+     edited or deleted — firestore.rules denies update and delete outright. -->
+<h2 class="font-headline-sm text-headline-sm text-on-surface">All Price Updates</h2>
+<p class="font-body-sm text-body-sm text-gray-muted -mt-6">Every save ever made, newest first. Permanent record — cannot be edited or deleted.</p>
+<section class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto max-h-[520px] overflow-y-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 z-10">
+<tr class="bg-surface-container-high border-b border-outline-variant">
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE &amp; TIME</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">WEIGHT</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">SELL</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">BUY</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">PER GRAM</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">UPDATED BY</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-[13px] divide-y divide-outline-variant/30" id="price-updates-table-body"></tbody>
+</table>
+</div>
+</section>
 </div>
 </div>
 </section>
@@ -788,8 +812,9 @@ tailwind.config = {
         settings: { systemMode: false, marketLink: true },
         products: {},
         priceHistory: [],
+        priceUpdates: [],
         latestRate: null,
-        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false },
+        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false, priceUpdates: false },
     };
     let ui = {
         orderFilters: { status: 'All' },
@@ -959,6 +984,7 @@ tailwind.config = {
         GBA.settings.listen(settings => { state.settings = settings; renderLogs(); });
         GBA.priceHistory.listenLatest(record => { state.latestRate = record; renderLatestRate(); });
         GBA.priceHistory.listen('1m', records => { state.priceHistory = records; state.loaded.priceHistory = true; renderPriceHistoryTable(); });
+        GBA.priceHistory.listenUpdates(200, records => { state.priceUpdates = records; state.loaded.priceUpdates = true; renderPriceUpdatesTable(); });
         loadProducts();
     }
 
@@ -988,6 +1014,22 @@ tailwind.config = {
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.buy)}</td>
                 <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtMarginPercent(r.sell, r.buy)}</td>
             </tr>`).join('') || `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-muted">${state.loaded.priceHistory ? 'No rate records yet.' : 'Loading…'}</td></tr>`;
+    }
+
+    // The immutable trail — every save, including several on the same day.
+    function renderPriceUpdatesTable() {
+        document.getElementById('price-updates-table-body').innerHTML = state.priceUpdates.map(r => {
+            const perGram = Number(r.pricePerGram || 0);
+            return `
+            <tr>
+                <td class="px-6 py-4 text-on-surface whitespace-nowrap">${GBA.fmtDateTime(r.recordedAt)}</td>
+                <td class="px-6 py-4 text-on-surface">${productLabel(r)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.sell)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${GBA.fmtRM(r.buy)}</td>
+                <td class="px-6 py-4 text-right text-on-surface">${perGram > 0 ? GBA.fmtRM(perGram) : '—'}</td>
+                <td class="px-6 py-4 text-gray-muted">${escapeHtml(r.updatedBy || '—')}</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="6" class="px-6 py-10 text-center text-gray-muted">${state.loaded.priceUpdates ? 'No price updates recorded yet.' : 'Loading…'}</td></tr>`;
     }
 
     function loadProducts() {
