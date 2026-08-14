@@ -11,20 +11,34 @@ import "../../page.css";
  * offset) rather than a new visual language.
  *
  * TO ADD MORE PHOTOS: drop the file into `public/image/` as gift-N.jpeg and
- * bump the count below. Nothing else needs to change — the gallery lays
- * itself out, keeps each image's own aspect ratio, and the whole block is
- * skipped while the list is empty so the page never shows an empty frame.
+ * add a row below. Nothing else needs to change — the gallery lays itself
+ * out, keeps each image's own aspect ratio, and the whole block is skipped
+ * while the list is empty so the page never shows an empty frame.
  *
  * Names are lowercase with no spaces or brackets on purpose. Windows treats
  * "GIFT (1).jpeg" and "gift (1).jpeg" as the same file, but the Linux box
  * this deploys to does not — a casing slip there is a 404 that only shows
  * up in production.
+ *
+ * `price` is the figure printed on each photo. It is not displayed anywhere
+ * — it exists so the running order below stays sortable and obvious, rather
+ * than being a sequence of filenames nobody can check. Sorted here rather
+ * than renaming the files, so a repriced photo means editing one number.
  */
-const GIFT_PHOTO_COUNT = 5;
-const MERCHANDISE_IMAGES = Array.from({ length: GIFT_PHOTO_COUNT }, (_, i) => ({
-  src: `/image/gift-${i + 1}.jpeg`,
-  alt: `GBA Custom Gold Gift Set — presentation box, gift bag and personalised gold cards, design ${i + 1} of ${GIFT_PHOTO_COUNT}`,
-}));
+const GIFT_PHOTOS = [
+  { file: "gift-4.jpeg", price: 119 },
+  { file: "gift-3.jpeg", price: 238 },
+  { file: "gift-5.jpeg", price: 595 },
+  { file: "gift-2.jpeg", price: 714 },
+  { file: "gift-1.jpeg", price: 952 },
+];
+
+const MERCHANDISE_IMAGES = [...GIFT_PHOTOS]
+  .sort((a, b) => a.price - b.price)
+  .map((photo, i, all) => ({
+    src: `/image/${photo.file}`,
+    alt: `GBA Custom Gold Gift Set at RM${photo.price} — presentation box, gift bag and personalised gold cards, design ${i + 1} of ${all.length}`,
+  }));
 
 export const metadata = {
   title: "Merchandise & Gift | GB Asset",
