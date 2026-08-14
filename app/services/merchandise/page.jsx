@@ -10,14 +10,18 @@ import "../../page.css";
  * (section-head, the .service-card panel treatment, the store-page top
  * offset) rather than a new visual language.
  *
- * TO ADD THE PRODUCT PHOTOS: drop the files into `public/image/` and add one
- * entry per photo below. Nothing else needs to change — the gallery lays
- * itself out, keeps each image's own aspect ratio, and the whole block is
- * skipped while the list is empty so the page never shows an empty frame.
+ * TO ADD MORE PHOTOS: drop the files into `public/image/` and add one entry
+ * per photo below. Nothing else needs to change — the gallery lays itself
+ * out, keeps each image's own aspect ratio, and the whole block is skipped
+ * while the list is empty so the page never shows an empty frame.
  *
- *   { src: "/image/merch-gift-set.jpg", alt: "GBA Custom Gold Gift Set" }
+ * The filenames contain spaces, so the space is percent-encoded here; the
+ * parentheses are legal in a URL path and are left as-is.
  */
-const MERCHANDISE_IMAGES = [];
+const MERCHANDISE_IMAGES = Array.from({ length: 8 }, (_, i) => ({
+  src: `/image/GIFT%20(${i + 1}).jpeg`,
+  alt: `GBA Custom Gold Gift Set — presentation box, gift bag and personalised gold card, design ${i + 1} of 8`,
+}));
 
 export const metadata = {
   title: "Merchandise & Gift | GB Asset",
