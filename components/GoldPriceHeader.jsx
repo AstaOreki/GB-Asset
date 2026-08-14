@@ -2,11 +2,17 @@
 
 import { priceFor } from "../lib/goldPricing";
 
+// Order and length must match the .gold-weight-toggle grid and its sliding
+// indicator in page.css — the indicator's width and translate steps are
+// derived from this many slots.
 const WEIGHTS = [
   { grams: 1, label: "1g", unit: "gram" },
+  { grams: 5, label: "5g", unit: "5g" },
   { grams: 10, label: "10g", unit: "10g" },
+  { grams: 20, label: "20g", unit: "20g" },
   { grams: 50, label: "50g", unit: "50g" },
   { grams: 100, label: "100g", unit: "100g" },
+  { grams: 250, label: "250g", unit: "250g" },
   { grams: 1000, label: "1kg", unit: "kg" },
 ];
 

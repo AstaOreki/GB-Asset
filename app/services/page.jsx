@@ -1,3 +1,4 @@
+import Link from "next/link";
 import StorefrontHeader from "../../components/StorefrontHeader";
 import FullFooter from "../../components/FullFooter";
 import RevealOnScroll from "../../components/RevealOnScroll";
@@ -96,6 +97,23 @@ export default function ServicesPage() {
                 <h4>Redemption &amp; Resale</h4>
                 <p>Assistance with eligible gold redemption and resale processes, where applicable.</p>
               </div>
+              {/* The one service with a detail page behind it, so it is a
+                  link rather than a plain card — same .service-card styling,
+                  plus .is-linked for the pointer and the "View" cue. */}
+              <Link className="service-card is-linked" href="/services/merchandise">
+                <div className="service-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M3 8h18v3H3zM4.5 11v9h15v-9M12 8v12"></path>
+                    <path d="M12 8S9.5 3.5 7.5 4.6 9.8 8 12 8Zm0 0s2.5-4.5 4.5-3.4S14.2 8 12 8Z"></path>
+                  </svg>
+                </div>
+                <h4>Merchandise &amp; Gift</h4>
+                <p>
+                  Make your moments memorable with a personalised GBA Custom Gold Gift Set — thoughtfully designed for
+                  meaningful occasions, celebrations and corporate gifting.
+                </p>
+                <span className="service-card-cue">View Collection →</span>
+              </Link>
             </div>
           </div>
         </section>

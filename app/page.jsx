@@ -25,9 +25,12 @@ import "./page.css";
  */
 const PRICE_CARDS = [
   { id: "bar-1kg", weight: "1 Kilo", alt: "1 Kilo Gold Bar", img: "image/gold_1kg.png", staticPrice: "RM 537,893" },
+  { id: "bar-250g", weight: "250 GM", alt: "250 GM Gold Bar", img: "image/gold_100g.png", staticPrice: "RM 134,525" },
   { id: "bar-100g", weight: "100 GM", alt: "100 GM Gold Bar", img: "image/gold_100g.png", staticPrice: "RM 53,832" },
   { id: "bar-50g", weight: "50 GM", alt: "50 GM Gold Bar", img: "image/gold_50g.png", staticPrice: "RM 26,929" },
+  { id: "bar-20g", weight: "20 GM", alt: "20 GM Gold Bar", img: "image/gold_50g.png", staticPrice: "RM 11,040" },
   { id: "bar-10g", weight: "10 GM", alt: "10 GM Gold Bar", img: "image/gold_10g.png", staticPrice: "RM 5,579", containerStyle: { width: "65px" } },
+  { id: "bar-5g", weight: "5 GM", alt: "5 GM Gold Bar", img: "image/gold_10g.png", staticPrice: "RM 2,792", containerStyle: { width: "65px" } },
   { id: "bar-1g", weight: "1 GM", alt: "1 GM Gold Bar", img: "image/gold_1g.png", staticPrice: "RM 559", containerStyle: { width: "65px" } },
 ];
 
@@ -46,21 +49,6 @@ const PRICE_RANGES = [
 // renders it as a single point rather than refusing to draw.
 const RANGE_DAYS = { "1d": 1, "1w": 6, "1m": 29, "6m": 182, "1y": 364 };
 
-/**
- * Direct contact lines, shown in the Contact section and the footer.
- *
- * `href` is the deep link; `value` is what the reader sees. wa.me wants the
- * number in international form with no +, spaces or leading 0, so the
- * displayed 0-prefixed number and the link digits are kept as separate
- * fields rather than derived from each other by string surgery.
- */
-const CONTACT_METHODS = [
-  { kind: "whatsapp", label: "Support Line", value: "012-213 6051", href: "https://wa.me/60122136051" },
-  { kind: "whatsapp", label: "Zety", value: "012-333 3774", href: "https://wa.me/60123333774" },
-  { kind: "whatsapp", label: "Izuddin", value: "012-240 600", href: "https://wa.me/6012240600" },
-  { kind: "instagram", label: "Instagram", value: "@gbagold.my", href: "https://www.instagram.com/gbagold.my" },
-];
-
 const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
 
 // 2dp, same format as the Gold Price card — the High/Low tiles are now
@@ -75,9 +63,12 @@ const fmtRM2 = (n) =>
 // weight is a filter over existing data — never a multiplied 1g estimate.
 const CHART_WEIGHTS = [
   { grams: 1, label: "1g" },
+  { grams: 5, label: "5g" },
   { grams: 10, label: "10g" },
+  { grams: 20, label: "20g" },
   { grams: 50, label: "50g" },
   { grams: 100, label: "100g" },
+  { grams: 250, label: "250g" },
   { grams: 1000, label: "1kg" },
 ];
 
@@ -966,41 +957,6 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Direct lines, above the form — most people would rather message
-              than fill in a form. Each opens the app directly. */}
-          <div className="contact-methods reveal">
-            {CONTACT_METHODS.map((c) => (
-              <a
-                key={c.href}
-                className={`contact-method is-${c.kind}`}
-                href={c.href}
-                rel="noopener noreferrer"
-                target="_blank"
-                aria-label={`${c.label} on ${c.kind === "whatsapp" ? "WhatsApp" : "Instagram"}: ${c.value}`}
-              >
-                <span aria-hidden="true" className="contact-method-ic">
-                  {c.kind === "whatsapp" ? (
-                    <svg viewBox="0 0 24 24">
-                      <path
-                        fillRule="evenodd"
-                        d="M6.3 17.7 4.5 21.5l3.9-1.7A8.5 8.5 0 1 0 5.2 13a8.4 8.4 0 0 0 1.1 4.7Zm2.4-9c.2-.5.4-.5.6-.5h.5c.15 0 .35 0 .5.4.2.4.6 1.5.65 1.6.05.15.1.3 0 .5-.1.2-.15.3-.3.45-.15.2-.3.3-.4.45-.15.15-.3.3-.1.6.15.3.7 1.2 1.5 1.9 1.05 1 1.9 1.3 2.2 1.45.3.15.5.1.65-.05.2-.2.7-.8.9-1.1.2-.3.4-.25.65-.15.3.1 1.5.7 1.75.85.25.15.4.2.45.35.1.15.1.85-.2 1.65-.3.8-1.7 1.55-2.35 1.6-.6.1-1.35.15-4.3-1.35C6.5 15.65 5 12.2 4.9 12c-.1-.2-.85-1.15-.85-2.2 0-1.05.55-1.55.75-1.8.2-.2.45-.25.6-.25Z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24">
-                      <rect height="17" rx="5" width="17" x="3.5" y="3.5"></rect>
-                      <circle cx="12" cy="12" r="4.2"></circle>
-                      <circle cx="17" cy="7" fill="currentColor" r="1" stroke="none"></circle>
-                    </svg>
-                  )}
-                </span>
-                <span className="contact-method-text">
-                  <b>{c.label}</b>
-                  <span>{c.value}</span>
-                </span>
-              </a>
-            ))}
-          </div>
           <form className="glass-card reveal" id="consultForm" ref={formRef} onSubmit={handleConsultSubmit}>
             <div className="field">
               <input id="consultName" ref={nameRef} placeholder=" " required type="text" />

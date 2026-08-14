@@ -261,6 +261,14 @@ tailwind.config = {
 </div>
 <div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
 <div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 250G</span>
+<img alt="250g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_100g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-250g">RM 134,525.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
 <span class="font-label-caps text-gray-muted">AU 999.9 • 100G</span>
 <img alt="100g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_100g.png"/>
 </div>
@@ -277,10 +285,26 @@ tailwind.config = {
 </div>
 <div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
 <div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 20G</span>
+<img alt="20g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_50g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-20g">RM 11,040.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
 <span class="font-label-caps text-gray-muted">AU 999.9 • 10G</span>
 <img alt="10g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_10g.png"/>
 </div>
 <div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-10g">RM 5,579.00</div>
+<div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-gray-muted">AU 999.9 • 5G</span>
+<img alt="5g Gold Bar" class="w-16 h-12 object-contain" src="image/gold_10g.png"/>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface mb-1" id="price-5g">RM 2,792.00</div>
 <div class="flex items-center gap-2 text-ui-data"><span class="text-gray-muted">WHOLESALER FACTORY PRICE</span></div>
 </div>
 <div class="glass-panel rounded-lg p-6 flex flex-col gold-glow transition-all">
@@ -1035,7 +1059,7 @@ tailwind.config = {
     function loadProducts() {
         GBA.getProducts().then(products => {
             state.products = products;
-            const tiles = { 'price-1kg': 'bar-1kg', 'price-100g': 'bar-100g', 'price-50g': 'bar-50g', 'price-10g': 'bar-10g', 'price-1g': 'bar-1g' };
+            const tiles = { 'price-1kg': 'bar-1kg', 'price-250g': 'bar-250g', 'price-100g': 'bar-100g', 'price-50g': 'bar-50g', 'price-20g': 'bar-20g', 'price-10g': 'bar-10g', 'price-5g': 'bar-5g', 'price-1g': 'bar-1g' };
             Object.keys(tiles).forEach(elId => {
                 const p = products[tiles[elId]];
                 const el = document.getElementById(elId);

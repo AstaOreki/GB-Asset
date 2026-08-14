@@ -26,9 +26,12 @@
   // a placeholder until the admin enters a real buy price.
   var STATIC_PRODUCTS = {
     "bar-1kg":  { name: "1 Kilo Gold Bar", tag: "Signature Bar",      purity: "999.9", grams: 1000, sellPrice: 537893, buyPrice: 537893, margin: 0, price: 537893, img: "image/gold_1kg.png",  w: 52 },
+    "bar-250g": { name: "250 GM Gold Bar",       tag: "Investor Bar",       purity: "999.9", grams: 250,  sellPrice: 134525, buyPrice: 134525, margin: 0, price: 134525, img: "image/gold_100g.png", w: 56 },
     "bar-100g": { name: "100 GM Wholesale Bar",  tag: "Best Seller",        purity: "999.9", grams: 100,  sellPrice: 53832,  buyPrice: 53832,  margin: 0, price: 53832,  img: "image/gold_100g.png", w: 56 },
     "bar-50g":  { name: "50 GM Gold Bar",        tag: "Popular Choice",     purity: "999.9", grams: 50,   sellPrice: 26929,  buyPrice: 26929,  margin: 0, price: 26929,  img: "image/gold_50g.png",  w: 50 },
+    "bar-20g":  { name: "20 GM Gold Bar",        tag: "Everyday Bar",       purity: "999.9", grams: 20,   sellPrice: 11040,  buyPrice: 11040,  margin: 0, price: 11040,  img: "image/gold_50g.png",  w: 46 },
     "bar-10g":  { name: "10 GM Gift Bar",        tag: "Starter Collection", purity: "999.9", grams: 10,   sellPrice: 5579,   buyPrice: 5579,   margin: 0, price: 5579,   img: "image/gold_10g.png",  w: 40 },
+    "bar-5g":   { name: "5 GM Gold Bar",         tag: "Gift Collection",    purity: "999.9", grams: 5,    sellPrice: 2792,   buyPrice: 2792,   margin: 0, price: 2792,   img: "image/gold_10g.png",  w: 32 },
     "bar-1g":   { name: "1 GM Gold Bar",         tag: "Entry Collection",   purity: "999.9", grams: 1,    sellPrice: 559,    buyPrice: 559,    margin: 0, price: 559,    img: "image/gold_1g.png",   w: 24 }
   };
 
