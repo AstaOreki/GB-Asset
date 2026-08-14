@@ -14,6 +14,16 @@ import Link from "next/link";
  * "Terms & Conditions" link has no destination in this plan's scope and is
  * left as `href="#"`, matching the original.
  */
+// wa.me wants the number with no +, spaces or leading 0, so the displayed
+// form and the link digits are separate fields rather than derived from
+// one another.
+const FOOTER_CONTACTS = [
+  { kind: "whatsapp", label: "Support Line", value: "012-213 6051", href: "https://wa.me/60122136051" },
+  { kind: "whatsapp", label: "Zety", value: "012-333 3774", href: "https://wa.me/60123333774" },
+  { kind: "whatsapp", label: "Izuddin", value: "012-240 600", href: "https://wa.me/6012240600" },
+  { kind: "instagram", label: "", value: "@gbagold.my", href: "https://www.instagram.com/gbagold.my" },
+];
+
 export default function FullFooter() {
   return (
     <footer>
@@ -44,14 +54,14 @@ export default function FullFooter() {
                 <path d="M15 8.5h2.5V5.2c-.43-.06-1.9-.2-3.62-.2-3.58 0-6.03 2.25-6.03 6.4v3.1H4.4v3.7h3.45V22h3.8v-3.8h3.32l.53-3.7h-3.85v-2.7c0-1.07.29-1.8 1.75-1.8Z"></path>
               </svg>
             </a>
-            <a aria-label="Instagram" href="#">
+            <a aria-label="Instagram" href="https://www.instagram.com/gbagold.my" rel="noopener noreferrer" target="_blank">
               <svg viewBox="0 0 24 24">
                 <rect height="17" rx="5" width="17" x="3.5" y="3.5"></rect>
                 <circle cx="12" cy="12" r="4.2"></circle>
                 <circle cx="17" cy="7" fill="currentColor" r="1" stroke="none"></circle>
               </svg>
             </a>
-            <a aria-label="WhatsApp" href="#">
+            <a aria-label="WhatsApp" href="https://wa.me/60122136051" rel="noopener noreferrer" target="_blank">
               <svg viewBox="0 0 24 24">
                 <path
                   fillRule="evenodd"
@@ -89,9 +99,34 @@ export default function FullFooter() {
         </div>
         <div>
           <h4>Contact Us</h4>
-          <div className="contact-line">
-            <span className="ic">☎</span> +60 12-240 0600
-          </div>
+          {/* Each number opens WhatsApp directly rather than dialling. */}
+          {FOOTER_CONTACTS.map((c) => (
+            <a
+              key={c.href}
+              className="contact-line is-link"
+              href={c.href}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <span className="ic" aria-hidden="true">
+                {c.kind === "whatsapp" ? (
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      fillRule="evenodd"
+                      d="M6.3 17.7 4.5 21.5l3.9-1.7A8.5 8.5 0 1 0 5.2 13a8.4 8.4 0 0 0 1.1 4.7Zm2.4-9c.2-.5.4-.5.6-.5h.5c.15 0 .35 0 .5.4.2.4.6 1.5.65 1.6.05.15.1.3 0 .5-.1.2-.15.3-.3.45-.15.2-.3.3-.4.45-.15.15-.3.3-.1.6.15.3.7 1.2 1.5 1.9 1.05 1 1.9 1.3 2.2 1.45.3.15.5.1.65-.05.2-.2.7-.8.9-1.1.2-.3.4-.25.65-.15.3.1 1.5.7 1.75.85.25.15.4.2.45.35.1.15.1.85-.2 1.65-.3.8-1.7 1.55-2.35 1.6-.6.1-1.35.15-4.3-1.35C6.5 15.65 5 12.2 4.9 12c-.1-.2-.85-1.15-.85-2.2 0-1.05.55-1.55.75-1.8.2-.2.45-.25.6-.25Z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24">
+                    <rect height="17" rx="5" width="17" x="3.5" y="3.5"></rect>
+                    <circle cx="12" cy="12" r="4.2"></circle>
+                    <circle cx="17" cy="7" fill="currentColor" r="1" stroke="none"></circle>
+                  </svg>
+                )}
+              </span>
+              {c.value} <em>{c.label}</em>
+            </a>
+          ))}
           <div className="contact-line">
             <span className="ic">✉</span> sales@gbagold.my
           </div>

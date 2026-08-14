@@ -46,6 +46,21 @@ const PRICE_RANGES = [
 // renders it as a single point rather than refusing to draw.
 const RANGE_DAYS = { "1d": 1, "1w": 6, "1m": 29, "6m": 182, "1y": 364 };
 
+/**
+ * Direct contact lines, shown in the Contact section and the footer.
+ *
+ * `href` is the deep link; `value` is what the reader sees. wa.me wants the
+ * number in international form with no +, spaces or leading 0, so the
+ * displayed 0-prefixed number and the link digits are kept as separate
+ * fields rather than derived from each other by string surgery.
+ */
+const CONTACT_METHODS = [
+  { kind: "whatsapp", label: "Support Line", value: "012-213 6051", href: "https://wa.me/60122136051" },
+  { kind: "whatsapp", label: "Zety", value: "012-333 3774", href: "https://wa.me/60123333774" },
+  { kind: "whatsapp", label: "Izuddin", value: "012-240 600", href: "https://wa.me/6012240600" },
+  { kind: "instagram", label: "Instagram", value: "@gbagold.my", href: "https://www.instagram.com/gbagold.my" },
+];
+
 const toJsDate = (ts) => (ts && ts.toDate ? ts.toDate() : ts instanceof Date ? ts : null);
 
 // 2dp, same format as the Gold Price card — the High/Low tiles are now
@@ -950,6 +965,42 @@ export default function HomePage() {
               gold products.
             </p>
           </div>
+
+          {/* Direct lines, above the form — most people would rather message
+              than fill in a form. Each opens the app directly. */}
+          <div className="contact-methods reveal">
+            {CONTACT_METHODS.map((c) => (
+              <a
+                key={c.href}
+                className={`contact-method is-${c.kind}`}
+                href={c.href}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label={`${c.label} on ${c.kind === "whatsapp" ? "WhatsApp" : "Instagram"}: ${c.value}`}
+              >
+                <span aria-hidden="true" className="contact-method-ic">
+                  {c.kind === "whatsapp" ? (
+                    <svg viewBox="0 0 24 24">
+                      <path
+                        fillRule="evenodd"
+                        d="M6.3 17.7 4.5 21.5l3.9-1.7A8.5 8.5 0 1 0 5.2 13a8.4 8.4 0 0 0 1.1 4.7Zm2.4-9c.2-.5.4-.5.6-.5h.5c.15 0 .35 0 .5.4.2.4.6 1.5.65 1.6.05.15.1.3 0 .5-.1.2-.15.3-.3.45-.15.2-.3.3-.4.45-.15.15-.3.3-.1.6.15.3.7 1.2 1.5 1.9 1.05 1 1.9 1.3 2.2 1.45.3.15.5.1.65-.05.2-.2.7-.8.9-1.1.2-.3.4-.25.65-.15.3.1 1.5.7 1.75.85.25.15.4.2.45.35.1.15.1.85-.2 1.65-.3.8-1.7 1.55-2.35 1.6-.6.1-1.35.15-4.3-1.35C6.5 15.65 5 12.2 4.9 12c-.1-.2-.85-1.15-.85-2.2 0-1.05.55-1.55.75-1.8.2-.2.45-.25.6-.25Z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24">
+                      <rect height="17" rx="5" width="17" x="3.5" y="3.5"></rect>
+                      <circle cx="12" cy="12" r="4.2"></circle>
+                      <circle cx="17" cy="7" fill="currentColor" r="1" stroke="none"></circle>
+                    </svg>
+                  )}
+                </span>
+                <span className="contact-method-text">
+                  <b>{c.label}</b>
+                  <span>{c.value}</span>
+                </span>
+              </a>
+            ))}
+          </div>
           <form className="glass-card reveal" id="consultForm" ref={formRef} onSubmit={handleConsultSubmit}>
             <div className="field">
               <input id="consultName" ref={nameRef} placeholder=" " required type="text" />
@@ -1070,72 +1121,11 @@ export default function HomePage() {
         <div className="wrap store-grid">
           <div className="store-info reveal">
             <div className="eyebrow">Visit Us</div>
-            <h2>Our Store Locations</h2>
+            <h2>Our Store Location</h2>
             <p>
               Step into our showroom to view our bullion collection in person, get an in-store valuation, or speak
               directly with our precious metals specialists.
             </p>
-            <div className="eyebrow location-tag">Penang</div>
-            <div className="store-details">
-              <div className="store-detail">
-                <div className="ic">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12Z"></path>
-                    <circle cx="12" cy="9" r="2.5"></circle>
-                  </svg>
-                </div>
-                <div>
-                  <b>S. Ameer Jewelers</b>
-                  <span>George Town, Penang, Malaysia</span>
-                </div>
-              </div>
-              <div className="store-detail">
-                <div className="ic">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <path d="M12 7v5l3.5 2"></path>
-                  </svg>
-                </div>
-                <div>
-                  <b>Opening Hours</b>
-                  <span>Mon – Sat : 9:00 AM – 6:00 PM</span>
-                </div>
-              </div>
-              <div className="store-detail">
-                <div className="ic">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M6.3 17.7 4.5 21.5l3.9-1.7A8.5 8.5 0 1 0 5.2 13a8.4 8.4 0 0 0 1.1 4.7Z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <b>Contact</b>
-                  <span>+60 12-240 0600</span>
-                </div>
-              </div>
-            </div>
-            <a
-              className="btn btn-primary store-directions-btn"
-              data-ripple=""
-              href="https://www.google.com/maps/place/S.+Ameer+Jewelers/@5.416198,100.3350901,17z/data=!3m1!4b1!4m6!3m5!1s0x304ac391e9325c1b:0x68ecf1497a1cf128!8m2!3d5.416198!4d100.337665!16s%2Fg%2F11bccgg66m"
-              rel="noopener"
-              target="_blank"
-            >
-              Get Directions
-            </a>
-          </div>
-          <div className="store-map reveal">
-            <iframe
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              src="https://www.google.com/maps?q=S.+Ameer+Jewelers,5.416198,100.337665&z=17&output=embed"
-              title="S. Ameer Jewelers store location map"
-            ></iframe>
-          </div>
-        </div>
-
-        <div className="wrap store-grid">
-          <div className="store-info reveal">
             <div className="eyebrow location-tag">Kuala Lumpur</div>
             <div className="store-details">
               <div className="store-detail">
@@ -1147,7 +1137,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <b>GB Asset</b>
-                  <span>Binjai 8 Premium Soho, Unit 8, Lorong Binjai, KLCC, Kuala Lumpur</span>
+                  <span>No. 7, Binjai 8 Premium Soho, Unit 8, Lorong Binjai, KLCC, Kuala Lumpur</span>
                 </div>
               </div>
               <div className="store-detail">

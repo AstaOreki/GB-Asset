@@ -393,6 +393,20 @@ footer { background: var(--emerald-deep); padding: 90px 0 0; }
 .footer-grid ul li a:hover { color: var(--gold-light); }
 .contact-line { display: flex; gap: 10px; font-size: 13.5px; color: var(--gray-soft); margin-bottom: 14px; }
 .contact-line .ic { color: var(--gold-light); flex-shrink: 0; }
+/* Tappable contact lines (WhatsApp / Instagram). Same type and colour as
+   the static lines above them — only the hover and the 44px tap height
+   mark them as interactive. */
+.contact-line.is-link { align-items: center; min-height: 44px; margin-bottom: 4px; transition: color .3s var(--ease); }
+.contact-line.is-link:hover, .contact-line.is-link:focus-visible { color: var(--gold-light); }
+.contact-line.is-link .ic { display: inline-flex; width: 16px; height: 16px; }
+.contact-line.is-link .ic svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+.contact-line.is-link .ic svg rect, .contact-line.is-link .ic svg circle {
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+}
+.contact-line.is-link em {
+  font-style: normal; font-family: var(--label); font-size: 9.5px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--gray); margin-left: 2px;
+}
 .socials { display: flex; gap: 12px; margin-top: 22px; }
 .socials a {
   width: 36px; height: 36px; min-width: 36px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1px solid rgba(212, 175, 55, .4);
