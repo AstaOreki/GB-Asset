@@ -1197,3 +1197,62 @@ body::after {
 @media (max-width: 420px) {
   .price-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
 }
+
+/* ============ FAQ (/faq) ============ */
+.faq { padding: 130px 0; position: relative; background: radial-gradient(ellipse 55% 45% at 15% 15%, rgba(212,175,55,.07), transparent 55%), var(--emerald-deep); }
+/* Same panel treatment as .invest-calc / .price-chart elsewhere on the
+   site — a translucent ivory-on-gold card — so this reads as part of the
+   existing design system rather than a new one. */
+.faq-panel {
+  max-width: 860px; margin: 0 auto;
+  background: linear-gradient(160deg, rgba(251,248,241,.05), rgba(251,248,241,.02));
+  border: 1px solid rgba(212,175,55,.18); border-radius: 4px;
+  padding: 12px 36px;
+}
+.faq-list { display: flex; flex-direction: column; }
+.faq-item { border-bottom: 1px solid rgba(212,175,55,.16); }
+.faq-item:last-child { border-bottom: none; }
+
+.faq-question-row { font-weight: inherit; } /* neutralise <h3>'s default heading weight — the button supplies its own */
+.faq-question {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 24px 4px; text-align: left;
+  font-family: var(--display); font-size: 17px; font-weight: 500; color: var(--ivory);
+  transition: color .3s var(--ease);
+}
+.faq-question:hover { color: var(--gold-light); }
+
+/* Plus/minus glyph: a fixed horizontal bar plus a vertical bar that
+   scales away on open, leaving just the horizontal bar as the minus sign.
+   Pure CSS, no icon swap, so the transform itself is the animation. */
+.faq-icon {
+  position: relative; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid rgba(212,175,55,.5);
+  transition: border-color .3s var(--ease), background .3s var(--ease);
+}
+.faq-icon::before, .faq-icon::after {
+  content: ''; position: absolute; top: 50%; left: 50%; background: var(--gold-light);
+  transition: transform .35s var(--ease);
+}
+.faq-icon::before { width: 10px; height: 1.5px; transform: translate(-50%, -50%); }
+.faq-icon::after { width: 1.5px; height: 10px; transform: translate(-50%, -50%); }
+.faq-item.is-open .faq-icon { border-color: var(--gold-light); background: rgba(212,175,55,.12); }
+.faq-item.is-open .faq-icon::after { transform: translate(-50%, -50%) scaleY(0); }
+
+/* The expand/collapse animation: a grid row tweened from 0fr to 1fr
+   animates to the answer's real rendered height with no JS measuring
+   scrollHeight, and no fixed max-height guess that could clip a long
+   answer or leave a gap under a short one. */
+.faq-answer-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .4s var(--ease); }
+.faq-item.is-open .faq-answer-wrap { grid-template-rows: 1fr; }
+.faq-answer-inner { overflow: hidden; }
+.faq-answer { padding: 0 4px 24px; }
+.faq-answer p { color: var(--gray-soft); font-size: 14.5px; font-weight: 300; line-height: 1.75; }
+
+@media (max-width: 640px) {
+  .faq-panel { padding: 4px 20px; }
+  .faq-question { padding: 18px 2px; font-size: 15.5px; gap: 14px; }
+  .faq-icon { width: 24px; height: 24px; }
+  .faq-answer { padding: 0 2px 18px; }
+  .faq-answer p { font-size: 13.5px; }
+}

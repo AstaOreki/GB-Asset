@@ -106,6 +106,9 @@ export default function FullFooter() {
             <li>
               <Link href="/#location">Location</Link>
             </li>
+            <li>
+              <Link href="/faq">FAQs</Link>
+            </li>
           </ul>
         </div>
         <div>

@@ -41,7 +41,7 @@ const PRICE_CARDS = [
 const STORE_CONTACTS = [
   { number: "012-213 6051", label: "Support Line" },
   { number: "012-333 3774", label: "Zeyy" },
-  { number: "012-240 0600", label: "Rizqin" },
+  { number: "012-240 0600", label: "Izzudin" },
 ];
 
 const PRICE_RANGES = [

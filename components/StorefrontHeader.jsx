@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { label: "Price Today", hash: "#products" },
   { label: "Contact Us", hash: "#contact" },
   { label: "Location", hash: "#location" },
+  { label: "FAQs", href: "/faq" },
 ];
 
 /**
