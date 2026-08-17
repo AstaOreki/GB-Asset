@@ -195,6 +195,10 @@ tailwind.config = {
 <span class="material-symbols-outlined">campaign</span>
 <span class="font-nav-link text-nav-link uppercase">Announcements</span>
 </button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="newsletter">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-nav-link text-nav-link uppercase">Newsletter</span>
+</button>
 </nav>
 <div class="mt-auto pt-6 border-t border-outline-variant/30">
 <button class="w-full gold-shine shine-effect flex items-center justify-center gap-2 py-3 px-4 bg-primary text-on-primary font-label-caps rounded-sm mb-4 uppercase tracking-widest font-bold" id="export-btn">
@@ -779,6 +783,171 @@ tailwind.config = {
 </div>
 </div>
 </section>
+
+<section class="view-section space-y-8" id="view-newsletter">
+<!-- Overview stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="glass-panel p-6 rounded-lg border border-outline-variant"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Total Subscribers</p><p class="font-headline-sm text-headline-sm text-on-surface" id="nl-stat-total">0</p></div>
+<div class="glass-panel p-6 rounded-lg border border-outline-variant"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Active</p><p class="font-headline-sm text-headline-sm text-primary" id="nl-stat-active">0</p></div>
+<div class="glass-panel p-6 rounded-lg border border-outline-variant"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Unsubscribed</p><p class="font-headline-sm text-headline-sm text-on-surface-variant" id="nl-stat-unsubscribed">0</p></div>
+<div class="glass-panel p-6 rounded-lg border border-outline-variant"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Newsletters Sent</p><p class="font-headline-sm text-headline-sm text-on-surface" id="nl-stat-sent-count">0</p></div>
+<div class="glass-panel p-6 rounded-lg border border-outline-variant"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Emails Sent Today</p><p class="font-headline-sm text-headline-sm text-on-surface" id="nl-stat-sent-today">0</p></div>
+<div class="glass-panel p-6 rounded-lg border border-outline-variant"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Last Newsletter Sent</p><p class="font-body-sm text-body-sm text-on-surface mt-2" id="nl-stat-last-sent">—</p></div>
+<div class="glass-panel p-6 rounded-lg border border-outline-variant md:col-span-2"><p class="font-label-caps text-label-caps text-gray-muted uppercase mb-1">Next Scheduled Newsletter</p><p class="font-body-sm text-body-sm text-on-surface mt-2" id="nl-stat-next-scheduled">None scheduled.</p></div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- LEFT: Create Newsletter -->
+<div class="lg:col-span-5 space-y-6">
+<section class="glass-panel border border-outline-variant p-8 rounded-lg shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-gold-deep/5 blur-[60px] rounded-full -mr-16 -mt-16"></div>
+<div class="mb-6 flex items-center justify-between">
+<div><h2 class="font-headline-sm text-headline-sm text-gold-light mb-1">Create Newsletter</h2><p class="font-body-sm text-body-sm text-gray-muted" id="nl-editing-label">New draft.</p></div>
+<button class="hidden font-body-sm text-body-sm text-gray-muted hover:text-primary underline" id="nl-new-draft-btn" type="button">+ New draft</button>
+</div>
+<form class="space-y-5" id="newsletter-form">
+<input id="nl-field-docid" type="hidden"/>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Subject Line</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="nl-field-subject" placeholder="e.g., Gold Price Update — Aug 18" required type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Newsletter Title</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="nl-field-title" placeholder="e.g., Today's Gold Update" required type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Main Content</label>
+<textarea class="w-full bg-charcoal border border-outline/30 focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted p-4 rounded-lg outline-none resize-none" id="nl-field-content" placeholder="Main message body..." required rows="4"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Gold Price (RM/g)</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-3 outline-none" id="nl-field-price" placeholder="Auto if blank" step="0.01" type="number"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Price Change (RM)</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-3 outline-none" id="nl-field-change" placeholder="e.g., 5.00 or -2.50" step="0.01" type="number"/>
+</div>
+</div>
+<p class="font-body-sm text-[11px] text-gray-muted -mt-3">Leave both blank to use today's live GBA Gold price automatically at send time.</p>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Market Update</label>
+<textarea class="w-full bg-charcoal border border-outline/30 focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted p-4 rounded-lg outline-none resize-none" id="nl-field-market" placeholder="Optional market commentary..." rows="3"></textarea>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Optional Image URL</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="nl-field-image" placeholder="https://..." type="url"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">CTA Button Text</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="nl-field-cta-text" placeholder="e.g., View GBA Gold" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">CTA URL</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="nl-field-cta-url" placeholder="https://gbagold.my" type="url"/>
+</div>
+</div>
+<label class="flex items-center gap-2 font-body-sm text-body-sm text-gray-muted">
+<input class="rounded border-outline bg-charcoal" id="nl-field-recurrence" type="checkbox"/>
+Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
+</label>
+<div class="flex flex-wrap gap-3 pt-2">
+<button class="px-5 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-gold-light font-nav-link text-nav-link uppercase transition-colors" id="nl-preview-btn" type="button">Preview</button>
+<button class="px-5 py-3 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-gold-light font-nav-link text-nav-link uppercase transition-colors" id="nl-save-draft-btn" type="button">Save Draft</button>
+</div>
+<p class="hidden font-body-sm text-body-sm text-error" id="nl-form-error"></p>
+<p class="hidden font-body-sm text-body-sm text-primary" id="nl-form-status"></p>
+</form>
+
+<div class="mt-8 pt-6 border-t border-outline-variant/30 space-y-4">
+<p class="font-label-caps text-label-caps text-gold-pale uppercase">Test Mode</p>
+<p class="font-body-sm text-[11px] text-gray-muted">Sends only to the address below — never to real subscribers. Save the draft first.</p>
+<div class="flex gap-2">
+<input class="flex-1 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-2 px-2 outline-none" id="nl-test-email" placeholder="test@example.com" type="email"/>
+<button class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-gold-light font-nav-link text-[10px] uppercase transition-colors whitespace-nowrap" id="nl-send-test-btn" type="button">Send Test Email</button>
+</div>
+</div>
+
+<div class="mt-6 pt-6 border-t border-outline-variant/30 space-y-4">
+<p class="font-label-caps text-label-caps text-gold-pale uppercase">Schedule or Send</p>
+<div class="flex gap-2">
+<input class="flex-1 bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-2 px-2 outline-none" id="nl-schedule-at" type="datetime-local"/>
+<button class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-gold-light font-nav-link text-[10px] uppercase transition-colors whitespace-nowrap" id="nl-schedule-btn" type="button">Schedule</button>
+</div>
+<button class="w-full bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link py-4 rounded-lg shine-effect transition-transform active:scale-[0.98] uppercase disabled:opacity-50" id="nl-send-now-btn" type="button">Send Now to All Active Subscribers</button>
+</div>
+</section>
+</div>
+
+<!-- RIGHT: Subscribers + History -->
+<div class="lg:col-span-7 space-y-8">
+<div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Subscribers</h2>
+<div class="flex gap-2">
+<input class="bg-surface-container px-3 py-2 rounded-lg border border-outline-variant/30 text-body-sm w-full sm:w-48" id="nl-sub-search" placeholder="Search email..." type="text"/>
+<select class="bg-surface-container px-3 py-2 rounded-lg border border-outline-variant/30 text-body-sm" id="nl-sub-filter">
+<option value="all">All</option>
+<option value="active">Active</option>
+<option value="unsubscribed">Unsubscribed</option>
+</select>
+</div>
+</div>
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 z-10"><tr class="bg-surface-container-high border-b border-outline-variant">
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">EMAIL</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">STATUS</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">SUBSCRIBED</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">LAST EMAIL</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft text-right">ACTIONS</th>
+</tr></thead>
+<tbody class="font-body-sm text-[13px] divide-y divide-outline-variant/30" id="nl-subscribers-table-body"></tbody>
+</table>
+</div>
+</div>
+<p class="font-body-sm text-[11px] text-gray-muted mt-2" id="nl-sub-count-label"></p>
+</div>
+
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-4">Newsletter History</h2>
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead><tr class="bg-surface-container-high/50 border-b border-outline-variant">
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">SUBJECT</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">DATE</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">STATUS</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft text-right">RECIPIENTS</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft text-right">OK</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft text-right">FAILED</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft">BY</th>
+<th class="px-6 py-4 font-nav-link text-nav-link text-gray-soft text-right">ACTIONS</th>
+</tr></thead>
+<tbody class="font-body-sm text-[13px] divide-y divide-outline-variant/30" id="nl-history-table-body"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Newsletter preview modal -->
+<div class="hidden fixed inset-0 bg-black/70 z-[200] items-center justify-center p-6" id="nl-preview-modal-backdrop">
+<div class="glass-panel rounded-lg p-6 max-w-2xl w-full">
+<div class="flex items-center justify-between mb-4">
+<div><h3 class="font-headline-sm text-headline-sm text-on-surface">Newsletter Preview</h3><p class="font-body-sm text-[11px] text-gray-muted" id="nl-preview-meta"></p></div>
+<button class="material-symbols-outlined text-gray-muted hover:text-on-surface" id="nl-preview-close" type="button">close</button>
+</div>
+<div class="bg-white rounded-lg overflow-hidden" style="height:60vh;">
+<iframe id="nl-preview-iframe" style="width:100%;height:100%;border:0;" title="Newsletter email preview"></iframe>
+</div>
+</div>
+</div>
+
 <!-- Footer -->
 <footer class="flex flex-col md:flex-row justify-between items-center w-full py-8 border-t border-outline-variant/30 gap-4">
 <p class="font-body-sm text-body-sm text-gray-muted">© 2026 GB Asset Management | Institutional Gold Wholesaler</p>
@@ -838,13 +1007,18 @@ tailwind.config = {
         priceHistory: [],
         priceUpdates: [],
         latestRate: null,
-        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false, priceUpdates: false },
+        subscribers: [],
+        newsletters: [],
+        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false, priceUpdates: false, subscribers: false, newsletters: false },
     };
     let ui = {
         orderFilters: { status: 'All' },
         annFilterCritical: false,
         annSortNewest: true,
         logsFilterBlocked: false,
+        nlSubSearch: '',
+        nlSubFilter: 'all',
+        nlEditingDocId: null, // null = new draft; set while editing an existing "draft"-status newsletter
     };
     let adminActor = 'Admin';
     // Tracks which announcement docIds we've already toasted about; null
@@ -1009,6 +1183,8 @@ tailwind.config = {
         GBA.priceHistory.listenLatest(record => { state.latestRate = record; renderLatestRate(); });
         GBA.priceHistory.listen('1m', records => { state.priceHistory = records; state.loaded.priceHistory = true; renderPriceHistoryTable(); });
         GBA.priceHistory.listenUpdates(200, records => { state.priceUpdates = records; state.loaded.priceUpdates = true; renderPriceUpdatesTable(); });
+        GBA.newsletter.subscribers.listen(subscribers => { state.subscribers = subscribers; state.loaded.subscribers = true; renderNewsletterOverview(); renderSubscribersTable(); });
+        GBA.newsletter.newsletters.listen(newsletters => { state.newsletters = newsletters; state.loaded.newsletters = true; renderNewsletterOverview(); renderNewsletterHistory(); });
         loadProducts();
     }
 
@@ -1145,7 +1321,7 @@ tailwind.config = {
     document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', closeSidebar));
 
     // ---------- NAVIGATION ----------
-    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements' };
+    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements', newsletter: 'Newsletter' };
     function setView(view) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById('view-' + view).classList.add('active');
@@ -1813,6 +1989,323 @@ tailwind.config = {
     setInterval(tickMarket, 5000);
     tickMarket();
 
+    // ==================================================================
+    // NEWSLETTER
+    // ==================================================================
+    function nlStatusPill(status) {
+        const map = {
+            active: { label: 'Active', cls: 'bg-primary/20 text-primary' },
+            unsubscribed: { label: 'Unsubscribed', cls: 'bg-surface-container-highest text-gray-muted' },
+            draft: { label: 'Draft', cls: 'bg-surface-container-highest text-gray-muted' },
+            scheduled: { label: 'Scheduled', cls: 'bg-secondary-container text-secondary' },
+            sending: { label: 'Sending…', cls: 'bg-secondary-container text-secondary' },
+            sent: { label: 'Sent', cls: 'bg-green-900/30 text-green-500' },
+            failed: { label: 'Failed', cls: 'bg-red-900/30 text-red-400' },
+        };
+        const m = map[status] || { label: status || '—', cls: 'bg-surface-container-highest text-gray-muted' };
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] ${m.cls} font-bold uppercase tracking-wider">${m.label}</span>`;
+    }
+
+    function activeSubscribers() { return state.subscribers.filter(s => s.status === 'active'); }
+
+    function renderNewsletterOverview() {
+        const total = state.subscribers.length;
+        const active = activeSubscribers().length;
+        const unsub = state.subscribers.filter(s => s.status === 'unsubscribed').length;
+        document.getElementById('nl-stat-total').textContent = total;
+        document.getElementById('nl-stat-active').textContent = active;
+        document.getElementById('nl-stat-unsubscribed').textContent = unsub;
+
+        const sentNewsletters = state.newsletters.filter(n => n.status === 'sent');
+        document.getElementById('nl-stat-sent-count').textContent = sentNewsletters.length;
+
+        const todayStr = new Date().toDateString();
+        const sentToday = sentNewsletters.filter(n => n.sentAt && toDate(n.sentAt).toDateString() === todayStr);
+        const emailsToday = sentToday.reduce((sum, n) => sum + Number(n.successfulCount || 0), 0);
+        document.getElementById('nl-stat-sent-today').textContent = emailsToday;
+
+        const lastSent = sentNewsletters.slice().sort((a, b) => toDate(b.sentAt) - toDate(a.sentAt))[0];
+        document.getElementById('nl-stat-last-sent').textContent = lastSent
+            ? `${escapeHtml(lastSent.subject)} — ${formatTimestamp(lastSent.sentAt)}`
+            : 'No newsletters sent yet.';
+
+        const scheduled = state.newsletters
+            .filter(n => n.status === 'scheduled' && n.scheduledAt)
+            .sort((a, b) => toDate(a.scheduledAt) - toDate(b.scheduledAt))[0];
+        document.getElementById('nl-stat-next-scheduled').textContent = scheduled
+            ? `${escapeHtml(scheduled.subject)} — ${formatTimestamp(scheduled.scheduledAt)}${scheduled.recurrence === 'daily' ? ' (repeats daily)' : ''}`
+            : 'None scheduled.';
+    }
+
+    function renderSubscribersTable() {
+        const q = ui.nlSubSearch.trim().toLowerCase();
+        const filtered = state.subscribers.filter(s => {
+            if (ui.nlSubFilter !== 'all' && s.status !== ui.nlSubFilter) return false;
+            if (q && !String(s.email || '').toLowerCase().includes(q)) return false;
+            return true;
+        });
+        document.getElementById('nl-subscribers-table-body').innerHTML = filtered.map(s => `
+            <tr class="hover:bg-surface-container-high/40 transition-all">
+                <td class="px-6 py-4 text-on-surface">${escapeHtml(s.email)}</td>
+                <td class="px-6 py-4">${nlStatusPill(s.status)}</td>
+                <td class="px-6 py-4 text-on-surface-variant">${s.createdAt ? formatDateShort(s.createdAt) : '—'}</td>
+                <td class="px-6 py-4 text-on-surface-variant">${s.lastEmailSentAt ? formatDateShort(s.lastEmailSentAt) : 'Never'}</td>
+                <td class="px-6 py-4 text-right whitespace-nowrap">
+                    ${s.status === 'active'
+                        ? `<button class="text-[11px] uppercase text-gray-muted hover:text-primary mr-3" data-nl-unsub="${s.docId}">Unsubscribe</button>`
+                        : `<span class="text-[11px] uppercase text-gray-muted/40 mr-3">—</span>`}
+                    <button class="text-[11px] uppercase text-gray-muted hover:text-error" data-nl-delete-sub="${s.docId}">Delete</button>
+                </td>
+            </tr>`).join('') || `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-muted">${state.loaded.subscribers ? 'No subscribers match.' : 'Loading subscribers…'}</td></tr>`;
+        document.getElementById('nl-sub-count-label').textContent = `Showing ${filtered.length} of ${state.subscribers.length} subscribers`;
+    }
+
+    document.getElementById('nl-sub-search').addEventListener('input', e => { ui.nlSubSearch = e.target.value; renderSubscribersTable(); });
+    document.getElementById('nl-sub-filter').addEventListener('change', e => { ui.nlSubFilter = e.target.value; renderSubscribersTable(); });
+
+    document.getElementById('nl-subscribers-table-body').addEventListener('click', e => {
+        const unsubId = e.target.getAttribute('data-nl-unsub');
+        const delId = e.target.getAttribute('data-nl-delete-sub');
+        if (unsubId) {
+            const sub = state.subscribers.find(s => s.docId === unsubId);
+            confirmAction(`Unsubscribe ${sub ? sub.email : 'this address'}? They will stop receiving newsletters immediately.`, () => {
+                GBA.newsletter.subscribers.setStatus(unsubId, 'unsubscribed')
+                    .then(() => { addLog(adminActor, 'Subscriber Unsubscribed (Manual)', sub ? sub.email : unsubId, 'SUCCESS'); showToast('Subscriber unsubscribed.'); })
+                    .catch(err => showToast('Could not update subscriber: ' + err.message));
+            }, 'Unsubscribe', 'gold');
+        } else if (delId) {
+            const sub = state.subscribers.find(s => s.docId === delId);
+            confirmAction(`Permanently delete ${sub ? sub.email : 'this subscriber'}? This cannot be undone.`, () => {
+                GBA.newsletter.subscribers.remove(delId)
+                    .then(() => { addLog(adminActor, 'Subscriber Deleted', sub ? sub.email : delId, 'SUCCESS'); showToast('Subscriber deleted.'); })
+                    .catch(err => showToast('Could not delete subscriber: ' + err.message));
+            }, 'Delete');
+        }
+    });
+
+    function renderNewsletterHistory() {
+        const sorted = state.newsletters.slice().sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+        document.getElementById('nl-history-table-body').innerHTML = sorted.map(n => `
+            <tr class="hover:bg-surface-container-high/40 transition-all">
+                <td class="px-6 py-4 text-on-surface">${escapeHtml(n.subject)}</td>
+                <td class="px-6 py-4 text-on-surface-variant">${formatDateShort(n.sentAt || n.scheduledAt || n.createdAt)}</td>
+                <td class="px-6 py-4">${nlStatusPill(n.status)}</td>
+                <td class="px-6 py-4 text-right font-ui-data">${n.recipientCount || 0}</td>
+                <td class="px-6 py-4 text-right font-ui-data text-primary">${n.successfulCount || 0}</td>
+                <td class="px-6 py-4 text-right font-ui-data ${n.failedCount ? 'text-red-400' : 'text-gray-muted'}">${n.failedCount || 0}</td>
+                <td class="px-6 py-4 text-on-surface-variant text-[12px]">${escapeHtml(n.createdBy || '—')}</td>
+                <td class="px-6 py-4 text-right whitespace-nowrap">
+                    <button class="text-[11px] uppercase text-gray-muted hover:text-primary mr-3" data-nl-view="${n.docId}">View</button>
+                    ${n.status === 'draft' ? `<button class="text-[11px] uppercase text-gray-muted hover:text-on-surface mr-3" data-nl-edit="${n.docId}">Edit</button>` : ''}
+                    ${n.status === 'draft' || n.status === 'scheduled' ? `<button class="text-[11px] uppercase text-gray-muted hover:text-error" data-nl-delete-nl="${n.docId}">Delete</button>` : ''}
+                </td>
+            </tr>`).join('') || `<tr><td colspan="8" class="px-6 py-10 text-center text-gray-muted">${state.loaded.newsletters ? 'No newsletters yet.' : 'Loading…'}</td></tr>`;
+    }
+
+    document.getElementById('nl-history-table-body').addEventListener('click', e => {
+        const viewId = e.target.getAttribute('data-nl-view');
+        const editId = e.target.getAttribute('data-nl-edit');
+        const delId = e.target.getAttribute('data-nl-delete-nl');
+        if (viewId) {
+            const n = state.newsletters.find(x => x.docId === viewId);
+            if (n) openNewsletterPreview(n, `${n.status.toUpperCase()} · ${n.recipientCount || 0} recipients · ${n.successfulCount || 0} sent · ${n.failedCount || 0} failed`);
+        } else if (editId) {
+            loadNewsletterIntoForm(editId);
+        } else if (delId) {
+            const n = state.newsletters.find(x => x.docId === delId);
+            confirmAction(`Delete "${n ? n.subject : 'this newsletter'}"? This cannot be undone.`, () => {
+                GBA.newsletter.newsletters.remove(delId)
+                    .then(() => { addLog(adminActor, 'Newsletter Deleted', n ? n.subject : delId, 'SUCCESS'); showToast('Newsletter deleted.'); })
+                    .catch(err => showToast('Could not delete: ' + err.message));
+            }, 'Delete');
+        }
+    });
+
+    // ---------- Create Newsletter form ----------
+    function nlFormError(msg) {
+        const el = document.getElementById('nl-form-error');
+        const statusEl = document.getElementById('nl-form-status');
+        statusEl.classList.add('hidden');
+        el.textContent = msg;
+        el.classList.toggle('hidden', !msg);
+    }
+    function nlFormStatus(msg) {
+        const el = document.getElementById('nl-form-status');
+        const errEl = document.getElementById('nl-form-error');
+        errEl.classList.add('hidden');
+        el.textContent = msg;
+        el.classList.toggle('hidden', !msg);
+    }
+
+    function readNewsletterForm() {
+        const subject = document.getElementById('nl-field-subject').value.trim();
+        const title = document.getElementById('nl-field-title').value.trim();
+        const content = document.getElementById('nl-field-content').value.trim();
+        if (!subject || !title || !content) return { error: 'Subject, Title and Main Content are required.' };
+        const priceRaw = document.getElementById('nl-field-price').value;
+        const changeRaw = document.getElementById('nl-field-change').value;
+        return {
+            data: {
+                subject, title, content,
+                goldPrice: priceRaw !== '' ? Number(priceRaw) : null,
+                priceChange: changeRaw !== '' ? Number(changeRaw) : null,
+                marketUpdate: document.getElementById('nl-field-market').value.trim(),
+                imageUrl: document.getElementById('nl-field-image').value.trim(),
+                ctaText: document.getElementById('nl-field-cta-text').value.trim(),
+                ctaUrl: document.getElementById('nl-field-cta-url').value.trim(),
+                recurrence: document.getElementById('nl-field-recurrence').checked ? 'daily' : 'once',
+            }
+        };
+    }
+
+    function resetNewsletterForm() {
+        ui.nlEditingDocId = null;
+        document.getElementById('newsletter-form').reset();
+        document.getElementById('nl-editing-label').textContent = 'New draft.';
+        document.getElementById('nl-new-draft-btn').classList.add('hidden');
+    }
+
+    function loadNewsletterIntoForm(docId) {
+        const n = state.newsletters.find(x => x.docId === docId);
+        if (!n) return;
+        if (n.status !== 'draft') { showToast('Only drafts can be edited.'); return; }
+        ui.nlEditingDocId = docId;
+        document.getElementById('nl-field-subject').value = n.subject || '';
+        document.getElementById('nl-field-title').value = n.title || '';
+        document.getElementById('nl-field-content').value = n.content || '';
+        document.getElementById('nl-field-price').value = typeof n.goldPrice === 'number' ? n.goldPrice : '';
+        document.getElementById('nl-field-change').value = typeof n.priceChange === 'number' ? n.priceChange : '';
+        document.getElementById('nl-field-market').value = n.marketUpdate || '';
+        document.getElementById('nl-field-image').value = n.imageUrl || '';
+        document.getElementById('nl-field-cta-text').value = n.ctaText || '';
+        document.getElementById('nl-field-cta-url').value = n.ctaUrl || '';
+        document.getElementById('nl-field-recurrence').checked = n.recurrence === 'daily';
+        document.getElementById('nl-editing-label').textContent = `Editing draft: ${n.subject}`;
+        document.getElementById('nl-new-draft-btn').classList.remove('hidden');
+        nlFormStatus('');
+        nlFormError('');
+        document.getElementById('newsletter-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('nl-new-draft-btn').addEventListener('click', resetNewsletterForm);
+
+    document.getElementById('nl-save-draft-btn').addEventListener('click', () => {
+        const { error, data } = readNewsletterForm();
+        if (error) { nlFormError(error); return; }
+        nlFormError('');
+        const btn = document.getElementById('nl-save-draft-btn');
+        btn.disabled = true;
+        GBA.newsletter.newsletters.saveDraft(data, ui.nlEditingDocId)
+            .then(ref => {
+                if (!ui.nlEditingDocId && ref && ref.id) ui.nlEditingDocId = ref.id;
+                addLog(adminActor, 'Newsletter Draft Saved', data.subject, 'SUCCESS');
+                nlFormStatus('Draft saved.');
+                document.getElementById('nl-editing-label').textContent = `Editing draft: ${data.subject}`;
+                document.getElementById('nl-new-draft-btn').classList.remove('hidden');
+            })
+            .catch(err => nlFormError('Could not save draft: ' + err.message))
+            .finally(() => { btn.disabled = false; });
+    });
+
+    // ---------- Preview (uses the real server-rendered template) ----------
+    function openNewsletterPreview(draftLike, metaLabel) {
+        const backdrop = document.getElementById('nl-preview-modal-backdrop');
+        const iframe = document.getElementById('nl-preview-iframe');
+        document.getElementById('nl-preview-meta').textContent = metaLabel || '';
+        iframe.srcdoc = '<body style="font-family:sans-serif;padding:40px;color:#888;">Loading preview…</body>';
+        backdrop.classList.remove('hidden');
+        backdrop.classList.add('flex');
+        GBA.getCurrentUser().getIdToken()
+            .then(idToken => fetch('/api/newsletter/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                body: JSON.stringify(draftLike),
+            }))
+            .then(res => res.json().then(body => { if (!res.ok) throw new Error(body.error || 'Preview failed.'); return body; }))
+            .then(body => { iframe.srcdoc = body.html; })
+            .catch(err => { iframe.srcdoc = `<body style="font-family:sans-serif;padding:40px;color:#c0394d;">${escapeHtml(err.message)}</body>`; });
+    }
+    function closeNewsletterPreview() {
+        document.getElementById('nl-preview-modal-backdrop').classList.add('hidden');
+        document.getElementById('nl-preview-modal-backdrop').classList.remove('flex');
+    }
+    document.getElementById('nl-preview-close').addEventListener('click', closeNewsletterPreview);
+    document.getElementById('nl-preview-modal-backdrop').addEventListener('click', e => { if (e.target.id === 'nl-preview-modal-backdrop') closeNewsletterPreview(); });
+
+    document.getElementById('nl-preview-btn').addEventListener('click', () => {
+        const { error, data } = readNewsletterForm();
+        if (error) { nlFormError(error); return; }
+        nlFormError('');
+        openNewsletterPreview(data, 'Preview — reflects the current form, including unsaved changes.');
+    });
+
+    // ---------- Test send ----------
+    document.getElementById('nl-send-test-btn').addEventListener('click', () => {
+        const testEmail = document.getElementById('nl-test-email').value.trim();
+        if (!ui.nlEditingDocId) { nlFormError('Save the draft first, then send a test.'); return; }
+        if (!testEmail) { nlFormError('Enter a test recipient email first.'); return; }
+        nlFormError('');
+        const btn = document.getElementById('nl-send-test-btn');
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = 'Sending…';
+        GBA.getCurrentUser().getIdToken()
+            .then(idToken => fetch('/api/newsletter/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                body: JSON.stringify({ mode: 'test', newsletterId: ui.nlEditingDocId, testEmail }),
+            }))
+            .then(res => res.json().then(body => { if (!res.ok) throw new Error(body.error || 'Test send failed.'); return body; }))
+            .then(body => { showToast(body.message || 'Test email sent.'); addLog(adminActor, 'Newsletter Test Sent', testEmail, 'SUCCESS'); })
+            .catch(err => nlFormError('Test send failed: ' + err.message))
+            .finally(() => { btn.disabled = false; btn.textContent = original; });
+    });
+
+    // ---------- Schedule ----------
+    document.getElementById('nl-schedule-btn').addEventListener('click', () => {
+        if (!ui.nlEditingDocId) { nlFormError('Save the draft first, then schedule it.'); return; }
+        const raw = document.getElementById('nl-schedule-at').value;
+        if (!raw) { nlFormError('Pick a date and time first.'); return; }
+        const when = new Date(raw); // datetime-local -> the ADMIN's OWN browser clock/zone, same as any HTML date picker
+        if (isNaN(when.getTime()) || when.getTime() <= Date.now()) { nlFormError('Pick a time in the future.'); return; }
+        nlFormError('');
+        GBA.newsletter.newsletters.schedule(ui.nlEditingDocId, when)
+            .then(() => { addLog(adminActor, 'Newsletter Scheduled', formatTimestamp(when), 'SUCCESS'); showToast('Newsletter scheduled.'); resetNewsletterForm(); })
+            .catch(err => nlFormError('Could not schedule: ' + err.message));
+    });
+
+    // ---------- Send Now (with an explicit confirmation showing the real recipient count) ----------
+    document.getElementById('nl-send-now-btn').addEventListener('click', () => {
+        if (!ui.nlEditingDocId) { nlFormError('Save the draft first, then send it.'); return; }
+        const count = activeSubscribers().length;
+        if (count === 0) { nlFormError('There are no active subscribers to send to.'); return; }
+        nlFormError('');
+        confirmAction(
+            `You are about to send this newsletter to ${count.toLocaleString('en-MY')} active subscriber${count === 1 ? '' : 's'}. This cannot be undone. Are you sure?`,
+            () => {
+                const btn = document.getElementById('nl-send-now-btn');
+                btn.disabled = true;
+                btn.textContent = 'Sending…';
+                GBA.getCurrentUser().getIdToken()
+                    .then(idToken => fetch('/api/newsletter/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                        body: JSON.stringify({ mode: 'now', newsletterId: ui.nlEditingDocId }),
+                    }))
+                    .then(res => res.json().then(body => { if (!res.ok) throw new Error(body.error || 'Send failed.'); return body; }))
+                    .then(body => {
+                        showToast(`Sent — ${body.successfulCount} delivered, ${body.failedCount} failed.`);
+                        addLog(adminActor, 'Newsletter Sent', `${body.successfulCount}/${body.recipientCount} delivered`, body.failedCount ? 'WARNING' : 'SUCCESS');
+                        resetNewsletterForm();
+                    })
+                    .catch(err => { nlFormError('Send failed: ' + err.message); addLog(adminActor, 'Newsletter Send Failed', err.message, 'ERROR'); })
+                    .finally(() => { btn.disabled = false; btn.textContent = 'Send Now to All Active Subscribers'; });
+            },
+            'Send Newsletter',
+            'gold'
+        );
+    });
+
     function renderAll() {
         renderOverview();
         renderSalesReport();
@@ -1820,6 +2313,9 @@ tailwind.config = {
         renderConsultations();
         renderLogs();
         renderAnnouncements();
+        renderNewsletterOverview();
+        renderSubscribersTable();
+        renderNewsletterHistory();
     }
 
     renderAll();

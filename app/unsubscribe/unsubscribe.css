@@ -1,0 +1,52 @@
+/* ==========================================================================
+   /unsubscribe — one-off transactional page. Uses only the shared tokens
+   from app/globals.css (loaded on every page via the root layout); every
+   class here is scoped with "unsub-" and used only on this page.
+   ========================================================================== */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(25deg, rgba(0,0,0,.05) 0px, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode: overlay;
+  opacity: .55;
+}
+
+.unsub-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 160px 24px 100px;
+}
+.unsub-card {
+  max-width: 480px; margin: 0 auto; text-align: center;
+  background: linear-gradient(160deg, rgba(251,248,241,.05), rgba(251,248,241,.02));
+  border: 1px solid rgba(212,175,55,.2); border-radius: 6px;
+  padding: 48px 40px;
+}
+.unsub-icon {
+  width: 56px; height: 56px; margin: 0 auto 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(212,175,55,.4);
+}
+.unsub-icon svg { width: 26px; height: 26px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.unsub-icon.is-ok { background: rgba(212,175,55,.1); }
+.unsub-icon.is-ok svg { stroke: var(--gold-light); }
+.unsub-icon.is-error { background: rgba(176,24,41,.1); border-color: rgba(176,24,41,.4); }
+.unsub-icon.is-error svg { stroke: var(--maison-red-bright); }
+
+.unsub-card h1 { font-size: clamp(22px,3vw,28px); color: var(--ivory); line-height: 1.3; }
+.unsub-card p { margin-top: 16px; color: var(--gray-soft); font-size: 14.5px; font-weight: 300; line-height: 1.7; }
+
+.unsub-home-btn {
+  display: inline-block; margin-top: 32px; padding: 15px 34px;
+  background: linear-gradient(120deg, var(--gold-light), var(--gold) 55%, #A67C27);
+  color: var(--emerald-deep); font-family: var(--label); font-size: 11.5px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; border-radius: 2px;
+  transition: transform .35s var(--ease), box-shadow .4s var(--ease);
+}
+.unsub-home-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -18px rgba(212,175,55,.6); }
+
+@media (max-width: 480px) {
+  .unsub-page { padding: 130px 16px 70px; }
+  .unsub-card { padding: 36px 26px; }
+}

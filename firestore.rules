@@ -131,6 +131,33 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ---------------------------------------------------------- subscribers
+    // Newsletter subscribers. Deliberately fully admin-gated here, unlike
+    // consultations (which allows a public create) — subscribing,
+    // resubscribing and unsubscribing all go through app/api/newsletter/*
+    // routes using firebase-admin (which bypasses these rules entirely), the
+    // same reasoning orders moved server-side for: a raw public-writable
+    // collection would let a client set status directly, forge another
+    // subscriber's unsubscribeToken, or spam duplicate/fake entries with no
+    // way to validate the email actually exists. The admin dashboard reads
+    // and manages this collection directly as the signed-in admin, exactly
+    // like orders/consultations already do.
+    match /subscribers/{subscriberId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------- newsletters
+    // Draft/schedule authoring happens via direct client writes from the
+    // admin dashboard (same as announcements) — only admins can touch this
+    // collection at all. Actually SENDING a newsletter (calling Resend,
+    // iterating subscribers, writing lastEmailSentAt on every one of them)
+    // only ever happens through app/api/newsletter/send and
+    // app/api/newsletter/cron, both server-side via firebase-admin, so the
+    // Resend API key is never reachable from the browser.
+    match /newsletters/{newsletterId} {
+      allow read, write: if isAdmin();
+    }
+
     // ----------------------------------------------------------- settings
     // Storefront reads system-wide flags (e.g. maintenance mode); only
     // admins can change them.

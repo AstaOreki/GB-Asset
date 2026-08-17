@@ -13,6 +13,7 @@ import PriceChart from "../components/PriceChart";
 import PriceCompare from "../components/PriceCompare";
 import ProfitCalculator from "../components/ProfitCalculator";
 import GoldPriceHeader from "../components/GoldPriceHeader";
+import NewsletterSignup from "../components/NewsletterSignup";
 import { dailySeries, priceOn } from "../lib/priceSeries";
 import "./page.css";
 
@@ -1158,6 +1159,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <NewsletterSignup />
 
       <FullFooter />
     </>

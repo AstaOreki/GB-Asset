@@ -547,6 +547,80 @@
     return db.collection("announcements").doc(docId).delete();
   }
 
+  // ---------------------------------------------------------- newsletter
+  // Draft authoring (create/edit/schedule/delete) and subscriber management
+  // are direct client Firestore calls — same as announcements/orders — since
+  // firestore.rules gates both "subscribers" and "newsletters" to isAdmin()
+  // already. Actually SENDING an email is NOT here: that always goes
+  // through a fetch() to /api/newsletter/send from admin_dashboard.html
+  // (same pattern the Sales Report PDF export already uses for its
+  // server-only work), because only a server route can hold the Resend API
+  // key and iterate every active subscriber.
+  function listenSubscribers(cb) {
+    return db.collection("subscribers").orderBy("createdAt", "desc")
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) { out.push(Object.assign({ docId: doc.id }, doc.data())); });
+        cb(out);
+      }, function () { cb([]); });
+  }
+
+  function setSubscriberStatus(docId, status) {
+    return db.collection("subscribers").doc(docId).update({
+      status: status,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function deleteSubscriber(docId) {
+    return db.collection("subscribers").doc(docId).delete();
+  }
+
+  function listenNewsletters(cb) {
+    return db.collection("newsletters").orderBy("createdAt", "desc")
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) { out.push(Object.assign({ docId: doc.id }, doc.data())); });
+        cb(out);
+      }, function () { cb([]); });
+  }
+
+  // data: { subject, title, content, goldPrice, priceChange, marketUpdate,
+  // imageUrl, ctaText, ctaUrl }. docId omitted -> new draft; passed -> the
+  // admin is editing an existing draft (only "draft" status is ever safe to
+  // overwrite this way — the UI is responsible for not offering Edit on
+  // anything already scheduled/sending/sent).
+  function saveNewsletterDraft(data, docId) {
+    var payload = Object.assign({}, data, {
+      status: "draft",
+      goldPrice: (typeof data.goldPrice === "number" && data.goldPrice > 0) ? data.goldPrice : null,
+      priceChange: (typeof data.priceChange === "number") ? data.priceChange : null,
+      recurrence: data.recurrence === "daily" ? "daily" : "once"
+    });
+    if (docId) {
+      return db.collection("newsletters").doc(docId).update(payload);
+    }
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    payload.createdBy = (currentUser && (currentUser.email || currentUser.uid)) || "admin";
+    payload.recipientCount = 0;
+    payload.successfulCount = 0;
+    payload.failedCount = 0;
+    return db.collection("newsletters").add(payload);
+  }
+
+  // scheduledAt: a JS Date. Recurrence carries over from the draft — set it
+  // via saveNewsletterDraft() first if the admin checked "repeat daily".
+  function scheduleNewsletter(docId, scheduledAt) {
+    return db.collection("newsletters").doc(docId).update({
+      status: "scheduled",
+      scheduledAt: scheduledAt
+    });
+  }
+
+  function deleteNewsletter(docId) {
+    return db.collection("newsletters").doc(docId).delete();
+  }
+
   // ---------------------------------------------------------- priceHistory
   // "1d" starts at the beginning of YESTERDAY, not today. Each bar only
   // gets one upserted record per calendar day, so a since-midnight-today
@@ -862,6 +936,19 @@
       publish: publishAnnouncement,
       listen: listenAnnouncements,
       remove: deleteAnnouncement
+    },
+    newsletter: {
+      subscribers: {
+        listen: listenSubscribers,
+        setStatus: setSubscriberStatus,
+        remove: deleteSubscriber
+      },
+      newsletters: {
+        listen: listenNewsletters,
+        saveDraft: saveNewsletterDraft,
+        schedule: scheduleNewsletter,
+        remove: deleteNewsletter
+      }
     },
     priceHistory: {
       listen: listenPriceHistory,
