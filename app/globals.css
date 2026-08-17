@@ -129,41 +129,153 @@ html.reveal-armed .reveal-stagger.is-visible > * { opacity: 1; transform: transl
    position:fixed starting at top:0, so it would otherwise render on top of
    (hiding) this banner. --banner-offset is set by the component to its own
    rendered height (0 when no banner is showing), and header/.scroll-progress
-   above both read it, so they simply start lower instead of overlapping. */
+   above both read it, so they simply start lower instead of overlapping.
+
+   Structure: a fixed gold "ANNOUNCEMENT" badge on the left that never moves,
+   then a right→left scrolling ticker for the message itself. The ticker is
+   two identical content groups placed back to back with NO gap between the
+   groups — every bit of spacing instead comes from each chip's own
+   margin-right, so group 1 and group 2 are pixel-identical widths and
+   translateX(-50%) always lands exactly on the seam between them. That's
+   what makes the loop seamless regardless of how long the message is,
+   without measuring anything in JS. */
 .announcement-banner {
-  position: relative; z-index: 90;
-  display: flex; align-items: center; justify-content: center; gap: 18px;
-  padding: 12px 50px 12px 20px;
-  background: linear-gradient(120deg, var(--emerald-mid), var(--emerald-deep));
-  border-bottom: 1px solid rgba(212, 175, 55, .3);
-  text-align: center;
+  position: relative; z-index: 90; isolation: isolate;
+  display: flex; align-items: center; gap: 16px;
+  padding: 13px 50px 13px 22px;
+  background:
+    radial-gradient(ellipse 55% 160% at 0% 50%, rgba(212,175,55,.10), transparent 70%),
+    linear-gradient(120deg, var(--emerald-mid), var(--emerald-deep) 65%);
+  border-bottom: 1px solid rgba(212,175,55,.28);
+  box-shadow: 0 1px 0 rgba(0,0,0,.4);
+  overflow: hidden;
 }
-.announcement-banner-inner {
-  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: center;
-}
-.announcement-banner-title {
-  font-family: var(--label); font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--gold-light);
-}
-.announcement-banner-content {
-  font-family: var(--body); font-size: 13px; color: var(--gray-soft);
+/* Slim gold accent line across the very top edge. */
+.announcement-banner::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+  box-shadow: 0 0 12px rgba(212,175,55,.55);
 }
 .announcement-banner.banner-critical {
-  background: linear-gradient(120deg, #2a0d12, var(--emerald-deep));
-  border-bottom-color: rgba(176, 24, 41, .45);
+  background:
+    radial-gradient(ellipse 55% 160% at 0% 50%, rgba(176,24,41,.15), transparent 70%),
+    linear-gradient(120deg, #2a0d12, var(--emerald-deep) 65%);
+  border-bottom-color: rgba(176,24,41,.4);
 }
-.announcement-banner.banner-critical .announcement-banner-title { color: var(--maison-red-bright); }
+.announcement-banner.banner-critical::before {
+  background: linear-gradient(90deg, transparent, var(--maison-red-bright), #e0435a, var(--maison-red-bright), transparent);
+  box-shadow: 0 0 12px rgba(176,24,41,.55);
+}
+
+.announcement-ticker { flex: 1; min-width: 0; display: flex; align-items: center; gap: 16px; }
+
+/* The fixed label — distinct pill, never scrolls, never shrinks. */
+.announcement-badge {
+  flex-shrink: 0; position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid rgba(212,175,55,.55);
+  background: linear-gradient(160deg, rgba(212,175,55,.16), rgba(212,175,55,.04));
+  box-shadow: 0 0 0 1px rgba(212,175,55,.08), 0 0 16px -4px rgba(212,175,55,.65);
+  font-family: var(--label); font-size: 10.5px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--gold-light);
+}
+.announcement-badge-icon { width: 11px; height: 11px; flex-shrink: 0; fill: var(--gold-light); filter: drop-shadow(0 0 3px rgba(240,205,107,.8)); }
+/* A slow diagonal light sweep across the badge only — same technique as
+   .btn-primary::before elsewhere on the site, scaled down and slowed so it
+   reads as a gentle glint rather than a CTA-style shine. */
+.announcement-badge::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,.5), transparent);
+  transform: skewX(-20deg);
+  animation: announcementShine 5s ease-in-out infinite;
+}
+@keyframes announcementShine { 0%, 82%, 100% { left: -60%; } 45% { left: 130%; } }
+.announcement-banner.banner-critical .announcement-badge {
+  border-color: rgba(176,24,41,.6);
+  background: linear-gradient(160deg, rgba(176,24,41,.22), rgba(176,24,41,.05));
+  box-shadow: 0 0 0 1px rgba(176,24,41,.1), 0 0 16px -4px rgba(176,24,41,.7);
+  color: var(--maison-red-bright);
+}
+.announcement-banner.banner-critical .announcement-badge-icon { fill: var(--maison-red-bright); filter: drop-shadow(0 0 3px rgba(176,24,41,.7)); }
+
+/* The moving part. Masked at both edges so the message fades in/out rather
+   than being clipped hard mid-character. */
+.announcement-ticker-viewport {
+  flex: 1; min-width: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+.announcement-ticker-track {
+  display: flex; width: max-content; /* shrink to content, not the viewport — required for the -50% loop math */
+  animation: announcementTicker var(--ticker-duration, 30s) linear infinite;
+}
+@keyframes announcementTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* (hover: hover) excludes touch, where a tap would otherwise "stick" the
+   pause via iOS's sticky-hover behavior until the user taps elsewhere. */
+@media (hover: hover) {
+  .announcement-banner:hover .announcement-ticker-track { animation-play-state: paused; }
+}
+
+.announcement-ticker-group { flex-shrink: 0; display: flex; }
+.announcement-ticker-chip {
+  flex-shrink: 0; display: inline-flex; align-items: baseline; gap: 8px;
+  white-space: nowrap; margin-right: 56px;
+  font-size: 13px; color: var(--gray-soft);
+}
+.announcement-ticker-chip .spark { color: var(--gold); font-size: 11px; }
+.announcement-ticker-chip b { font-family: var(--label); font-weight: 700; letter-spacing: .3px; color: var(--ivory); }
+.announcement-banner.banner-critical .announcement-ticker-chip .spark { color: var(--maison-red-bright); }
+
 .announcement-banner-close {
-  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
-  color: var(--gray-soft); transition: color .3s var(--ease);
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%); z-index: 1;
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: var(--gray-soft);
+  transition: color .3s var(--ease), background .3s var(--ease);
 }
-.announcement-banner-close:hover { color: var(--gold-light); }
-.announcement-banner-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+.announcement-banner-close:hover { color: var(--gold-light); background: rgba(212,175,55,.14); }
+.announcement-banner-close svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+
+/* Users who've disabled motion still get the announcement — just as a
+   single static line instead of a loop. The 4 repeated chips per group (and
+   the whole duplicate group) exist purely to fill the scrolling track, so
+   only the first chip stays, unwrapped from nowrap so a long message wraps
+   onto a second line instead of overflowing on a narrow phone. */
+@media (prefers-reduced-motion: reduce) {
+  /* Every level here (track, group, chip) is normally a flex row so the
+     scrolling copies size and space themselves correctly. Flex items don't
+     wrap — each one is sized to its own unwrapped content and `flex-shrink:
+     0` (set on both the group and the chip, so the scrolling text can never
+     compress) stops it being squeezed smaller — so a long announcement
+     would silently run off the edge of the screen instead of becoming
+     readable. Turning track and group into plain block boxes removes them
+     from the flex chain entirely; the one remaining chip then answers to
+     ordinary text flow instead of flex sizing, and wraps like any other
+     paragraph. */
+  .announcement-ticker-track { display: block; animation: none !important; transform: none !important; width: auto; }
+  .announcement-ticker-group { display: block; }
+  .announcement-ticker-group:nth-child(2) { display: none; }
+  .announcement-ticker-chip:not(:first-child) { display: none; }
+  /* `gap` (used while it's an inline-flex row) doesn't apply to plain
+     inline content, so the spacing it provided is restored by hand. */
+  .announcement-ticker-chip:first-child { display: inline; white-space: normal; margin-right: 0; }
+  .announcement-ticker-chip:first-child .spark { margin-right: 6px; }
+  .announcement-ticker-chip:first-child b { margin-right: 6px; }
+  .announcement-ticker-viewport { mask-image: none; -webkit-mask-image: none; overflow: visible; }
+  .announcement-badge::after { animation: none; display: none; }
+}
+
 @media (max-width: 640px) {
-  .announcement-banner { padding: 10px 42px 10px 14px; gap: 4px; }
-  .announcement-banner-inner { flex-direction: column; gap: 2px; }
-  .announcement-banner-content { font-size: 12px; }
+  .announcement-banner { padding: 10px 42px 10px 14px; gap: 10px; }
+  .announcement-ticker { gap: 10px; }
+  .announcement-badge { padding: 6px 10px; font-size: 9px; letter-spacing: 1.2px; gap: 5px; }
+  .announcement-badge-icon { width: 10px; height: 10px; }
+  .announcement-ticker-chip { font-size: 12px; margin-right: 36px; gap: 6px; }
+  .announcement-ticker-viewport {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  }
+  .announcement-banner-close { right: 10px; width: 22px; height: 22px; }
 }
 
 /* ============ BUTTON RIPPLE ============ */
