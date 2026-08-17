@@ -34,6 +34,16 @@ const PRICE_CARDS = [
   { id: "bar-1g", weight: "1 GM", alt: "1 GM Gold Bar", img: "image/gold_1g.png", staticPrice: "RM 559", containerStyle: { width: "65px" } },
 ];
 
+// The three lines under Our Store Location's "Contact" item. Kept local to
+// this section rather than reusing the footer's WhatsApp list — different
+// labels/purpose (call this store directly, not message a specific person),
+// so a future edit to one doesn't silently change the other.
+const STORE_CONTACTS = [
+  { number: "012-213 6051", label: "Support Line" },
+  { number: "012-333 3774", label: "Zeyy" },
+  { number: "012-240 0600", label: "Rizqin" },
+];
+
 const PRICE_RANGES = [
   { key: "1d", label: "1 Day" },
   { key: "1w", label: "1 Week" },
@@ -1116,7 +1126,14 @@ export default function HomePage() {
                 </div>
                 <div>
                   <b>Contact</b>
-                  <span>+60 12-240 0600</span>
+                  <div className="store-contact-list">
+                    {STORE_CONTACTS.map((c) => (
+                      <div className="store-contact-line" key={c.number}>
+                        <span className="store-contact-number">{c.number}</span>
+                        <span className="store-contact-label">{c.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
