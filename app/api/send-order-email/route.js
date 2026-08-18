@@ -1,29 +1,8 @@
 import { Resend } from "resend";
+import { BANK_ACCOUNTS } from "../../../lib/bankAccounts";
+import { DELIVERY_LABELS, fmtRM, esc } from "../../../lib/orderEmailHelpers";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const DELIVERY_LABELS = {
-  self: "Self Pickup",
-  standard: "Insured Courier",
-  express: "Express Insured",
-};
-
-function fmtRM(n) {
-  return "RM " + Number(n).toLocaleString("en-MY", { minimumFractionDigits: 2 });
-}
-
-// order.customer/notes/address are free-text fields the customer typed at
-// checkout — must be escaped before going into the email HTML, same as the
-// admin dashboard already does for order data rendered in the browser.
-function esc(str) {
-  return String(str ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  })[c]);
-}
 
 function renderOrderEmailHtml(order) {
   const itemsRows = (order.items || [])
@@ -44,6 +23,30 @@ function renderOrderEmailHtml(order) {
           .map(esc)
           .join(", ")}</p>`;
 
+  // Manual bank transfer only — no payment gateway involved. The account
+  // numbers have to be in this email too, not just on the confirmation
+  // page, since the page is a one-time view but the email is what the
+  // customer can come back to when they actually sit down to make the
+  // transfer.
+  const bankTransferBlock =
+    order.paymentMethod === "bank"
+      ? `
+    <div style="margin:22px 0;padding:18px 20px;border:1px solid #d4af37;border-radius:6px;background:#faf7ee;">
+      <p style="margin:0 0 4px;font-weight:bold;color:#1a1a1a;">Payment Status: Pending Verification</p>
+      <p style="margin:0 0 14px;color:#555;">Amount to Transfer: <strong>${fmtRM(order.amount)}</strong></p>
+      <p style="margin:0 0 10px;font-weight:bold;color:#a67c27;text-transform:uppercase;font-size:12px;letter-spacing:1px;">Bank Transfer Details</p>
+      ${BANK_ACCOUNTS.map(
+        (acc) => `
+      <p style="margin:0 0 12px;line-height:1.5;">
+        <strong>${esc(acc.bank)}</strong><br>
+        ${esc(acc.name)}<br>
+        Account Number: <strong>${esc(acc.number)}</strong>
+      </p>`
+      ).join("")}
+      <p style="margin:14px 0 0;color:#555;font-size:13px;line-height:1.5;">Please transfer the exact order amount to one of the bank accounts above using your preferred banking app or online banking. After completing the transfer, please keep your transaction receipt for verification.</p>
+    </div>`
+      : "";
+
   return `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;">
     <h2 style="color:#a67c27;">Thank you for your order, ${esc(order.customer)}!</h2>
@@ -57,6 +60,7 @@ function renderOrderEmailHtml(order) {
     <p style="margin:4px 0;"><strong>Delivery method:</strong> ${esc(DELIVERY_LABELS[order.deliveryMethod] || order.deliveryMethod)}</p>
     ${addressBlock}
     <p style="margin:4px 0;"><strong>Payment method:</strong> ${esc(order.paymentMethod)}</p>
+    ${bankTransferBlock}
     ${order.notes ? `<p style="margin:4px 0;"><strong>Notes:</strong> ${esc(order.notes)}</p>` : ""}
     <p style="margin-top:24px;color:#777;font-size:13px;">GB Asset — this is an automated confirmation, please keep it for your records.</p>
   </div>`;

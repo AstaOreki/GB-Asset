@@ -11,12 +11,32 @@ import { useRevealOnScroll } from "../../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../../hooks/useButtonRipple";
 import { useCartBadge } from "../../hooks/useCartBadge";
 import { computeDeliveryFee } from "../../lib/catalog";
+import { BANK_ACCOUNTS } from "../../lib/bankAccounts";
 import "./checkout.css";
 
 // Card only becomes selectable once STRIPE_SECRET_KEY (server) and this
 // public flag are both set — same "build it, gate it off until configured"
 // pattern already used for order-confirmation email (RESEND_API_KEY).
 const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
+
+function BankAccountCards({ copiedAccount, onCopy }) {
+  return (
+    <div className="bank-account-list">
+      {BANK_ACCOUNTS.map((acc) => (
+        <div className="bank-account-card" key={acc.number}>
+          <div className="bank-account-bank">{acc.bank}</div>
+          <div className="bank-account-name">{acc.name}</div>
+          <div className="bank-account-number-row">
+            <span className="bank-account-number">{acc.number}</span>
+            <button type="button" className="bank-copy-btn" onClick={() => onCopy(acc.number)}>
+              {copiedAccount === acc.number ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Wrapped in Suspense because the inner component calls useSearchParams()
@@ -51,9 +71,12 @@ function CheckoutInner() {
   const [systemMode, setSystemMode] = useState(false);
 
   const [deliveryMethod, setDeliveryMethod] = useState("self");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentError, setPaymentError] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [confirmedAmount, setConfirmedAmount] = useState(0);
   const [cardCancelled, setCardCancelled] = useState(false);
   // Was window.alert() for both the expired-session and order-placement-
   // failure cases — the one moment the interface most needs to stay
@@ -144,6 +167,17 @@ function CheckoutInner() {
     };
   }, [gba]);
 
+  function handleCopyAccount(number) {
+    if (!navigator.clipboard) return;
+    navigator.clipboard
+      .writeText(number)
+      .then(() => {
+        setCopiedAccount(number);
+        setTimeout(() => setCopiedAccount(""), 1800);
+      })
+      .catch(() => {});
+  }
+
   function resetAddrForm() {
     setAddrLabel("");
     setAddrName("");
@@ -230,8 +264,7 @@ function CheckoutInner() {
     if (!gba || !products || systemMode) return;
 
     const form = formRef.current;
-    const paymentChecked = form.querySelector('input[name="payment"]:checked');
-    if (!paymentChecked) {
+    if (!paymentMethod) {
       setPaymentError(true);
       const pmBlock = paymentBlockRef.current;
       if (pmBlock) {
@@ -260,7 +293,6 @@ function CheckoutInner() {
     setIsSubmitting(true);
 
     const delivery = deliveryMethod;
-    const paymentMethod = paymentChecked.value;
     const notes = notesRef.current.value.trim();
 
     const selectedSavedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
@@ -301,6 +333,7 @@ function CheckoutInner() {
 
         const newOrderId = data.orderId;
         setOrderId(newOrderId);
+        setConfirmedAmount(data.amount);
 
         const orderData = {
           customer: name,
@@ -348,7 +381,7 @@ function CheckoutInner() {
 
         return gba.cart.clear().then(() => {
           refreshCartBadge();
-          setStep("confirmed");
+          setStep(paymentMethod === "bank" ? "bank-instructions" : "confirmed");
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       })
@@ -385,7 +418,7 @@ function CheckoutInner() {
             <span className="label">Details &amp; Payment</span>
           </div>
           <div className="cstep-line"></div>
-          <div className={`cstep ${step === "confirmed" ? "active" : ""}`} id="stepConfirm">
+          <div className={`cstep ${step === "confirmed" || step === "bank-instructions" ? "active" : ""}`} id="stepConfirm">
             <div className="cstep-num">3</div>
             <span className="label">Confirmation</span>
           </div>
@@ -630,21 +663,54 @@ function CheckoutInner() {
                     </h3>
                     <div className="option-cards">
                       <label className="option-card">
-                        <input name="payment" type="radio" value="bank" />
+                        <input
+                          checked={paymentMethod === "bank"}
+                          name="payment"
+                          type="radio"
+                          value="bank"
+                          onChange={() => {
+                            setPaymentMethod("bank");
+                            setPaymentError(false);
+                          }}
+                        />
                         <b>Bank Transfer</b>
                         <span>Direct transfer, order held for verification.</span>
                       </label>
                       <label className={`option-card${STRIPE_ENABLED ? "" : " option-disabled"}`}>
-                        <input name="payment" type="radio" value="card" disabled={!STRIPE_ENABLED} />
+                        <input
+                          checked={paymentMethod === "card"}
+                          name="payment"
+                          type="radio"
+                          value="card"
+                          disabled={!STRIPE_ENABLED}
+                          onChange={() => {
+                            setPaymentMethod("card");
+                            setPaymentError(false);
+                          }}
+                        />
                         <b>Credit / Debit Card{!STRIPE_ENABLED && " (Coming Soon)"}</b>
                         <span>Visa, Mastercard, secured checkout.</span>
                       </label>
                       <label className="option-card">
-                        <input name="payment" type="radio" value="cash" />
+                        <input
+                          checked={paymentMethod === "cash"}
+                          name="payment"
+                          type="radio"
+                          value="cash"
+                          onChange={() => {
+                            setPaymentMethod("cash");
+                            setPaymentError(false);
+                          }}
+                        />
                         <b>Cash on Pickup</b>
                         <span>Pay in-store upon collection.</span>
                       </label>
                     </div>
+                    {paymentMethod === "bank" && (
+                      <div className="status-note" style={{ marginTop: 18 }}>
+                        Bank account details will be shown once your order is placed.
+                      </div>
+                    )}
                     {cardCancelled && (
                       <div className="status-note" style={{ marginTop: 18 }}>
                         Card payment was cancelled — your order was saved but not charged. Select a payment method
@@ -750,6 +816,60 @@ function CheckoutInner() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {step === "bank-instructions" && (
+            <div className="panel order-success" id="bankInstructions">
+              <div className="order-success-icon">
+                <svg viewBox="0 0 24 24">
+                  <rect height="9" rx="1.5" width="14" x="5" y="11"></rect>
+                  <path d="M8 11V7a4 4 0 018 0v4"></path>
+                </svg>
+              </div>
+              <h2>Order Placed Successfully</h2>
+              <p>
+                Your order has been received. Complete the manual bank transfer below to finish your purchase — our
+                team will verify it and confirm your order once payment is received.
+              </p>
+              <div className="order-id" id="orderIdText">
+                {orderId}
+              </div>
+
+              <div className="bank-transfer-panel bank-transfer-panel-confirm">
+                <div className="bank-transfer-summary-row">
+                  <span>Payment Method</span>
+                  <b>Bank Transfer</b>
+                </div>
+                <div className="bank-transfer-summary-row">
+                  <span>Payment Status</span>
+                  <b>Pending Verification</b>
+                </div>
+                <div className="bank-transfer-amount">
+                  <span>Amount to Transfer</span>
+                  <b>{gba ? gba.fmtRM(confirmedAmount) : `RM ${confirmedAmount.toFixed(2)}`}</b>
+                </div>
+                <h4 className="bank-transfer-details-heading">Bank Transfer Details</h4>
+                <BankAccountCards copiedAccount={copiedAccount} onCopy={handleCopyAccount} />
+                <p className="bank-transfer-note">
+                  Please transfer the exact order amount to one of the bank accounts above using your preferred
+                  banking app or online banking. After completing the transfer, please keep your transaction
+                  receipt for verification.
+                </p>
+              </div>
+
+              <br />
+              <button
+                type="button"
+                className="btn btn-primary"
+                data-ripple=""
+                onClick={() => {
+                  setStep("confirmed");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                Continue
+              </button>
             </div>
           )}
 

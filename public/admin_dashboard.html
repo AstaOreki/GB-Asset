@@ -593,6 +593,7 @@ tailwind.config = {
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">CUSTOMER</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">PRODUCT</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">PAYMENT</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">AMOUNT (RM)</th>
 <th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-center">STATUS</th>
 <th class="px-6 py-5 w-10"></th>
@@ -1534,6 +1535,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     });
 
     // ---------- ORDERS ----------
+    const PAYMENT_METHOD_LABELS = { bank: 'Bank Transfer', card: 'Card', cash: 'Cash on Pickup' };
     function renderOrders() {
         let list = state.orders.slice();
         if (ui.orderFilters.status !== 'All') list = list.filter(o => o.status === ui.orderFilters.status);
@@ -1550,6 +1552,10 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
                     </div>
                 </td>
                 <td class="px-6 py-5"><span class="px-3 py-1 rounded bg-charcoal border border-gold-deep/20 text-gold-light text-[11px] font-medium">${escapeHtml(o.product)}</span></td>
+                <td class="px-6 py-5">
+                    <span class="px-3 py-1 rounded bg-charcoal border border-outline-variant text-on-surface-variant text-[11px]">${escapeHtml(PAYMENT_METHOD_LABELS[o.paymentMethod] || o.paymentMethod || '—')}</span>
+                    ${o.paymentMethod === 'bank' && o.status === 'pending' ? '<div class="mt-1 font-label-caps text-[9px] text-gold-light uppercase tracking-wide">Pending Verification</div>' : ''}
+                </td>
                 <td class="px-6 py-5 font-ui-data text-right text-primary">${Number(o.amount).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</td>
                 <td class="px-6 py-5"><div class="flex justify-center">
                     <select data-order-status="${o.id}" class="bg-charcoal border border-outline-variant rounded text-[10px] font-bold uppercase tracking-wider py-1 px-2 outline-none focus:border-gold-light">
@@ -1561,7 +1567,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
                     </select>
                 </div></td>
                 <td class="px-6 py-5"><button data-delete-order="${o.id}" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-error" title="Delete"><span class="material-symbols-outlined">delete</span></button></td>
-            </tr>`).join('') || `<tr><td colspan="7" class="px-6 py-10 text-center text-gray-muted">${state.loaded.orders ? 'No orders match this filter.' : 'Loading orders…'}</td></tr>`;
+            </tr>`).join('') || `<tr><td colspan="8" class="px-6 py-10 text-center text-gray-muted">${state.loaded.orders ? 'No orders match this filter.' : 'Loading orders…'}</td></tr>`;
 
         document.getElementById('orders-count-label').textContent = `Showing ${list.length} of ${state.orders.length} results`;
 
@@ -1570,10 +1576,24 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
             sel.addEventListener('change', async () => {
                 const id = sel.getAttribute('data-order-status');
                 const order = state.orders.find(o => o.id === id);
+                const newlyPaidBankOrder = sel.value === 'paid' && order && order.paymentMethod === 'bank' && order.status !== 'paid';
                 try {
                     await GBA.orders.updateStatus(id, sel.value);
                     addLog(adminActor, 'Order Status Updated', order ? `#${order.id} — ${order.customer} → ${sel.value}` : id, 'SUCCESS');
                     showToast('Order status updated.');
+                    // Bank transfers are manually verified by admin — this is the one
+                    // moment a "payment confirmed" email should go out, never earlier.
+                    if (newlyPaidBankOrder) {
+                        GBA.getCurrentUser().getIdToken()
+                            .then(idToken => fetch('/api/send-payment-confirmed-email', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                                body: JSON.stringify({ orderId: id }),
+                            }))
+                            .then(res => res.json().then(data => { if (!res.ok) throw new Error(data.error || 'Failed to send.'); return data; }))
+                            .then(() => { showToast('Payment confirmation email sent.'); addLog(adminActor, 'Payment Confirmed Email Sent', order ? `#${order.id} — ${order.customer}` : id, 'SUCCESS'); })
+                            .catch(err => { showToast('Order marked paid, but the confirmation email failed: ' + err.message); addLog(adminActor, 'Payment Confirmed Email Failed', order ? `#${order.id} — ${err.message}` : id, 'ERROR'); });
+                    }
                 } catch (err) {
                     sel.value = previousValue;
                     showToast('Could not update order status: ' + err.message);
