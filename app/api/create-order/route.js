@@ -143,6 +143,12 @@ export async function POST(request) {
     subtotal,
     amount,
     createdAt: new Date(),
+    // Bank transfer is a manual payment method with its own review
+    // workflow (see app/api/orders/*) — paymentStatus tracks that
+    // separately from the fulfillment `status` above, which stays
+    // "pending" until an admin confirms the receipt. Card/cash orders
+    // don't get this field at all; they're untouched by that workflow.
+    ...(paymentMethod === "bank" ? { paymentStatus: "awaiting_payment" } : {}),
   };
 
   await db.collection("orders").doc(orderId).set(order);

@@ -260,12 +260,12 @@ export default function HomePage() {
   // fills the rest by carrying the previous price forward and tags each
   // day so nothing invented can be mistaken for a real update.
   const chartWeightLabel = (CHART_WEIGHTS.find((w) => w.grams === chartWeight) || CHART_WEIGHTS[0]).label;
-  // Is there any recorded price at all for the selected bar? Drives whether
-  // the calendar and comparison panels render — an empty calendar is worse
-  // than no calendar.
-  const hasHistoryForWeight = !!(
-    historyRows && historyRows.some((r) => r.weight === chartWeight && typeof r.sell === "number")
-  );
+  // Is there any recorded price at all, for any bar? Drives whether the
+  // comparison panel renders — an empty comparison card is worse than no
+  // card. Not scoped to chartWeight: the comparison panel now has its own
+  // independent gram selector, so a bar with no history yet shouldn't hide
+  // the whole panel when other bars do have history to compare.
+  const hasAnyPriceHistory = !!(historyRows && historyRows.some((r) => typeof r.sell === "number"));
   const chartSeries = useMemo(() => {
     if (!chartRows || !gba) return null;
     const today = gba.priceHistory.todayKey();
@@ -818,14 +818,14 @@ export default function HomePage() {
             <PriceChart series={chartSeries} weightLabel={chartWeightLabel} fmtRM={gba.fmtRM} />
           )}
 
-          {/* Pure history — with nothing recorded for this bar there is
+          {/* Pure history — with nothing recorded at all yet there is
               nothing to show, so it stays out of the page entirely rather
               than rendering an empty shell. */}
-          {gba && hasHistoryForWeight && (
+          {gba && hasAnyPriceHistory && (
             <PriceCompare
               records={historyRows}
-              weight={chartWeight}
-              weightLabel={chartWeightLabel}
+              weightOptions={CHART_WEIGHTS}
+              defaultWeight={chartWeight}
               todayKey={gba.priceHistory.todayKey()}
               fmtRM={gba.fmtRM}
             />

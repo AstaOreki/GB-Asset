@@ -183,6 +183,10 @@ tailwind.config = {
 <span class="material-symbols-outlined">shopping_cart</span>
 <span class="font-nav-link text-nav-link uppercase">Orders</span>
 </button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="payment-verification">
+<span class="material-symbols-outlined">verified</span>
+<span class="font-nav-link text-nav-link uppercase">Payment Verification</span>
+</button>
 <button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="consultations">
 <span class="material-symbols-outlined">diversity_3</span>
 <span class="font-nav-link text-nav-link uppercase">Consultations</span>
@@ -607,6 +611,53 @@ tailwind.config = {
 </div>
 </div>
 </section>
+<!-- ================= PAYMENT VERIFICATION ================= -->
+<section class="view-section space-y-gutter" id="view-payment-verification">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<span class="font-label-caps text-label-caps text-gold-deep mb-2 block uppercase">Manual Bank Transfer</span>
+<h2 class="font-display-lg text-headline-md text-primary tracking-tight">Payment Verification</h2>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-6 flex flex-wrap items-center gap-gutter">
+<div class="flex-1 min-w-[200px]">
+<label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">Filter by Payment Status</label>
+<select class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface focus:ring-1 focus:ring-primary" id="pv-filter-status">
+<option value="All">All Statuses</option>
+<option value="awaiting_payment">Awaiting Payment</option>
+<option value="proof_submitted">Payment Proof Submitted</option>
+<option value="under_review">Under Review</option>
+<option value="confirmed">Confirmed</option>
+<option value="rejected">Rejected</option>
+</select>
+</div>
+<div class="flex items-end h-[68px]">
+<button class="h-10 px-6 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors font-label-caps text-[10px]" id="pv-reset-filters">RESET FILTERS</button>
+</div>
+</div>
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 border-b border-outline-variant">
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">ORDER NUMBER</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">CUSTOMER</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">DATE</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-right">AMOUNT (RM)</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft">BANK</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-center">RECEIPT</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-center">STATUS</th>
+<th class="px-6 py-5 font-nav-link text-nav-link text-gray-soft text-center">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30" id="pv-table-body"></tbody>
+</table>
+</div>
+<div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
+<span class="font-body-sm text-[11px] text-gray-muted uppercase tracking-widest" id="pv-count-label">Showing 0 results</span>
+</div>
+</div>
+</section>
 <!-- ================= CONSULTATIONS ================= -->
 <section class="view-section space-y-gutter" id="view-consultations">
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -949,6 +1000,63 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
 </div>
 </div>
 
+<!-- Payment Verification review modal -->
+<div class="hidden fixed inset-0 bg-black/70 z-[200] items-center justify-center p-6" id="pv-review-modal-backdrop">
+<div class="glass-panel rounded-lg p-6 max-w-3xl w-full" style="max-height:88vh;overflow-y:auto;">
+<div class="flex items-center justify-between mb-4">
+<div><h3 class="font-headline-sm text-headline-sm text-on-surface" id="pv-review-title">Order</h3><p class="font-body-sm text-[11px] text-gray-muted" id="pv-review-meta"></p></div>
+<button class="material-symbols-outlined text-gray-muted hover:text-on-surface" id="pv-review-close" type="button">close</button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div>
+<h4 class="font-label-caps text-[10px] text-gold-light uppercase mb-2">Customer Information</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed" id="pv-review-customer"></p>
+</div>
+<div>
+<h4 class="font-label-caps text-[10px] text-gold-light uppercase mb-2">Order Information</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed" id="pv-review-order"></p>
+</div>
+</div>
+
+<div class="mb-6">
+<h4 class="font-label-caps text-[10px] text-gold-light uppercase mb-2">Payment Information</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed" id="pv-review-payment"></p>
+</div>
+
+<div class="mb-6">
+<h4 class="font-label-caps text-[10px] text-gold-light uppercase mb-2">Receipt</h4>
+<div id="pv-review-receipt-wrap" class="bg-white rounded-lg overflow-hidden flex items-center justify-center" style="min-height:200px;">
+<p class="text-gray-500 text-sm p-6" id="pv-review-receipt-placeholder">No receipt submitted yet.</p>
+</div>
+</div>
+
+<p class="hidden text-error text-body-sm mb-4" id="pv-review-error"></p>
+
+<div class="flex flex-wrap gap-3" id="pv-review-actions">
+<button class="flex-1 bg-primary text-on-primary font-bold font-nav-link text-nav-link px-6 py-3 rounded-lg uppercase shine-effect" id="pv-confirm-btn">Confirm Payment &amp; Confirm Order</button>
+<button class="flex-1 border border-error text-error font-bold font-nav-link text-nav-link px-6 py-3 rounded-lg uppercase hover:bg-error-container/20 transition-colors" id="pv-reject-btn">Reject Payment</button>
+</div>
+
+<div class="hidden mt-4 pt-4 border-t border-outline-variant" id="pv-reject-panel">
+<label class="block font-label-caps text-[10px] text-gray-muted mb-2 uppercase">Rejection Reason</label>
+<select class="w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface mb-3" id="pv-reject-reason-select">
+<option value="Receipt unclear">Receipt unclear</option>
+<option value="Amount incorrect">Amount incorrect</option>
+<option value="Payment cannot be verified">Payment cannot be verified</option>
+<option value="Wrong bank transfer">Wrong bank transfer</option>
+<option value="Other">Other</option>
+</select>
+<textarea class="hidden w-full bg-surface-container border border-outline-variant rounded-lg py-2.5 px-4 text-body-sm text-on-surface mb-3" id="pv-reject-reason-other" placeholder="Describe the reason" rows="2"></textarea>
+<p class="hidden text-error text-body-sm mb-3" id="pv-reject-error"></p>
+<div class="flex gap-3">
+<button class="bg-error-container text-on-error-container font-bold font-nav-link text-nav-link px-6 py-3 rounded-lg uppercase" id="pv-reject-confirm-btn">Confirm Rejection</button>
+<button class="border border-outline-variant px-6 py-3 rounded-lg font-nav-link text-nav-link text-gray-muted hover:text-on-surface uppercase" id="pv-reject-cancel-btn">Cancel</button>
+</div>
+</div>
+</div>
+</div>
+
 <!-- Footer -->
 <footer class="flex flex-col md:flex-row justify-between items-center w-full py-8 border-t border-outline-variant/30 gap-4">
 <p class="font-body-sm text-body-sm text-gray-muted">© 2026 GB Asset Management | Institutional Gold Wholesaler</p>
@@ -1014,6 +1122,9 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     };
     let ui = {
         orderFilters: { status: 'All' },
+        pvFilters: { status: 'All' },
+        pvReviewOrderId: null,
+        pvRejecting: false,
         annFilterCritical: false,
         annSortNewest: true,
         logsFilterBlocked: false,
@@ -1162,7 +1273,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     });
 
     function initDashboard() {
-        GBA.orders.listen(orders => { state.orders = orders; state.loaded.orders = true; renderOverview(); renderOrders(); renderSalesReport(); });
+        GBA.orders.listen(orders => { state.orders = orders; state.loaded.orders = true; renderOverview(); renderOrders(); renderSalesReport(); renderPaymentVerification(); });
         GBA.consultations.listen(consultations => { state.consultations = consultations; state.loaded.consultations = true; renderOverview(); renderConsultations(); });
         GBA.announcements.listen(announcements => {
             if (seenAnnouncementIds === null) {
@@ -1322,7 +1433,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', closeSidebar));
 
     // ---------- NAVIGATION ----------
-    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements', newsletter: 'Newsletter' };
+    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', 'payment-verification': 'Payment Verification', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements', newsletter: 'Newsletter' };
     function setView(view) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById('view-' + view).classList.add('active');
@@ -1576,24 +1687,10 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
             sel.addEventListener('change', async () => {
                 const id = sel.getAttribute('data-order-status');
                 const order = state.orders.find(o => o.id === id);
-                const newlyPaidBankOrder = sel.value === 'paid' && order && order.paymentMethod === 'bank' && order.status !== 'paid';
                 try {
                     await GBA.orders.updateStatus(id, sel.value);
                     addLog(adminActor, 'Order Status Updated', order ? `#${order.id} — ${order.customer} → ${sel.value}` : id, 'SUCCESS');
                     showToast('Order status updated.');
-                    // Bank transfers are manually verified by admin — this is the one
-                    // moment a "payment confirmed" email should go out, never earlier.
-                    if (newlyPaidBankOrder) {
-                        GBA.getCurrentUser().getIdToken()
-                            .then(idToken => fetch('/api/send-payment-confirmed-email', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-                                body: JSON.stringify({ orderId: id }),
-                            }))
-                            .then(res => res.json().then(data => { if (!res.ok) throw new Error(data.error || 'Failed to send.'); return data; }))
-                            .then(() => { showToast('Payment confirmation email sent.'); addLog(adminActor, 'Payment Confirmed Email Sent', order ? `#${order.id} — ${order.customer}` : id, 'SUCCESS'); })
-                            .catch(err => { showToast('Order marked paid, but the confirmation email failed: ' + err.message); addLog(adminActor, 'Payment Confirmed Email Failed', order ? `#${order.id} — ${err.message}` : id, 'ERROR'); });
-                    }
                 } catch (err) {
                     sel.value = previousValue;
                     showToast('Could not update order status: ' + err.message);
@@ -1703,6 +1800,207 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         } catch (err) {
             errorEl.textContent = 'Could not create order: ' + err.message;
             errorEl.classList.remove('hidden');
+        }
+    });
+
+    // ---------- PAYMENT VERIFICATION (manual bank transfer) ----------
+    // Keep in sync with lib/paymentStatus.js — duplicated here for the
+    // same reason ADMIN_EMAILS/STATIC_PRODUCTS are duplicated: this static
+    // HTML file has no module system to share it from.
+    const PV_STATUS_LABELS = { awaiting_payment: 'Awaiting Payment', proof_submitted: 'Payment Proof Submitted', under_review: 'Under Review', confirmed: 'Confirmed', rejected: 'Rejected' };
+    const PV_STATUS_BADGE_CLASS = {
+        awaiting_payment: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        proof_submitted: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        under_review: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        confirmed: 'bg-green-500/10 text-green-400 border-green-500/20',
+        rejected: 'bg-error-container text-on-error-container border-transparent',
+    };
+    function pvStatusPill(status) {
+        const cls = PV_STATUS_BADGE_CLASS[status] || 'bg-surface-container-high text-gray-muted border-outline-variant';
+        return `<span class="${cls} font-ui-data text-ui-data px-3 py-1 rounded-full border uppercase">${escapeHtml(PV_STATUS_LABELS[status] || status || '—')}</span>`;
+    }
+    function bankOrders() { return state.orders.filter(o => o.paymentMethod === 'bank'); }
+
+    function renderPaymentVerification() {
+        let list = bankOrders();
+        if (ui.pvFilters.status !== 'All') list = list.filter(o => o.paymentStatus === ui.pvFilters.status);
+        list.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+        document.getElementById('pv-table-body').innerHTML = list.map(o => `
+            <tr class="hover:bg-surface-container-high/40 transition-all duration-300">
+                <td class="px-6 py-5 font-ui-data text-on-surface">${escapeHtml(o.id)}</td>
+                <td class="px-6 py-5 font-body-sm text-on-surface">${escapeHtml(o.customer)}</td>
+                <td class="px-6 py-5 font-body-sm text-on-surface-variant">${formatDateShort(o.createdAt)}</td>
+                <td class="px-6 py-5 font-ui-data text-right text-primary">${Number(o.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</td>
+                <td class="px-6 py-5 font-body-sm text-on-surface-variant">${escapeHtml(o.bankName || '—')}</td>
+                <td class="px-6 py-5 text-center">${o.receiptFileName ? '<span class="material-symbols-outlined text-primary text-[18px]" title="Receipt on file">description</span>' : '<span class="text-gray-muted text-[11px]">—</span>'}</td>
+                <td class="px-6 py-5 text-center">${pvStatusPill(o.paymentStatus)}</td>
+                <td class="px-6 py-5 text-center"><button data-pv-review="${o.id}" class="font-label-caps text-[10px] text-gold-light hover:text-primary uppercase tracking-wider">Review</button></td>
+            </tr>`).join('') || `<tr><td colspan="8" class="px-6 py-10 text-center text-gray-muted">${state.loaded.orders ? 'No bank transfer orders match this filter.' : 'Loading…'}</td></tr>`;
+
+        document.getElementById('pv-count-label').textContent = `Showing ${list.length} of ${bankOrders().length} results`;
+
+        document.querySelectorAll('[data-pv-review]').forEach(btn => {
+            btn.addEventListener('click', () => openPvReview(btn.getAttribute('data-pv-review')));
+        });
+    }
+
+    document.getElementById('pv-filter-status').addEventListener('change', (e) => { ui.pvFilters.status = e.target.value; renderPaymentVerification(); });
+    document.getElementById('pv-reset-filters').addEventListener('click', () => { ui.pvFilters.status = 'All'; document.getElementById('pv-filter-status').value = 'All'; renderPaymentVerification(); });
+
+    function pvOrderInfoHtml(o) {
+        const items = Array.isArray(o.items) && o.items.length
+            ? o.items.map(i => `${escapeHtml(i.name)} × ${i.qty}`).join('<br>')
+            : escapeHtml(o.product || '');
+        return `Order #${escapeHtml(o.id)}<br>${items}<br>Total: RM ${Number(o.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2 })}`;
+    }
+
+    function pvPaymentInfoHtml(o) {
+        const uploaded = o.receiptUploadedAt ? formatDateShort(o.receiptUploadedAt) : '—';
+        const rejectedLine = o.paymentStatus === 'rejected' && o.rejectionReason
+            ? `<br><span class="text-error">Rejection Reason: ${escapeHtml(o.rejectionReason)}</span>`
+            : '';
+        return `Payment Method: Bank Transfer<br>` +
+            `Bank Used: ${escapeHtml(o.bankName || '—')}<br>` +
+            `Transaction Reference: ${escapeHtml(o.transactionReference || '—')}<br>` +
+            `Amount Transferred: ${typeof o.amountTransferred === 'number' ? 'RM ' + o.amountTransferred.toLocaleString('en-MY', { minimumFractionDigits: 2 }) : '—'}<br>` +
+            `Uploaded: ${uploaded}${rejectedLine}`;
+    }
+
+    async function openPvReview(orderId) {
+        const order = state.orders.find(o => o.id === orderId);
+        if (!order) return;
+        ui.pvReviewOrderId = orderId;
+
+        document.getElementById('pv-review-title').textContent = `Order #${order.id}`;
+        document.getElementById('pv-review-meta').innerHTML = pvStatusPill(order.paymentStatus);
+        document.getElementById('pv-review-customer').innerHTML = `${escapeHtml(order.customer)}<br>${escapeHtml(order.email || '')}<br>${escapeHtml(order.phone || '')}`;
+        document.getElementById('pv-review-order').innerHTML = pvOrderInfoHtml(order);
+        document.getElementById('pv-review-payment').innerHTML = pvPaymentInfoHtml(order);
+        document.getElementById('pv-review-error').classList.add('hidden');
+        document.getElementById('pv-reject-panel').classList.add('hidden');
+        document.getElementById('pv-reject-reason-select').value = 'Receipt unclear';
+        document.getElementById('pv-reject-reason-other').classList.add('hidden');
+        document.getElementById('pv-reject-reason-other').value = '';
+        document.getElementById('pv-reject-error').classList.add('hidden');
+
+        const receiptWrap = document.getElementById('pv-review-receipt-wrap');
+        if (order.receiptFileName) {
+            receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">Loading receipt…</p>';
+            try {
+                const idToken = await GBA.getCurrentUser().getIdToken();
+                const res = await fetch(`/api/orders/receipt-url?orderId=${encodeURIComponent(orderId)}`, { headers: { Authorization: `Bearer ${idToken}` } });
+                const data = await res.json();
+                if (res.ok && data.url) {
+                    const isPdf = /\.pdf$/i.test(order.receiptFileName || '');
+                    receiptWrap.innerHTML = isPdf
+                        ? `<iframe src="${data.url}" style="width:100%;height:400px;border:0;" title="Payment receipt"></iframe>`
+                        : `<img src="${data.url}" style="max-width:100%;max-height:400px;object-fit:contain;" alt="Payment receipt">`;
+                } else {
+                    receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">Could not load the receipt.</p>';
+                }
+            } catch {
+                receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">Could not load the receipt.</p>';
+            }
+        } else {
+            receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">No receipt submitted yet.</p>';
+        }
+
+        const canAct = order.paymentStatus === 'proof_submitted' || order.paymentStatus === 'under_review';
+        ['pv-confirm-btn', 'pv-reject-btn'].forEach(id => {
+            const btn = document.getElementById(id);
+            btn.disabled = !canAct;
+            btn.classList.toggle('opacity-40', !canAct);
+            btn.classList.toggle('pointer-events-none', !canAct);
+        });
+
+        document.getElementById('pv-review-modal-backdrop').classList.remove('hidden');
+        document.getElementById('pv-review-modal-backdrop').classList.add('flex');
+
+        // Fires once, proof_submitted -> under_review, matching "Under
+        // Review: Admin is reviewing payment" — a direct client write
+        // (see GBA.orders.setPaymentStatus) since it has no email/business
+        // logic attached, unlike confirm/reject below.
+        if (order.paymentStatus === 'proof_submitted') {
+            GBA.orders.setPaymentStatus(orderId, 'under_review').catch(() => {});
+        }
+    }
+
+    function closePvReview() {
+        document.getElementById('pv-review-modal-backdrop').classList.add('hidden');
+        document.getElementById('pv-review-modal-backdrop').classList.remove('flex');
+        ui.pvReviewOrderId = null;
+    }
+    document.getElementById('pv-review-close').addEventListener('click', closePvReview);
+
+    document.getElementById('pv-confirm-btn').addEventListener('click', () => {
+        const orderId = ui.pvReviewOrderId;
+        const order = state.orders.find(o => o.id === orderId);
+        if (!orderId || !order) return;
+        confirmAction(
+            `Confirm payment for order #${orderId} — ${order.customer}? This will confirm the order and send the customer a payment-confirmed email.`,
+            async () => {
+                const errEl = document.getElementById('pv-review-error');
+                errEl.classList.add('hidden');
+                try {
+                    const idToken = await GBA.getCurrentUser().getIdToken();
+                    const res = await fetch('/api/orders/confirm-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                        body: JSON.stringify({ orderId }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Could not confirm payment.');
+                    addLog(adminActor, 'Payment Confirmed', `#${orderId} — ${order.customer}`, 'SUCCESS');
+                    showToast(data.alreadyConfirmed ? 'This order was already confirmed.' : 'Payment confirmed — order marked as paid.');
+                    closePvReview();
+                } catch (err) {
+                    errEl.textContent = err.message;
+                    errEl.classList.remove('hidden');
+                }
+            }
+        );
+    });
+
+    document.getElementById('pv-reject-btn').addEventListener('click', () => {
+        document.getElementById('pv-reject-panel').classList.remove('hidden');
+    });
+    document.getElementById('pv-reject-cancel-btn').addEventListener('click', () => {
+        document.getElementById('pv-reject-panel').classList.add('hidden');
+    });
+    document.getElementById('pv-reject-reason-select').addEventListener('change', (e) => {
+        document.getElementById('pv-reject-reason-other').classList.toggle('hidden', e.target.value !== 'Other');
+    });
+    document.getElementById('pv-reject-confirm-btn').addEventListener('click', async () => {
+        const orderId = ui.pvReviewOrderId;
+        const order = state.orders.find(o => o.id === orderId);
+        if (!orderId || !order) return;
+        const select = document.getElementById('pv-reject-reason-select');
+        const otherText = document.getElementById('pv-reject-reason-other').value.trim();
+        const reason = select.value === 'Other' ? otherText : select.value;
+        const errEl = document.getElementById('pv-reject-error');
+        if (!reason) {
+            errEl.textContent = 'Please describe the rejection reason.';
+            errEl.classList.remove('hidden');
+            return;
+        }
+        errEl.classList.add('hidden');
+        try {
+            const idToken = await GBA.getCurrentUser().getIdToken();
+            const res = await fetch('/api/orders/reject-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+                body: JSON.stringify({ orderId, reason }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Could not reject payment.');
+            addLog(adminActor, 'Payment Rejected', `#${orderId} — ${order.customer} (${reason})`, 'WARNING');
+            showToast('Payment rejected — customer can upload a new receipt.');
+            document.getElementById('pv-reject-panel').classList.add('hidden');
+            closePvReview();
+        } catch (err) {
+            errEl.textContent = err.message;
+            errEl.classList.remove('hidden');
         }
     });
 

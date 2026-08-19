@@ -11,32 +11,12 @@ import { useRevealOnScroll } from "../../hooks/useRevealOnScroll";
 import { useButtonRipple } from "../../hooks/useButtonRipple";
 import { useCartBadge } from "../../hooks/useCartBadge";
 import { computeDeliveryFee } from "../../lib/catalog";
-import { BANK_ACCOUNTS } from "../../lib/bankAccounts";
 import "./checkout.css";
 
 // Card only becomes selectable once STRIPE_SECRET_KEY (server) and this
 // public flag are both set — same "build it, gate it off until configured"
 // pattern already used for order-confirmation email (RESEND_API_KEY).
 const STRIPE_ENABLED = process.env.NEXT_PUBLIC_STRIPE_ENABLED === "true";
-
-function BankAccountCards({ copiedAccount, onCopy }) {
-  return (
-    <div className="bank-account-list">
-      {BANK_ACCOUNTS.map((acc) => (
-        <div className="bank-account-card" key={acc.number}>
-          <div className="bank-account-bank">{acc.bank}</div>
-          <div className="bank-account-name">{acc.name}</div>
-          <div className="bank-account-number-row">
-            <span className="bank-account-number">{acc.number}</span>
-            <button type="button" className="bank-copy-btn" onClick={() => onCopy(acc.number)}>
-              {copiedAccount === acc.number ? "Copied ✓" : "Copy"}
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 /**
  * Wrapped in Suspense because the inner component calls useSearchParams()
@@ -73,10 +53,8 @@ function CheckoutInner() {
   const [deliveryMethod, setDeliveryMethod] = useState("self");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentError, setPaymentError] = useState(false);
-  const [copiedAccount, setCopiedAccount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
-  const [confirmedAmount, setConfirmedAmount] = useState(0);
   const [cardCancelled, setCardCancelled] = useState(false);
   // Was window.alert() for both the expired-session and order-placement-
   // failure cases — the one moment the interface most needs to stay
@@ -166,17 +144,6 @@ function CheckoutInner() {
       if (typeof unsubscribe === "function") unsubscribe();
     };
   }, [gba]);
-
-  function handleCopyAccount(number) {
-    if (!navigator.clipboard) return;
-    navigator.clipboard
-      .writeText(number)
-      .then(() => {
-        setCopiedAccount(number);
-        setTimeout(() => setCopiedAccount(""), 1800);
-      })
-      .catch(() => {});
-  }
 
   function resetAddrForm() {
     setAddrLabel("");
@@ -333,7 +300,6 @@ function CheckoutInner() {
 
         const newOrderId = data.orderId;
         setOrderId(newOrderId);
-        setConfirmedAmount(data.amount);
 
         const orderData = {
           customer: name,
@@ -381,7 +347,15 @@ function CheckoutInner() {
 
         return gba.cart.clear().then(() => {
           refreshCartBadge();
-          setStep(paymentMethod === "bank" ? "bank-instructions" : "confirmed");
+          if (paymentMethod === "bank") {
+            // A real route, not an in-memory step — the customer needs to
+            // be able to come back to this page later (from the order
+            // email, or to re-upload after a rejection), which an SPA
+            // step that resets on refresh can't support.
+            window.location.href = `/orders/${newOrderId}/payment`;
+            return;
+          }
+          setStep("confirmed");
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       })
@@ -418,7 +392,7 @@ function CheckoutInner() {
             <span className="label">Details &amp; Payment</span>
           </div>
           <div className="cstep-line"></div>
-          <div className={`cstep ${step === "confirmed" || step === "bank-instructions" ? "active" : ""}`} id="stepConfirm">
+          <div className={`cstep ${step === "confirmed" ? "active" : ""}`} id="stepConfirm">
             <div className="cstep-num">3</div>
             <span className="label">Confirmation</span>
           </div>
@@ -816,60 +790,6 @@ function CheckoutInner() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {step === "bank-instructions" && (
-            <div className="panel order-success" id="bankInstructions">
-              <div className="order-success-icon">
-                <svg viewBox="0 0 24 24">
-                  <rect height="9" rx="1.5" width="14" x="5" y="11"></rect>
-                  <path d="M8 11V7a4 4 0 018 0v4"></path>
-                </svg>
-              </div>
-              <h2>Order Placed Successfully</h2>
-              <p>
-                Your order has been received. Complete the manual bank transfer below to finish your purchase — our
-                team will verify it and confirm your order once payment is received.
-              </p>
-              <div className="order-id" id="orderIdText">
-                {orderId}
-              </div>
-
-              <div className="bank-transfer-panel bank-transfer-panel-confirm">
-                <div className="bank-transfer-summary-row">
-                  <span>Payment Method</span>
-                  <b>Bank Transfer</b>
-                </div>
-                <div className="bank-transfer-summary-row">
-                  <span>Payment Status</span>
-                  <b>Pending Verification</b>
-                </div>
-                <div className="bank-transfer-amount">
-                  <span>Amount to Transfer</span>
-                  <b>{gba ? gba.fmtRM(confirmedAmount) : `RM ${confirmedAmount.toFixed(2)}`}</b>
-                </div>
-                <h4 className="bank-transfer-details-heading">Bank Transfer Details</h4>
-                <BankAccountCards copiedAccount={copiedAccount} onCopy={handleCopyAccount} />
-                <p className="bank-transfer-note">
-                  Please transfer the exact order amount to one of the bank accounts above using your preferred
-                  banking app or online banking. After completing the transfer, please keep your transaction
-                  receipt for verification.
-                </p>
-              </div>
-
-              <br />
-              <button
-                type="button"
-                className="btn btn-primary"
-                data-ripple=""
-                onClick={() => {
-                  setStep("confirmed");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              >
-                Continue
-              </button>
             </div>
           )}
 

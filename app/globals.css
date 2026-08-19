@@ -535,6 +535,8 @@ footer { background: var(--emerald-deep); padding: 90px 0 0; }
 }
 .footer-bottom a { margin-left: 20px; transition: color .3s var(--ease); }
 .footer-bottom a:hover { color: var(--gold-light); }
+.footer-reg { display: block; margin-top: 4px; font-size: 11px; color: var(--gray); }
+@media (min-width: 701px) { .footer-reg { display: inline; margin-top: 0; margin-left: 14px; } }
 
 @media (max-width: 700px) { .footer-grid { grid-template-columns: 1fr; } }
 

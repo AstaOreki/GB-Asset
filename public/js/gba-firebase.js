@@ -502,6 +502,26 @@
 
   function deleteOrder(id) { return db.collection("orders").doc(id).delete(); }
 
+  // Single-order realtime read — used by the bank-transfer payment page
+  // (app/orders/[orderId]/payment), which needs live paymentStatus updates
+  // (e.g. when an admin confirms/rejects) without polling. firestore.rules
+  // only allows this for the order's own owner or an admin.
+  function listenOrder(id, cb) {
+    return db.collection("orders").doc(id)
+      .onSnapshot(function (doc) { cb(doc.exists ? doc.data() : null); }, function () { cb(null); });
+  }
+
+  // Admin-only, same as updateOrderStatus above. Only ever used for the
+  // "proof_submitted -> under_review" transition when an admin opens a
+  // receipt to look at it — no email, no business logic, so a direct
+  // write (rather than a server route) is fine here. Confirming or
+  // rejecting a payment is NOT done this way — those go through
+  // app/api/orders/confirm-payment and reject-payment, which need to be
+  // transactional/atomic and send emails.
+  function setOrderPaymentStatus(id, paymentStatus) {
+    return db.collection("orders").doc(id).update({ paymentStatus: paymentStatus });
+  }
+
   // --------------------------------------------------------- consultations
   function submitConsultation(data) {
     data.status = "new";
@@ -923,7 +943,9 @@
     orders: {
       create: createOrder,
       listen: listenOrders,
+      listenOne: listenOrder,
       updateStatus: updateOrderStatus,
+      setPaymentStatus: setOrderPaymentStatus,
       remove: deleteOrder
     },
     consultations: {

@@ -153,7 +153,10 @@ export default function FullFooter() {
         </div>
       </div>
       <div className="footer-bottom wrap">
-        <div>© 2026 GB Asset. All rights reserved.</div>
+        <div>
+          © 2026 GB Asset. All rights reserved.
+          <span className="footer-reg">Company Registration: GBA Asset Trading 202603058906 (KT0609248-K)</span>
+        </div>
         <div>
           <Link href="/privacy-policy">Privacy Policy</Link>
           <a href="#">Terms &amp; Conditions</a>

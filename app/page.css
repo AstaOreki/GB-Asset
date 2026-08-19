@@ -554,13 +554,14 @@ body::after {
 .pcmp-inputs { display: flex; flex-direction: column; gap: 14px; }
 .pcmp-field { display: flex; flex-direction: column; gap: 7px; }
 .pcmp-field span { font-family: var(--label); font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gold-light); }
-.pcmp-field input {
+.pcmp-field input, .pcmp-field select {
   width: 100%; background: #FFFFFF; color: var(--charcoal);
   border: none; border-bottom: 1.5px solid rgba(212,175,55,.4); border-radius: 3px;
   padding: 10px 12px; font-family: var(--body); font-size: 14px;
   transition: border-color .25s var(--ease);
 }
-.pcmp-field input:focus { outline: none; border-bottom-color: var(--gold); }
+.pcmp-field input:focus, .pcmp-field select:focus { outline: none; border-bottom-color: var(--gold); }
+.pcmp-field select { cursor: pointer; }
 .pcmp-result { background: rgba(0,0,0,.15); border-radius: 4px; padding: 22px 24px; }
 .pcmp-none { font-size: 13px; color: var(--gray-soft); line-height: 1.6; }
 .pcmp-sides { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; }

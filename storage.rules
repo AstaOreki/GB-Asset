@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Payment receipts are uploaded and read exclusively through
+// app/api/orders/upload-receipt and app/api/orders/receipt-url, both using
+// firebase-admin (which bypasses these rules entirely, same as
+// firestore.rules). No client — customer or admin — ever talks to Storage
+// directly, so there is no case where a permissive rule here would help;
+// denying everything is what actually enforces "customers can only view
+// their own receipts, only admins can view all of them" (that check lives
+// in the API routes, verified against Firestore's orders.userId).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

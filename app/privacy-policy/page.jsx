@@ -332,11 +332,11 @@ export default function PrivacyPolicyPage() {
                 <p>
                   GB Asset
                   <br />
-                  S. Ameer Jewelers,
+                  No. 7, Binjai 8 Premium Soho,
                   <br />
-                  83, Lebuh Ah Quee,
+                  Unit 8, Lorong Binjai,
                   <br />
-                  10200 George Town, Pulau Pinang.
+                  KLCC, Kuala Lumpur.
                   <br />
                   Tel: +60 12-240 0600 (WhatsApp &amp; Telefon)
                 </p>

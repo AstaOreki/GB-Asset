@@ -330,36 +330,6 @@ body::after {
 }
 .status-note-error { border-color: rgba(176, 24, 41, .5); background: rgba(176, 24, 41, .1); color: #e08a6a; }
 
-/* ============ BANK TRANSFER PANEL (manual transfer account details) ============ */
-.bank-transfer-panel {
-  margin-top: 20px; padding: 22px;
-  background: linear-gradient(160deg, rgba(212, 175, 55, .08), rgba(212, 175, 55, .02));
-  border: 1px solid rgba(212, 175, 55, .3); border-radius: 4px;
-}
-.bank-transfer-summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--gray-soft); }
-.bank-transfer-summary-row + .bank-transfer-summary-row { margin-top: 8px; }
-.bank-transfer-summary-row b { color: var(--ivory); font-weight: 500; }
-.bank-transfer-amount { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(212, 175, 55, .18); }
-.bank-transfer-amount span { font-family: var(--label); font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-light); }
-.bank-transfer-amount b { font-family: var(--serif-accent); font-style: italic; font-size: 22px; color: var(--ivory); font-weight: 500; }
-.bank-transfer-details-heading {
-  margin-top: 22px; font-family: var(--label); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-light);
-}
-.bank-transfer-note { margin-top: 16px; font-size: 12.5px; line-height: 1.6; color: var(--gray-soft); }
-.bank-account-list { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-.bank-account-card { padding: 16px 18px; border: 1px solid rgba(212, 175, 55, .2); border-radius: 4px; background: rgba(255, 255, 255, .02); }
-.bank-account-bank { font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; }
-.bank-account-name { margin-top: 6px; font-size: 13px; color: var(--ivory); font-weight: 500; }
-.bank-account-number-row { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.bank-account-number { font-family: var(--label); font-size: 15px; letter-spacing: 1px; color: var(--ivory); }
-.bank-copy-btn {
-  flex-shrink: 0; padding: 6px 12px; font-family: var(--label); font-size: 10px; font-weight: 700;
-  letter-spacing: 1px; text-transform: uppercase; color: var(--gold-light);
-  border: 1px solid rgba(212, 175, 55, .4); border-radius: 3px; transition: all .25s var(--ease);
-}
-.bank-copy-btn:hover { border-color: var(--gold-light); background: rgba(212, 175, 55, .1); }
-.bank-transfer-panel-confirm { text-align: left; margin-top: 26px; }
-
 /* ============ SAVED-ADDRESS "ADD NEW" INLINE FORM (matches /profile) ============ */
 .profile-note { font-size: 13.5px; color: var(--gray-soft); line-height: 1.6; }
 .submit-btn.small { width: auto; margin-top: 0; padding: 13px 26px; font-size: 11px; }
