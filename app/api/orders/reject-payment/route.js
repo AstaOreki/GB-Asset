@@ -28,9 +28,14 @@ export async function POST(request) {
   if (!db) return Response.json({ error: "Server not configured." }, { status: 501 });
 
   const orderRef = db.collection("orders").doc(orderId);
-  const snap = await orderRef.get();
-  if (!snap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
-  const order = snap.data();
+  let order;
+  try {
+    const snap = await orderRef.get();
+    if (!snap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
+    order = snap.data();
+  } catch {
+    return Response.json({ error: "Could not look up this order — please try again." }, { status: 500 });
+  }
 
   if (order.paymentMethod !== "bank") {
     return Response.json({ error: "This order does not use bank transfer." }, { status: 400 });
@@ -41,23 +46,27 @@ export async function POST(request) {
 
   const rejectedAt = new Date();
 
-  await orderRef.collection("receiptHistory").add({
-    receiptUrl: order.receiptUrl || null,
-    receiptFileName: order.receiptFileName || null,
-    receiptUploadedAt: order.receiptUploadedAt || null,
-    bankName: order.bankName || "",
-    transactionReference: order.transactionReference || "",
-    amountTransferred: typeof order.amountTransferred === "number" ? order.amountTransferred : null,
-    outcome: "rejected",
-    rejectionReason: reason,
-    rejectedAt,
-    rejectedBy: admin.email,
-  });
+  try {
+    await orderRef.collection("receiptHistory").add({
+      receiptUrl: order.receiptUrl || null,
+      receiptFileName: order.receiptFileName || null,
+      receiptUploadedAt: order.receiptUploadedAt || null,
+      bankName: order.bankName || "",
+      transactionReference: order.transactionReference || "",
+      amountTransferred: typeof order.amountTransferred === "number" ? order.amountTransferred : null,
+      outcome: "rejected",
+      rejectionReason: reason,
+      rejectedAt,
+      rejectedBy: admin.email,
+    });
 
-  await orderRef.update({
-    paymentStatus: "rejected",
-    rejectionReason: reason,
-  });
+    await orderRef.update({
+      paymentStatus: "rejected",
+      rejectionReason: reason,
+    });
+  } catch {
+    return Response.json({ error: "Could not reject this payment — please try again." }, { status: 500 });
+  }
 
   return Response.json({ ok: true });
 }

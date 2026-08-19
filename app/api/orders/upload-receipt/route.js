@@ -62,9 +62,14 @@ export async function POST(request) {
   }
 
   const orderRef = db.collection("orders").doc(orderId);
-  const orderSnap = await orderRef.get();
-  if (!orderSnap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
-  const order = orderSnap.data();
+  let order;
+  try {
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
+    order = orderSnap.data();
+  } catch {
+    return Response.json({ error: "Could not look up your order — please try again." }, { status: 500 });
+  }
 
   if (order.userId !== decoded.uid) {
     return Response.json({ error: "This is not your order." }, { status: 403 });
@@ -82,20 +87,39 @@ export async function POST(request) {
 
   const timestamp = Date.now();
   const objectPath = `orders/${orderId}/receipts/${timestamp}_${sanitizeFilename(file.name)}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
 
-  await bucket.file(objectPath).save(buffer, { contentType: file.type, resumable: false });
+  // Every failure here — including "Storage isn't provisioned on this
+  // Firebase project yet" — must come back as JSON, not an unhandled
+  // exception. An uncaught throw in a Route Handler produces a plain-text/
+  // HTML 500 page; the client always expects JSON and its res.json() call
+  // then throws too, so the real error never reaches the user — they just
+  // see a generic "please try again." with no way to know why.
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await bucket.file(objectPath).save(buffer, { contentType: file.type, resumable: false });
 
-  await orderRef.update({
-    paymentStatus: "proof_submitted",
-    bankName,
-    transactionReference,
-    amountTransferred,
-    receiptUrl: objectPath, // a Storage object path, not a public URL — see app/api/orders/receipt-url
-    receiptFileName: file.name,
-    receiptUploadedAt: new Date(),
-    rejectionReason: null,
-  });
+    await orderRef.update({
+      paymentStatus: "proof_submitted",
+      bankName,
+      transactionReference,
+      amountTransferred,
+      receiptUrl: objectPath, // a Storage object path, not a public URL — see app/api/orders/receipt-url
+      receiptFileName: file.name,
+      receiptUploadedAt: new Date(),
+      rejectionReason: null,
+    });
+  } catch (err) {
+    const message = err && err.message ? String(err.message) : "";
+    const storageNotSetUp = /has not been set up|does not exist|bucket.*not found/i.test(message);
+    return Response.json(
+      {
+        error: storageNotSetUp
+          ? "Payment receipt storage isn't set up yet — please contact us directly instead of uploading here."
+          : "Could not upload your receipt — please try again.",
+      },
+      { status: 500 }
+    );
+  }
 
   // Fire-and-forget, same as the order-placed email — a Resend hiccup must
   // never block the upload itself succeeding.

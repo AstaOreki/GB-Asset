@@ -22,28 +22,33 @@ export async function GET(request) {
   if (!db || !bucket) return Response.json({ error: "Server not configured." }, { status: 501 });
 
   const orderRef = db.collection("orders").doc(orderId);
-  const orderSnap = await orderRef.get();
-  if (!orderSnap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
-  const order = orderSnap.data();
-
-  const isOwner = order.userId === decoded.uid;
-  const isAdmin = isAdminEmail(decoded.email);
-  if (!isOwner && !isAdmin) {
-    return Response.json({ error: "Not authorized." }, { status: 403 });
-  }
-
+  let order;
   let objectPath;
   let fileName;
-  if (historyId) {
-    if (!isAdmin) return Response.json({ error: "Not authorized." }, { status: 403 });
-    const historySnap = await orderRef.collection("receiptHistory").doc(historyId).get();
-    if (!historySnap.exists) return Response.json({ error: "Receipt not found." }, { status: 404 });
-    const entry = historySnap.data();
-    objectPath = entry.receiptUrl;
-    fileName = entry.receiptFileName;
-  } else {
-    objectPath = order.receiptUrl;
-    fileName = order.receiptFileName;
+  try {
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
+    order = orderSnap.data();
+
+    const isOwner = order.userId === decoded.uid;
+    const isAdmin = isAdminEmail(decoded.email);
+    if (!isOwner && !isAdmin) {
+      return Response.json({ error: "Not authorized." }, { status: 403 });
+    }
+
+    if (historyId) {
+      if (!isAdmin) return Response.json({ error: "Not authorized." }, { status: 403 });
+      const historySnap = await orderRef.collection("receiptHistory").doc(historyId).get();
+      if (!historySnap.exists) return Response.json({ error: "Receipt not found." }, { status: 404 });
+      const entry = historySnap.data();
+      objectPath = entry.receiptUrl;
+      fileName = entry.receiptFileName;
+    } else {
+      objectPath = order.receiptUrl;
+      fileName = order.receiptFileName;
+    }
+  } catch {
+    return Response.json({ error: "Could not look up this order — please try again." }, { status: 500 });
   }
 
   if (!objectPath) return Response.json({ error: "No receipt on file." }, { status: 404 });

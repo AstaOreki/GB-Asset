@@ -52,6 +52,14 @@ export default function BankTransferPaymentPage({ params }) {
     };
   }, [gba, orderId]);
 
+  // If an admin rejects this receipt while the customer still has the page
+  // open, drop the stale "submitted successfully" panel from their earlier
+  // upload — otherwise it never clears itself, and the re-upload form the
+  // rejection banner is telling them to use would stay hidden underneath it.
+  useEffect(() => {
+    if (order && order.paymentStatus === "rejected") setUploadSuccess(false);
+  }, [order && order.paymentStatus]);
+
   function handleCopyRef() {
     if (!navigator.clipboard) return;
     navigator.clipboard
@@ -241,63 +249,72 @@ export default function BankTransferPaymentPage({ params }) {
                 <p className="bank-transfer-note">Please use your Order Number as the payment reference when making the bank transfer.</p>
               </div>
 
-              {UPLOADABLE_STATUSES.includes(status) && (
+              {uploadSuccess && (
+                // Deliberately NOT gated on UPLOADABLE_STATUSES — the
+                // realtime order listener flips `status` to
+                // "proof_submitted" right around when this upload
+                // completes (often before the user can even read this),
+                // and that status is what hides the form below. Without
+                // its own unconditional block, this confirmation would
+                // vanish the instant the order updates instead of staying
+                // up as the actual "your upload worked" message.
+                <div className="panel payment-upload-panel">
+                  <h3>Upload Payment Receipt</h3>
+                  <div className="status-note">
+                    Your payment receipt has been submitted successfully. Our admin will verify your payment before
+                    confirming your order.
+                  </div>
+                </div>
+              )}
+
+              {!uploadSuccess && UPLOADABLE_STATUSES.includes(status) && (
                 <form className="panel payment-upload-panel" onSubmit={handleUpload}>
                   <h3>Upload Payment Receipt</h3>
 
-                  {uploadSuccess ? (
-                    <div className="status-note">
-                      Your payment receipt has been submitted successfully. Our admin will verify your payment before
-                      confirming your order.
+                  <div className="field small">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                      onChange={handleFileChange}
+                      required
+                    />
+                  </div>
+                  <p className="payment-upload-hint">JPG, JPEG, PNG, or PDF — up to 8MB.</p>
+
+                  <div className="field-row" style={{ marginTop: 22 }}>
+                    <div className="field">
+                      <input placeholder=" " type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+                      <label>Bank Used (optional)</label>
                     </div>
-                  ) : (
-                    <>
-                      <div className="field small">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-                          onChange={handleFileChange}
-                          required
-                        />
-                      </div>
-                      <p className="payment-upload-hint">JPG, JPEG, PNG, or PDF — up to 8MB.</p>
+                    <div className="field">
+                      <input placeholder=" " type="text" value={txnRef} onChange={(e) => setTxnRef(e.target.value)} />
+                      <label>Transaction Reference (optional)</label>
+                    </div>
+                  </div>
+                  <div className="field" style={{ marginTop: 26 }}>
+                    <input
+                      placeholder=" "
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={amountTransferred}
+                      onChange={(e) => setAmountTransferred(e.target.value)}
+                    />
+                    <label>Amount Transferred (optional)</label>
+                  </div>
 
-                      <div className="field-row" style={{ marginTop: 22 }}>
-                        <div className="field">
-                          <input placeholder=" " type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} />
-                          <label>Bank Used (optional)</label>
-                        </div>
-                        <div className="field">
-                          <input placeholder=" " type="text" value={txnRef} onChange={(e) => setTxnRef(e.target.value)} />
-                          <label>Transaction Reference (optional)</label>
-                        </div>
-                      </div>
-                      <div className="field" style={{ marginTop: 26 }}>
-                        <input
-                          placeholder=" "
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={amountTransferred}
-                          onChange={(e) => setAmountTransferred(e.target.value)}
-                        />
-                        <label>Amount Transferred (optional)</label>
-                      </div>
-
-                      {uploading && (
-                        <div className="payment-upload-progress">
-                          <div className="payment-upload-progress-bar" style={{ width: `${uploadPct}%` }} />
-                        </div>
-                      )}
-
-                      <button className="submit-btn" data-ripple="" type="submit" disabled={!file || uploading}>
-                        {uploading ? `Uploading… ${uploadPct}%` : "Submit Payment Proof"}
-                      </button>
-
-                      {uploadError && <div className="status-note status-note-error" style={{ marginTop: 14 }}>{uploadError}</div>}
-                    </>
+                  {uploading && (
+                    <div className="payment-upload-progress">
+                      <div className="payment-upload-progress-bar" style={{ width: `${uploadPct}%` }} />
+                    </div>
                   )}
+
+                  <button className="submit-btn" data-ripple="" type="submit" disabled={!file || uploading}>
+                    {uploading ? `Uploading… ${uploadPct}%` : "Submit Payment Proof"}
+                  </button>
+
+                  {uploadError && <div className="status-note status-note-error" style={{ marginTop: 14 }}>{uploadError}</div>}
                 </form>
               )}
 
