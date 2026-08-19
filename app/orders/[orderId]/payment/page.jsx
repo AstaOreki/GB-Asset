@@ -35,6 +35,7 @@ export default function BankTransferPaymentPage({ params }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -129,6 +130,33 @@ export default function BankTransferPaymentPage({ params }) {
       };
       xhr.send(form);
     });
+  }
+
+  // The receipt URL Firestore holds isn't fetchable directly — Vercel
+  // Blob's private store rejects a plain browser request to it — so this
+  // goes through /api/orders/receipt (an authenticated proxy) and opens
+  // the result as a local object URL instead of the real one.
+  function handleViewReceipt() {
+    if (!gba || receiptLoading) return;
+    const currentUser = gba.getCurrentUser();
+    if (!currentUser) return;
+    setReceiptLoading(true);
+    currentUser
+      .getIdToken()
+      .then((idToken) =>
+        fetch(`/api/orders/receipt?orderId=${encodeURIComponent(orderId)}`, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        })
+      )
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not load the receipt.");
+        return res.blob();
+      })
+      .then((blob) => {
+        setReceiptLoading(false);
+        window.open(URL.createObjectURL(blob), "_blank", "noopener,noreferrer");
+      })
+      .catch(() => setReceiptLoading(false));
   }
 
   const status = order && order.paymentStatus;
@@ -301,15 +329,15 @@ export default function BankTransferPaymentPage({ params }) {
                 <div className="panel payment-receipt-view">
                   <h3>Your Submitted Receipt</h3>
                   <p className="payment-upload-hint">{order.receiptFileName}</p>
-                  <a
+                  <button
+                    type="button"
                     className="btn btn-primary"
                     data-ripple=""
-                    href={order.receiptUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={handleViewReceipt}
+                    disabled={receiptLoading}
                   >
-                    View My Receipt
-                  </a>
+                    {receiptLoading ? "Loading…" : "View My Receipt"}
+                  </button>
                 </div>
               )}
             </div>

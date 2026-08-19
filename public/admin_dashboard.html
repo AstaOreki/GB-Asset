@@ -1886,11 +1886,25 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
 
         const receiptWrap = document.getElementById('pv-review-receipt-wrap');
         if (order.receiptFileName && order.receiptUrl) {
-            const isPdf = /\.pdf$/i.test(order.receiptFileName || '');
-            const url = escapeHtml(order.receiptUrl);
-            receiptWrap.innerHTML = isPdf
-                ? `<iframe src="${url}" style="width:100%;height:400px;border:0;" title="Payment receipt"></iframe>`
-                : `<img src="${url}" style="max-width:100%;max-height:400px;object-fit:contain;" alt="Payment receipt">`;
+            // order.receiptUrl points at a private Vercel Blob — not directly
+            // fetchable by the browser (confirmed live: a plain request to it
+            // returns "Forbidden") — so this goes through the same
+            // authenticated proxy the customer payment page uses instead of
+            // setting it as the src directly.
+            receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">Loading receipt…</p>';
+            try {
+                const idToken = await GBA.getCurrentUser().getIdToken();
+                const res = await fetch(`/api/orders/receipt?orderId=${encodeURIComponent(orderId)}`, { headers: { Authorization: `Bearer ${idToken}` } });
+                if (!res.ok) throw new Error('Could not load the receipt.');
+                const blob = await res.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const isPdf = /\.pdf$/i.test(order.receiptFileName || '');
+                receiptWrap.innerHTML = isPdf
+                    ? `<iframe src="${objectUrl}" style="width:100%;height:400px;border:0;" title="Payment receipt"></iframe>`
+                    : `<img src="${objectUrl}" style="max-width:100%;max-height:400px;object-fit:contain;" alt="Payment receipt">`;
+            } catch {
+                receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">Could not load the receipt.</p>';
+            }
         } else {
             receiptWrap.innerHTML = '<p class="text-gray-500 text-sm p-6">No receipt submitted yet.</p>';
         }
