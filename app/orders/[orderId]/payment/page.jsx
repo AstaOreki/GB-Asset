@@ -36,7 +36,6 @@ export default function BankTransferPaymentPage({ params }) {
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  const [receiptUrlLoading, setReceiptUrlLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -130,26 +129,6 @@ export default function BankTransferPaymentPage({ params }) {
       };
       xhr.send(form);
     });
-  }
-
-  function handleViewReceipt() {
-    if (!gba || receiptUrlLoading) return;
-    const currentUser = gba.getCurrentUser();
-    if (!currentUser) return;
-    setReceiptUrlLoading(true);
-    currentUser
-      .getIdToken()
-      .then((idToken) =>
-        fetch(`/api/orders/receipt-url?orderId=${encodeURIComponent(orderId)}`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        })
-      )
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        setReceiptUrlLoading(false);
-        if (ok && data.url) window.open(data.url, "_blank", "noopener,noreferrer");
-      })
-      .catch(() => setReceiptUrlLoading(false));
   }
 
   const status = order && order.paymentStatus;
@@ -318,13 +297,19 @@ export default function BankTransferPaymentPage({ params }) {
                 </form>
               )}
 
-              {(SUBMITTED_STATUSES.includes(status) || status === "confirmed") && order.receiptFileName && (
+              {(SUBMITTED_STATUSES.includes(status) || status === "confirmed") && order.receiptFileName && order.receiptUrl && (
                 <div className="panel payment-receipt-view">
                   <h3>Your Submitted Receipt</h3>
                   <p className="payment-upload-hint">{order.receiptFileName}</p>
-                  <button type="button" className="btn btn-primary" data-ripple="" onClick={handleViewReceipt} disabled={receiptUrlLoading}>
-                    {receiptUrlLoading ? "Loading…" : "View My Receipt"}
-                  </button>
+                  <a
+                    className="btn btn-primary"
+                    data-ripple=""
+                    href={order.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View My Receipt
+                  </a>
                 </div>
               )}
             </div>

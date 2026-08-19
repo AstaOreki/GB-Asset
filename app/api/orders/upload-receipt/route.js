@@ -1,5 +1,6 @@
-import { getAdminDb, getAdminBucket } from "../../../../lib/firebaseAdmin";
+import { getAdminDb } from "../../../../lib/firebaseAdmin";
 import { getRequestUser } from "../../../../lib/adminAuth";
+import { uploadReceiptBlob } from "../../../../lib/blobStorage";
 import { RECEIPT_MIME_TYPES, RECEIPT_MAX_BYTES } from "../../../../lib/paymentStatus";
 import { renderProofSubmittedEmailHtml, sendResendEmail } from "../../../../lib/paymentEmails";
 
@@ -26,8 +27,13 @@ export async function POST(request) {
   if (!decoded) return Response.json({ error: "Not signed in." }, { status: 401 });
 
   const db = getAdminDb();
-  const bucket = getAdminBucket();
-  if (!db || !bucket) return Response.json({ error: "Server not configured." }, { status: 501 });
+  if (!db) return Response.json({ error: "Server not configured." }, { status: 501 });
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return Response.json(
+      { error: "Payment receipt storage isn't set up yet — please contact us directly instead of uploading here." },
+      { status: 501 }
+    );
+  }
 
   let form;
   try {
@@ -88,37 +94,32 @@ export async function POST(request) {
   const timestamp = Date.now();
   const objectPath = `orders/${orderId}/receipts/${timestamp}_${sanitizeFilename(file.name)}`;
 
-  // Every failure here — including "Storage isn't provisioned on this
-  // Firebase project yet" — must come back as JSON, not an unhandled
-  // exception. An uncaught throw in a Route Handler produces a plain-text/
-  // HTML 500 page; the client always expects JSON and its res.json() call
-  // then throws too, so the real error never reaches the user — they just
-  // see a generic "please try again." with no way to know why.
+  // Every failure here must come back as JSON, not an unhandled exception.
+  // An uncaught throw in a Route Handler produces a plain-text/HTML 500
+  // page; the client always expects JSON and its res.json() call then
+  // throws too, so the real error never reaches the user — they just see
+  // a generic "please try again." with no way to know why.
+  let receiptUrl;
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    await bucket.file(objectPath).save(buffer, { contentType: file.type, resumable: false });
+    receiptUrl = await uploadReceiptBlob(objectPath, buffer, file.type);
+  } catch {
+    return Response.json({ error: "Could not upload your receipt — please try again." }, { status: 500 });
+  }
 
+  try {
     await orderRef.update({
       paymentStatus: "proof_submitted",
       bankName,
       transactionReference,
       amountTransferred,
-      receiptUrl: objectPath, // a Storage object path, not a public URL — see app/api/orders/receipt-url
+      receiptUrl,
       receiptFileName: file.name,
       receiptUploadedAt: new Date(),
       rejectionReason: null,
     });
-  } catch (err) {
-    const message = err && err.message ? String(err.message) : "";
-    const storageNotSetUp = /has not been set up|does not exist|bucket.*not found/i.test(message);
-    return Response.json(
-      {
-        error: storageNotSetUp
-          ? "Payment receipt storage isn't set up yet — please contact us directly instead of uploading here."
-          : "Could not upload your receipt — please try again.",
-      },
-      { status: 500 }
-    );
+  } catch {
+    return Response.json({ error: "Could not save your receipt — please try again." }, { status: 500 });
   }
 
   // Fire-and-forget, same as the order-placed email — a Resend hiccup must
