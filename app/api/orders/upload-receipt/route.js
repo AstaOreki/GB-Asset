@@ -28,12 +28,12 @@ export async function POST(request) {
 
   const db = getAdminDb();
   if (!db) return Response.json({ error: "Server not configured." }, { status: 501 });
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return Response.json(
-      { error: "Payment receipt storage isn't set up yet — please contact us directly instead of uploading here." },
-      { status: 501 }
-    );
-  }
+  // No upfront credential check here on purpose — @vercel/blob supports two
+  // separate ways to authenticate (a plain BLOB_READ_WRITE_TOKEN, or
+  // BLOB_STORE_ID + Vercel's ambient VERCEL_OIDC_TOKEN, tried first) and
+  // checking for only one of them would wrongly reject a project set up
+  // the other way. uploadReceiptBlob()'s own try/catch below surfaces
+  // whichever one is actually missing.
 
   let form;
   try {
