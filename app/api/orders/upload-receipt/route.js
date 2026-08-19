@@ -73,7 +73,8 @@ export async function POST(request) {
     const orderSnap = await orderRef.get();
     if (!orderSnap.exists) return Response.json({ error: "Order not found." }, { status: 404 });
     order = orderSnap.data();
-  } catch {
+  } catch (err) {
+    console.error("upload-receipt: order lookup failed", err);
     return Response.json({ error: "Could not look up your order — please try again." }, { status: 500 });
   }
 
@@ -103,7 +104,8 @@ export async function POST(request) {
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     receiptUrl = await uploadReceiptBlob(objectPath, buffer, file.type);
-  } catch {
+  } catch (err) {
+    console.error("upload-receipt: blob upload failed", err);
     return Response.json({ error: "Could not upload your receipt — please try again." }, { status: 500 });
   }
 
@@ -118,7 +120,8 @@ export async function POST(request) {
       receiptUploadedAt: new Date(),
       rejectionReason: null,
     });
-  } catch {
+  } catch (err) {
+    console.error("upload-receipt: order update failed", err);
     return Response.json({ error: "Could not save your receipt — please try again." }, { status: 500 });
   }
 
