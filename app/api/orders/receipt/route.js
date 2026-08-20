@@ -38,8 +38,8 @@ export async function GET(request) {
   if (!order.receiptUrl) return Response.json({ error: "No receipt on file." }, { status: 404 });
 
   try {
-    const { buffer, contentType } = await fetchReceiptBlob(order.receiptUrl);
-    return new Response(buffer, {
+    const { stream, contentType } = await fetchReceiptBlob(order.receiptUrl);
+    return new Response(stream, {
       headers: {
         "Content-Type": contentType,
         "Content-Disposition": `inline; filename="${(order.receiptFileName || "receipt").replace(/"/g, "")}"`,
