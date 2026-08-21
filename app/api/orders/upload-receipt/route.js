@@ -1,10 +1,23 @@
+import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "../../../../lib/firebaseAdmin";
-import { getRequestUser } from "../../../../lib/adminAuth";
+import { getRequestUser, getAdminEmails } from "../../../../lib/adminAuth";
 import { uploadReceiptBlob } from "../../../../lib/blobStorage";
 import { RECEIPT_MIME_TYPES, RECEIPT_MAX_BYTES } from "../../../../lib/paymentStatus";
-import { renderProofSubmittedEmailHtml, sendResendEmail } from "../../../../lib/paymentEmails";
+import { isValidFileSignature } from "../../../../lib/fileSignature";
+import {
+  renderProofSubmittedEmailHtml,
+  renderAdminReceiptUploadedEmailHtml,
+  sendResendEmail,
+} from "../../../../lib/paymentEmails";
 
 export const runtime = "nodejs";
+
+// Cheap abuse guards for an endpoint that writes to paid Blob storage on
+// every call — not meant to stop a determined attacker (that needs a real
+// rate limiter), just the two realistic cases: a user double/triple
+// clicking "Upload" and a stuck retry loop on a flaky connection.
+const UPLOAD_COOLDOWN_MS = 30 * 1000;
+const MAX_UPLOADS_PER_ORDER = 10;
 
 function extensionOf(filename) {
   const m = /\.[^.]+$/.exec(filename || "");
@@ -92,6 +105,22 @@ export async function POST(request) {
     );
   }
 
+  if ((order.receiptUploadCount || 0) >= MAX_UPLOADS_PER_ORDER) {
+    return Response.json(
+      { error: "Too many upload attempts on this order — please contact us directly." },
+      { status: 429 }
+    );
+  }
+  const lastUploadMs = order.lastReceiptUploadAt && order.lastReceiptUploadAt.toDate
+    ? order.lastReceiptUploadAt.toDate().getTime()
+    : 0;
+  if (lastUploadMs && Date.now() - lastUploadMs < UPLOAD_COOLDOWN_MS) {
+    return Response.json(
+      { error: "Please wait a few seconds before uploading again." },
+      { status: 429 }
+    );
+  }
+
   const timestamp = Date.now();
   const objectPath = `orders/${orderId}/receipts/${timestamp}_${sanitizeFilename(file.name)}`;
 
@@ -103,6 +132,14 @@ export async function POST(request) {
   let receiptUrl;
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+    // Extension/MIME are both just client-supplied labels — a renamed file
+    // passes those unchanged. This checks the actual bytes.
+    if (!isValidFileSignature(buffer, file.type)) {
+      return Response.json(
+        { error: "That file doesn't look like a valid JPG, PNG, or PDF." },
+        { status: 400 }
+      );
+    }
     receiptUrl = await uploadReceiptBlob(objectPath, buffer, file.type);
   } catch (err) {
     console.error("upload-receipt: blob upload failed", err);
@@ -119,6 +156,8 @@ export async function POST(request) {
       receiptFileName: file.name,
       receiptUploadedAt: new Date(),
       rejectionReason: null,
+      receiptUploadCount: FieldValue.increment(1),
+      lastReceiptUploadAt: new Date(),
     });
   } catch (err) {
     console.error("upload-receipt: order update failed", err);
@@ -132,6 +171,14 @@ export async function POST(request) {
       to: order.email,
       subject: `Payment receipt received — Order #${orderId}`,
       html: renderProofSubmittedEmailHtml({ ...order, orderId }),
+    }).catch(() => {});
+  }
+  const adminEmails = getAdminEmails();
+  if (adminEmails.length) {
+    sendResendEmail({
+      to: adminEmails,
+      subject: `Payment receipt uploaded — Order #${orderId}`,
+      html: renderAdminReceiptUploadedEmailHtml({ ...order, orderId, amountTransferred }),
     }).catch(() => {});
   }
 

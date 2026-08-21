@@ -655,6 +655,11 @@ tailwind.config = {
 </div>
 <div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
 <span class="font-body-sm text-[11px] text-gray-muted uppercase tracking-widest" id="pv-count-label">Showing 0 results</span>
+<div class="flex items-center gap-3">
+<span class="font-body-sm text-[11px] text-gray-muted uppercase tracking-widest" id="pv-page-label">Page 1 of 1</span>
+<button class="h-8 px-3 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-high disabled:opacity-40 disabled:pointer-events-none transition-colors font-label-caps text-[10px]" id="pv-prev-page" type="button">PREV</button>
+<button class="h-8 px-3 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-high disabled:opacity-40 disabled:pointer-events-none transition-colors font-label-caps text-[10px]" id="pv-next-page" type="button">NEXT</button>
+</div>
 </div>
 </div>
 </section>
@@ -1123,6 +1128,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     let ui = {
         orderFilters: { status: 'All' },
         pvFilters: { status: 'All' },
+        pvPage: 1,
         pvReviewOrderId: null,
         pvRejecting: false,
         annFilterCritical: false,
@@ -1821,12 +1827,18 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     }
     function bankOrders() { return state.orders.filter(o => o.paymentMethod === 'bank'); }
 
+    const PV_PAGE_SIZE = 25;
     function renderPaymentVerification() {
         let list = bankOrders();
         if (ui.pvFilters.status !== 'All') list = list.filter(o => o.paymentStatus === ui.pvFilters.status);
         list.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
-        document.getElementById('pv-table-body').innerHTML = list.map(o => `
+        const totalFiltered = list.length;
+        const totalPages = Math.max(1, Math.ceil(totalFiltered / PV_PAGE_SIZE));
+        if (ui.pvPage > totalPages) ui.pvPage = totalPages;
+        const pageList = list.slice((ui.pvPage - 1) * PV_PAGE_SIZE, ui.pvPage * PV_PAGE_SIZE);
+
+        document.getElementById('pv-table-body').innerHTML = pageList.map(o => `
             <tr class="hover:bg-surface-container-high/40 transition-all duration-300">
                 <td class="px-6 py-5 font-ui-data text-on-surface">${escapeHtml(o.id)}</td>
                 <td class="px-6 py-5 font-body-sm text-on-surface">${escapeHtml(o.customer)}</td>
@@ -1834,19 +1846,26 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
                 <td class="px-6 py-5 font-ui-data text-right text-primary">${Number(o.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</td>
                 <td class="px-6 py-5 font-body-sm text-on-surface-variant">${escapeHtml(o.bankName || '—')}</td>
                 <td class="px-6 py-5 text-center">${o.receiptFileName ? '<span class="material-symbols-outlined text-primary text-[18px]" title="Receipt on file">description</span>' : '<span class="text-gray-muted text-[11px]">—</span>'}</td>
-                <td class="px-6 py-5 text-center">${pvStatusPill(o.paymentStatus)}</td>
+                <td class="px-6 py-5 text-center">${pvStatusPill(o.paymentStatus)}${isStaleOrder(o) ? '<br><span class="text-error text-[10px] font-bold uppercase tracking-wider" title="Awaiting payment for ' + PV_STALE_DAYS + '+ days with no receipt">⚠ Stale</span>' : ''}</td>
                 <td class="px-6 py-5 text-center"><button data-pv-review="${o.id}" class="font-label-caps text-[10px] text-gold-light hover:text-primary uppercase tracking-wider">Review</button></td>
             </tr>`).join('') || `<tr><td colspan="8" class="px-6 py-10 text-center text-gray-muted">${state.loaded.orders ? 'No bank transfer orders match this filter.' : 'Loading…'}</td></tr>`;
 
-        document.getElementById('pv-count-label').textContent = `Showing ${list.length} of ${bankOrders().length} results`;
+        document.getElementById('pv-count-label').textContent = totalFiltered
+            ? `Showing ${(ui.pvPage - 1) * PV_PAGE_SIZE + 1}–${Math.min(ui.pvPage * PV_PAGE_SIZE, totalFiltered)} of ${totalFiltered} results`
+            : `Showing 0 of ${bankOrders().length} results`;
+        document.getElementById('pv-page-label').textContent = `Page ${ui.pvPage} of ${totalPages}`;
+        document.getElementById('pv-prev-page').disabled = ui.pvPage <= 1;
+        document.getElementById('pv-next-page').disabled = ui.pvPage >= totalPages;
 
         document.querySelectorAll('[data-pv-review]').forEach(btn => {
             btn.addEventListener('click', () => openPvReview(btn.getAttribute('data-pv-review')));
         });
     }
 
-    document.getElementById('pv-filter-status').addEventListener('change', (e) => { ui.pvFilters.status = e.target.value; renderPaymentVerification(); });
-    document.getElementById('pv-reset-filters').addEventListener('click', () => { ui.pvFilters.status = 'All'; document.getElementById('pv-filter-status').value = 'All'; renderPaymentVerification(); });
+    document.getElementById('pv-filter-status').addEventListener('change', (e) => { ui.pvFilters.status = e.target.value; ui.pvPage = 1; renderPaymentVerification(); });
+    document.getElementById('pv-reset-filters').addEventListener('click', () => { ui.pvFilters.status = 'All'; document.getElementById('pv-filter-status').value = 'All'; ui.pvPage = 1; renderPaymentVerification(); });
+    document.getElementById('pv-prev-page').addEventListener('click', () => { if (ui.pvPage > 1) { ui.pvPage -= 1; renderPaymentVerification(); } });
+    document.getElementById('pv-next-page').addEventListener('click', () => { ui.pvPage += 1; renderPaymentVerification(); });
 
     function pvOrderInfoHtml(o) {
         const items = Array.isArray(o.items) && o.items.length
@@ -1860,11 +1879,26 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         const rejectedLine = o.paymentStatus === 'rejected' && o.rejectionReason
             ? `<br><span class="text-error">Rejection Reason: ${escapeHtml(o.rejectionReason)}</span>`
             : '';
+        // Flags a customer-entered amount that doesn't match the order total —
+        // easy to miss just reading the two numbers side by side in a modal.
+        const mismatch = typeof o.amountTransferred === 'number' && Math.abs(o.amountTransferred - Number(o.amount || 0)) > 0.01;
+        const mismatchLine = mismatch
+            ? `<br><span class="text-error font-bold">⚠ Amount mismatch — order total is RM ${Number(o.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2 })}</span>`
+            : '';
         return `Payment Method: Bank Transfer<br>` +
             `Bank Used: ${escapeHtml(o.bankName || '—')}<br>` +
             `Transaction Reference: ${escapeHtml(o.transactionReference || '—')}<br>` +
-            `Amount Transferred: ${typeof o.amountTransferred === 'number' ? 'RM ' + o.amountTransferred.toLocaleString('en-MY', { minimumFractionDigits: 2 }) : '—'}<br>` +
+            `Amount Transferred: ${typeof o.amountTransferred === 'number' ? 'RM ' + o.amountTransferred.toLocaleString('en-MY', { minimumFractionDigits: 2 }) : '—'}${mismatchLine}<br>` +
             `Uploaded: ${uploaded}${rejectedLine}`;
+    }
+
+    // Awaiting-payment bank orders with no receipt yet, past this age, get a
+    // "Stale" flag in the table so they don't just silently sit forever —
+    // matches the reminder-email threshold in app/api/orders/stale-payment-reminder.
+    const PV_STALE_DAYS = 3;
+    function isStaleOrder(o) {
+        return o.paymentMethod === 'bank' && o.paymentStatus === 'awaiting_payment' && !o.receiptUrl &&
+            (Date.now() - toDate(o.createdAt).getTime()) / 86400000 >= PV_STALE_DAYS;
     }
 
     async function openPvReview(orderId) {
