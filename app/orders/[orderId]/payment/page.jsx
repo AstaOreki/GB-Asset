@@ -8,7 +8,7 @@ import BankAccountCards from "../../../../components/BankAccountCards";
 import { useGBA } from "../../../../hooks/useGBA";
 import { useAuthAwareNav } from "../../../../hooks/useAuthAwareNav";
 import { useButtonRipple } from "../../../../hooks/useButtonRipple";
-import { PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONE } from "../../../../lib/paymentStatus";
+import { PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONE, RECEIPT_MAX_BYTES } from "../../../../lib/paymentStatus";
 import "./payment.css";
 
 const UPLOADABLE_STATUSES = ["awaiting_payment", "rejected"];
@@ -72,7 +72,20 @@ export default function BankTransferPaymentPage({ params }) {
   }
 
   function handleFileChange(e) {
-    setFile(e.target.files && e.target.files[0] ? e.target.files[0] : null);
+    const picked = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    // Checked here too, not just server-side: a file over the platform's
+    // request-body ceiling never reaches app/api/orders/upload-receipt's
+    // own size check at all — Vercel rejects the request before the route
+    // handler runs, as a bare 413 with no JSON body. Catching it up front
+    // means the customer gets an immediate, readable error instead of a
+    // failed upload with a blank message.
+    if (picked && picked.size > RECEIPT_MAX_BYTES) {
+      setUploadError("That file is too large — please upload a file under 4MB.");
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setFile(picked);
     setUploadError("");
   }
 
@@ -287,7 +300,7 @@ export default function BankTransferPaymentPage({ params }) {
                       required
                     />
                   </div>
-                  <p className="payment-upload-hint">JPG, JPEG, PNG, or PDF — up to 8MB.</p>
+                  <p className="payment-upload-hint">JPG, JPEG, PNG, or PDF — up to 4MB.</p>
 
                   <div className="field-row" style={{ marginTop: 22 }}>
                     <div className="field">

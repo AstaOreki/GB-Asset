@@ -72,7 +72,7 @@ export async function POST(request) {
     return Response.json({ error: "Please choose a receipt file to upload." }, { status: 400 });
   }
   if (file.size > RECEIPT_MAX_BYTES) {
-    return Response.json({ error: "That file is too large — please upload a file under 8MB." }, { status: 400 });
+    return Response.json({ error: "That file is too large — please upload a file under 4MB." }, { status: 400 });
   }
   const allowedExts = RECEIPT_MIME_TYPES[file.type];
   const ext = extensionOf(file.name);
