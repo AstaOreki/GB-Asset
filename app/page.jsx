@@ -40,7 +40,6 @@ const PRICE_CARDS = [
 // so a future edit to one doesn't silently change the other.
 const STORE_CONTACTS = [
   { number: "012-213 6051", label: "Support Line" },
-  { number: "012-333 3774", label: "Zeyy" },
   { number: "012-240 0600", label: "Izzudin" },
 ];
 
