@@ -19,7 +19,6 @@ import Link from "next/link";
 // one another.
 const FOOTER_CONTACTS = [
   { kind: "whatsapp", label: "Support Line", value: "012-213 6051", href: "https://wa.me/60122136051" },
-  { kind: "whatsapp", label: "Zety", value: "012-333 3774", href: "https://wa.me/60123333774" },
   { kind: "whatsapp", label: "Izuddin", value: "012-240 600", href: "https://wa.me/6012240600" },
   { kind: "instagram", label: "", value: "@gbagold.my", href: "https://www.instagram.com/gbagold.my" },
 ];
