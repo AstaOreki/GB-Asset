@@ -641,6 +641,65 @@
     return db.collection("newsletters").doc(docId).delete();
   }
 
+  // --------------------------------------------------------------- news
+  // Public News page + homepage "Latest News" preview only ever call
+  // listenPublished (firestore.rules also enforces this server-side, this
+  // is just so the admin's unpublished drafts never even reach the
+  // client). The admin dashboard's News Management view uses listenAll.
+  function listenPublishedNews(cb) {
+    return db.collection("news").where("published", "==", true).orderBy("date", "desc")
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) { out.push(Object.assign({ docId: doc.id }, doc.data())); });
+        cb(out);
+      }, function () { cb([]); });
+  }
+
+  function listenAllNews(cb) {
+    return db.collection("news").orderBy("date", "desc")
+      .onSnapshot(function (snap) {
+        var out = [];
+        snap.forEach(function (doc) { out.push(Object.assign({ docId: doc.id }, doc.data())); });
+        cb(out);
+      }, function () { cb([]); });
+  }
+
+  // data: { title, slug, excerpt, content, category, posterUrl, date,
+  // published }. docId omitted -> new article; passed -> editing an
+  // existing one (same create-or-update shape as saveNewsletterDraft).
+  function saveNews(data, docId) {
+    if (docId) {
+      return db.collection("news").doc(docId).update(Object.assign({}, data, {
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }));
+    }
+    return db.collection("news").add(Object.assign({}, data, {
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }));
+  }
+
+  function setNewsPublished(docId, published) {
+    return db.collection("news").doc(docId).update({
+      published: published,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function deleteNews(docId) {
+    return db.collection("news").doc(docId).delete();
+  }
+
+  // One-shot lookup used by the admin form to warn about a slug collision
+  // before saving — excludeDocId skips the article being edited itself.
+  function checkSlugExists(slug, excludeDocId) {
+    return db.collection("news").where("slug", "==", slug).get().then(function (snap) {
+      var conflict = false;
+      snap.forEach(function (doc) { if (doc.id !== excludeDocId) conflict = true; });
+      return conflict;
+    });
+  }
+
   // ---------------------------------------------------------- priceHistory
   // "1d" starts at the beginning of YESTERDAY, not today. Each bar only
   // gets one upserted record per calendar day, so a since-midnight-today
@@ -971,6 +1030,14 @@
         schedule: scheduleNewsletter,
         remove: deleteNewsletter
       }
+    },
+    news: {
+      listenPublished: listenPublishedNews,
+      listenAll: listenAllNews,
+      save: saveNews,
+      setPublished: setNewsPublished,
+      remove: deleteNews,
+      checkSlugExists: checkSlugExists
     },
     priceHistory: {
       listen: listenPriceHistory,

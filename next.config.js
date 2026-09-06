@@ -20,6 +20,13 @@ const nextConfig = {
       { source: '/checkout.html', destination: '/checkout', permanent: true },
       { source: '/login.html', destination: '/login', permanent: true },
       { source: '/privacy-policy.html', destination: '/privacy-policy', permanent: true },
+      // Aliases for the section URLs quoted in the News/routing request —
+      // /about and /faq are the real, already-indexed routes; these just
+      // make sure a visitor typing the literal alias still lands correctly.
+      { source: '/aboutus', destination: '/about', permanent: true },
+      { source: '/faqs', destination: '/faq', permanent: true },
+      { source: '/pricetoday', destination: '/price-today', permanent: true },
+      { source: '/contactus', destination: '/contact', permanent: true },
     ];
   },
 };

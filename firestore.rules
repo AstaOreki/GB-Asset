@@ -175,6 +175,16 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // --------------------------------------------------------------- news
+    // Public News page shows only published articles; a direct-id read of a
+    // draft (not just a filtered list query) is still blocked for non-admins,
+    // so a guessed/unlisted slug can never expose an unpublished article.
+    // Only admins can create/edit/delete/publish.
+    match /news/{newsId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
     // ----------------------------------------------------------- settings
     // Storefront reads system-wide flags (e.g. maintenance mode); only
     // admins can change them.

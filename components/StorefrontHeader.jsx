@@ -8,47 +8,37 @@ import { useCartBadge } from "../hooks/useCartBadge";
 import { useScrollProgress } from "../hooks/useScrollProgress";
 
 /**
- * `href` = its own route, always a <Link> and highlighted when you are on
- * it. `hash` = a section of the homepage, so it is an in-page anchor on "/"
- * and a cross-page "/#anchor" link everywhere else.
- *
- * Ordered so the three destinations that are real pages come first, then
- * the homepage sections in the order you meet them scrolling down. Pricing
- * and Price Today used to be split apart by About Us and Services, which
- * put the two price links at opposite ends of the bar.
+ * Every item is its own dedicated route, always rendered as a <Link> and
+ * highlighted when you are on it. Pricing/Price Today/Contact Us/Location
+ * used to be in-page "#anchor" scrolls to homepage sections; each now has
+ * its own page (the sections still exist inline on "/" too, per the
+ * homepage's own "View X" links).
  */
 const NAV_ITEMS = [
-  // Both: on "/" it scrolls back to the hero, from anywhere else it
-  // navigates home. Route-only made it a no-op on the homepage itself.
-  { label: "Home", href: "/", hash: "#top" },
+  { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
   { label: "Services", href: "/services" },
-  { label: "Pricing", hash: "#pricing" },
-  { label: "Price Today", hash: "#products" },
-  { label: "Contact Us", hash: "#contact" },
-  { label: "Location", hash: "#location" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Price Today", href: "/price-today" },
+  { label: "Contact Us", href: "/contact" },
+  { label: "Location", href: "/location" },
   { label: "FAQs", href: "/faq" },
+  { label: "News", href: "/news" },
 ];
 
 /**
  * Storefront header: logo + nav-links + cart badge + auth button.
  *
- * @param {{ variant?: "home" | string }} props
- *   variant === "home"  -> in-page `#anchor` hrefs. Use on "/" only.
- *   any other value     -> cross-page `/#anchor` hrefs.
- *                          Use on /about, /services, /cart, /checkout, etc.
- *
- * The `.active` link is derived from the current pathname, so Home, About Us
- * and Services each highlight on their own page without the caller having
- * to say which one it is.
+ * The `.active` link is derived from the current pathname, so every item
+ * highlights on its own page without the caller having to say which one
+ * it is.
  *
  * Renders its own `.scroll-progress` bar (driven by useScrollProgress),
  * a cart badge (driven by useCartBadge), and a login/logout button
  * (driven by useAuthAwareNav). All three render neutral SSR-safe
  * defaults (not-scrolled, badge hidden/0, logged-out) until mounted.
  */
-export default function StorefrontHeader({ variant }) {
-  const isHome = variant === "home";
+export default function StorefrontHeader() {
   const pathname = usePathname();
   const { scrolled, progress } = useScrollProgress();
   const { count } = useCartBadge();
@@ -58,26 +48,9 @@ export default function StorefrontHeader({ variant }) {
   // One place decides how a nav item renders, so the desktop bar and the
   // mobile drawer can never drift apart.
   const renderNav = (item) => {
-    const active = item.href && pathname === item.href ? "active" : undefined;
-    // An item with a hash points at a homepage section, so while we are on
-    // the homepage it stays a plain anchor and scrolls. This is checked
-    // first so Home — which has both — scrolls here and routes elsewhere.
-    if (item.hash && isHome) {
-      return (
-        <a key={item.label} className={active} href={item.hash}>
-          {item.label}
-        </a>
-      );
-    }
-    if (item.href) {
-      return (
-        <Link key={item.label} className={active} href={item.href}>
-          {item.label}
-        </Link>
-      );
-    }
+    const active = pathname === item.href ? "active" : undefined;
     return (
-      <Link key={item.label} href={`/${item.hash}`}>
+      <Link key={item.label} className={active} href={item.href}>
         {item.label}
       </Link>
     );

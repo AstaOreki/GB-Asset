@@ -203,6 +203,10 @@ tailwind.config = {
 <span class="material-symbols-outlined">mail</span>
 <span class="font-nav-link text-nav-link uppercase">Newsletter</span>
 </button>
+<button class="nav-link w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 rounded-lg" data-view="news">
+<span class="material-symbols-outlined">article</span>
+<span class="font-nav-link text-nav-link uppercase">News</span>
+</button>
 </nav>
 <div class="mt-auto pt-6 border-t border-outline-variant/30">
 <button class="w-full gold-shine shine-effect flex items-center justify-center gap-2 py-3 px-4 bg-primary text-on-primary font-label-caps rounded-sm mb-4 uppercase tracking-widest font-bold" id="export-btn">
@@ -992,6 +996,85 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
 </div>
 </section>
 
+<!-- ================= NEWS ================= -->
+<section class="view-section space-y-8" id="view-news">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- LEFT: Create/Edit Article -->
+<div class="lg:col-span-5 space-y-6">
+<section class="glass-panel border border-outline-variant p-8 rounded-lg shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-gold-deep/5 blur-[60px] rounded-full -mr-16 -mt-16"></div>
+<div class="mb-6 flex items-center justify-between">
+<div><h2 class="font-headline-sm text-headline-sm text-gold-light mb-1">Create Article</h2><p class="font-body-sm text-body-sm text-gray-muted" id="news-editing-label">New article.</p></div>
+<button class="hidden font-body-sm text-body-sm text-gray-muted hover:text-primary underline" id="news-new-article-btn" type="button">+ New Article</button>
+</div>
+<form class="space-y-5" id="news-form">
+<input id="news-field-docid" type="hidden"/>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Title</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="news-field-title" placeholder="e.g., GBA Gold Opens New Showroom" required type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">URL Slug</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="news-field-slug" placeholder="auto-generated-from-title" required type="text"/>
+<p class="font-body-sm text-[11px] text-gray-muted">Article will be published at /news/<span id="news-slug-preview">this-slug</span></p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Date</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface py-3 px-2 outline-none" id="news-field-date" required type="date"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Category (Optional)</label>
+<input class="w-full bg-charcoal border-b border-outline focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted py-3 outline-none" id="news-field-category" placeholder="e.g., Announcement" type="text"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Short Summary (Optional)</label>
+<textarea class="w-full bg-charcoal border border-outline/30 focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted p-4 rounded-lg outline-none resize-none" id="news-field-excerpt" placeholder="One or two sentences shown on news cards..." rows="2"></textarea>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Content</label>
+<textarea class="w-full bg-charcoal border border-outline/30 focus:border-gold-light focus:ring-0 text-on-surface placeholder:text-gray-muted p-4 rounded-lg outline-none resize-none" id="news-field-content" placeholder="Full article content..." required rows="6"></textarea>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-label-caps text-gold-pale uppercase">Poster Image (JPG/PNG, max 5MB)</label>
+<input accept="image/jpeg,image/png" class="w-full text-body-sm text-gray-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-deep file:text-charcoal file:font-bold file:cursor-pointer" id="news-field-poster" type="file"/>
+<img alt="" class="hidden mt-3 rounded-lg max-h-32" id="news-poster-preview"/>
+</div>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="rounded" id="news-field-published" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface">Publish immediately</span>
+</label>
+<button class="w-full bg-gold-deep text-charcoal font-bold font-nav-link text-nav-link py-4 rounded-lg shine-effect transition-transform active:scale-[0.98] uppercase disabled:opacity-50" id="news-save-btn" type="submit">Save Article</button>
+<p class="hidden font-body-sm text-body-sm text-error" id="news-form-error"></p>
+</form>
+</section>
+</div>
+<!-- RIGHT: Article list -->
+<div class="lg:col-span-7 space-y-8">
+<div class="flex items-center justify-between mb-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">News Management</h2>
+</div>
+<div class="glass-panel rounded-lg overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-ui-data text-gray-muted border-b border-outline-variant/20">
+<th class="px-6 py-4 font-normal">POSTER</th>
+<th class="px-6 py-4 font-normal">TITLE</th>
+<th class="px-6 py-4 font-normal">DATE</th>
+<th class="px-6 py-4 font-normal">STATUS</th>
+<th class="px-6 py-4 font-normal text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-[13px] divide-y divide-outline-variant/30" id="news-table-body"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</section>
+
 <!-- Newsletter preview modal -->
 <div class="hidden fixed inset-0 bg-black/70 z-[200] items-center justify-center p-6" id="nl-preview-modal-backdrop">
 <div class="glass-panel rounded-lg p-6 max-w-2xl w-full">
@@ -1123,7 +1206,8 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         latestRate: null,
         subscribers: [],
         newsletters: [],
-        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false, priceUpdates: false, subscribers: false, newsletters: false },
+        news: [],
+        loaded: { orders: false, consultations: false, announcements: false, logs: false, priceHistory: false, priceUpdates: false, subscribers: false, newsletters: false, news: false },
     };
     let ui = {
         orderFilters: { status: 'All' },
@@ -1137,6 +1221,9 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         nlSubSearch: '',
         nlSubFilter: 'all',
         nlEditingDocId: null, // null = new draft; set while editing an existing "draft"-status newsletter
+        newsEditingDocId: null, // null = new article; set while editing an existing article
+        newsSlugTouched: false, // true once the admin edits the slug field by hand — stops title auto-generating over it
+        newsPosterFile: null, // the File chosen in the poster <input>, held here so the submit handler can upload it
     };
     let adminActor = 'Admin';
     // Tracks which announcement docIds we've already toasted about; null
@@ -1303,6 +1390,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         GBA.priceHistory.listenUpdates(200, records => { state.priceUpdates = records; state.loaded.priceUpdates = true; renderPriceUpdatesTable(); });
         GBA.newsletter.subscribers.listen(subscribers => { state.subscribers = subscribers; state.loaded.subscribers = true; renderNewsletterOverview(); renderSubscribersTable(); });
         GBA.newsletter.newsletters.listen(newsletters => { state.newsletters = newsletters; state.loaded.newsletters = true; renderNewsletterOverview(); renderNewsletterHistory(); });
+        GBA.news.listenAll(news => { state.news = news; state.loaded.news = true; renderNewsTable(); });
         loadProducts();
     }
 
@@ -1439,7 +1527,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
     document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', closeSidebar));
 
     // ---------- NAVIGATION ----------
-    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', 'payment-verification': 'Payment Verification', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements', newsletter: 'Newsletter' };
+    const viewTitles = { overview: 'Overview', 'price-today': 'Price Today', 'sales-report': 'Sales Report', orders: 'Order Management', 'payment-verification': 'Payment Verification', consultations: 'Consultations', logs: 'System Logs & Maintenance', announcements: 'Announcements', newsletter: 'Newsletter', news: 'News Management' };
     function setView(view) {
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         document.getElementById('view-' + view).classList.add('active');
@@ -2319,6 +2407,8 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
             document.querySelectorAll('#logs-table-body tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'; });
         } else if (activeView === 'view-announcements') {
             document.querySelectorAll('#announcement-list > div').forEach(card => { card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+        } else if (activeView === 'view-news') {
+            document.querySelectorAll('#news-table-body tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'; });
         }
     });
 
@@ -2661,6 +2751,200 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         );
     });
 
+    // ==================================================================
+    // NEWS
+    // ==================================================================
+    function slugify(title) {
+        return String(title || '')
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function formatNewsDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function newsStatusPill(published) {
+        return published
+            ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-primary/20 text-primary font-bold uppercase tracking-wider">Published</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-surface-container-highest text-gray-muted font-bold uppercase tracking-wider">Draft</span>';
+    }
+
+    function renderNewsTable() {
+        const body = document.getElementById('news-table-body');
+        if (!state.loaded.news) {
+            body.innerHTML = '<tr><td class="px-6 py-6 text-gray-muted" colspan="5">Loading articles…</td></tr>';
+            return;
+        }
+        if (state.news.length === 0) {
+            body.innerHTML = '<tr><td class="px-6 py-6 text-gray-muted" colspan="5">No news articles yet — create one on the left.</td></tr>';
+            return;
+        }
+        body.innerHTML = state.news.map(n => `
+            <tr class="hover:bg-surface-container-high/40 transition-all">
+                <td class="px-6 py-3">
+                    ${n.posterUrl
+                        ? `<img alt="" class="w-14 h-10 object-cover rounded" src="${n.posterUrl}"/>`
+                        : `<div class="w-14 h-10 rounded bg-surface-container-highest"></div>`}
+                </td>
+                <td class="px-6 py-3 text-on-surface">${escapeHtml(n.title)}</td>
+                <td class="px-6 py-3 text-on-surface-variant">${formatNewsDate(n.date)}</td>
+                <td class="px-6 py-3">${newsStatusPill(!!n.published)}</td>
+                <td class="px-6 py-3 text-right whitespace-nowrap">
+                    <button class="text-[11px] uppercase text-gray-muted hover:text-primary mr-3" data-news-edit="${n.docId}">Edit</button>
+                    <button class="text-[11px] uppercase text-gray-muted hover:text-primary mr-3" data-news-toggle="${n.docId}">${n.published ? 'Unpublish' : 'Publish'}</button>
+                    <button class="text-[11px] uppercase text-gray-muted hover:text-error" data-news-delete="${n.docId}">Delete</button>
+                </td>
+            </tr>`).join('');
+
+        body.querySelectorAll('[data-news-edit]').forEach(btn => btn.addEventListener('click', () => loadNewsIntoForm(btn.getAttribute('data-news-edit'))));
+        body.querySelectorAll('[data-news-toggle]').forEach(btn => btn.addEventListener('click', () => {
+            const docId = btn.getAttribute('data-news-toggle');
+            const n = state.news.find(x => x.docId === docId);
+            if (!n) return;
+            GBA.news.setPublished(docId, !n.published)
+                .then(() => { addLog(adminActor, n.published ? 'News Unpublished' : 'News Published', n.title, 'SUCCESS'); showToast(n.published ? 'Article unpublished.' : 'Article published.'); })
+                .catch(err => showToast('Could not update article: ' + err.message));
+        }));
+        body.querySelectorAll('[data-news-delete]').forEach(btn => btn.addEventListener('click', () => {
+            const docId = btn.getAttribute('data-news-delete');
+            const n = state.news.find(x => x.docId === docId);
+            confirmAction(`Delete the article "${n ? n.title : ''}"? This cannot be undone.`, async () => {
+                try {
+                    await GBA.news.remove(docId);
+                    addLog(adminActor, 'News Deleted', n ? n.title : docId, 'SUCCESS');
+                    showToast('Article deleted.');
+                    if (ui.newsEditingDocId === docId) resetNewsForm();
+                } catch (err) {
+                    showToast('Could not delete article: ' + err.message);
+                }
+            });
+        }));
+    }
+
+    function resetNewsForm() {
+        ui.newsEditingDocId = null;
+        ui.newsSlugTouched = false;
+        ui.newsPosterFile = null;
+        document.getElementById('news-form').reset();
+        document.getElementById('news-poster-preview').classList.add('hidden');
+        document.getElementById('news-slug-preview').textContent = 'this-slug';
+        document.getElementById('news-editing-label').textContent = 'New article.';
+        document.getElementById('news-new-article-btn').classList.add('hidden');
+        document.getElementById('news-field-date').value = new Date().toISOString().slice(0, 10);
+    }
+
+    function loadNewsIntoForm(docId) {
+        const n = state.news.find(x => x.docId === docId);
+        if (!n) return;
+        ui.newsEditingDocId = docId;
+        ui.newsSlugTouched = true; // editing an existing article should never silently rewrite its slug
+        ui.newsPosterFile = null;
+        document.getElementById('news-field-title').value = n.title || '';
+        document.getElementById('news-field-slug').value = n.slug || '';
+        document.getElementById('news-slug-preview').textContent = n.slug || 'this-slug';
+        document.getElementById('news-field-date').value = n.date || '';
+        document.getElementById('news-field-category').value = n.category || '';
+        document.getElementById('news-field-excerpt').value = n.excerpt || '';
+        document.getElementById('news-field-content').value = n.content || '';
+        document.getElementById('news-field-published').checked = !!n.published;
+        const preview = document.getElementById('news-poster-preview');
+        if (n.posterUrl) { preview.src = n.posterUrl; preview.classList.remove('hidden'); } else { preview.classList.add('hidden'); }
+        document.getElementById('news-editing-label').textContent = `Editing: ${n.title}`;
+        document.getElementById('news-new-article-btn').classList.remove('hidden');
+        document.getElementById('news-form-error').classList.add('hidden');
+        document.getElementById('news-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('news-new-article-btn').addEventListener('click', resetNewsForm);
+
+    document.getElementById('news-field-title').addEventListener('input', (e) => {
+        if (ui.newsSlugTouched) return;
+        const slug = slugify(e.target.value);
+        document.getElementById('news-field-slug').value = slug;
+        document.getElementById('news-slug-preview').textContent = slug || 'this-slug';
+    });
+    document.getElementById('news-field-slug').addEventListener('input', (e) => {
+        ui.newsSlugTouched = true;
+        document.getElementById('news-slug-preview').textContent = slugify(e.target.value) || 'this-slug';
+    });
+    document.getElementById('news-field-poster').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        ui.newsPosterFile = file || null;
+        const preview = document.getElementById('news-poster-preview');
+        if (file) { preview.src = URL.createObjectURL(file); preview.classList.remove('hidden'); }
+    });
+
+    function newsFormError(msg) {
+        const el = document.getElementById('news-form-error');
+        if (!msg) { el.classList.add('hidden'); return; }
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    document.getElementById('news-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        newsFormError('');
+        const title = document.getElementById('news-field-title').value.trim();
+        const slug = slugify(document.getElementById('news-field-slug').value);
+        const date = document.getElementById('news-field-date').value;
+        const category = document.getElementById('news-field-category').value.trim();
+        const excerpt = document.getElementById('news-field-excerpt').value.trim();
+        const content = document.getElementById('news-field-content').value.trim();
+        const published = document.getElementById('news-field-published').checked;
+        if (!title || !slug || !date || !content) {
+            newsFormError('Title, slug, date and content are required.');
+            return;
+        }
+        const conflict = await GBA.news.checkSlugExists(slug, ui.newsEditingDocId);
+        if (conflict) {
+            newsFormError(`The slug "${slug}" is already used by another article — please change it.`);
+            return;
+        }
+
+        const btn = document.getElementById('news-save-btn');
+        btn.disabled = true;
+        const originalLabel = btn.textContent;
+        try {
+            let posterUrl = ui.newsEditingDocId
+                ? (state.news.find(x => x.docId === ui.newsEditingDocId) || {}).posterUrl || null
+                : null;
+            if (ui.newsPosterFile) {
+                btn.textContent = 'Uploading poster…';
+                const idToken = await GBA.getCurrentUser().getIdToken();
+                const form = new FormData();
+                form.append('file', ui.newsPosterFile);
+                const res = await fetch('/api/news/upload-poster', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${idToken}` },
+                    body: form,
+                });
+                const body = await res.json();
+                if (!res.ok) throw new Error(body.error || 'Poster upload failed.');
+                posterUrl = body.url;
+            }
+            btn.textContent = 'Saving…';
+            const data = { title, slug, date, category, excerpt, content, published, posterUrl };
+            const ref = await GBA.news.save(data, ui.newsEditingDocId);
+            if (!ui.newsEditingDocId && ref && ref.id) ui.newsEditingDocId = ref.id;
+            addLog(adminActor, ui.newsEditingDocId ? 'News Article Saved' : 'News Article Created', title, 'SUCCESS');
+            showToast('Article saved.');
+            resetNewsForm();
+        } catch (err) {
+            newsFormError('Could not save article: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalLabel;
+        }
+    });
+
+    resetNewsForm();
+
     function renderAll() {
         renderOverview();
         renderSalesReport();
@@ -2671,6 +2955,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         renderNewsletterOverview();
         renderSubscribersTable();
         renderNewsletterHistory();
+        renderNewsTable();
     }
 
     renderAll();

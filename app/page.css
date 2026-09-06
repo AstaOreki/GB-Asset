@@ -1182,6 +1182,41 @@ body::after {
   font-family: var(--label); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gold-light);
 }
 .store-directions-btn { margin-top: 14px; }
+/* "Learn More"/"View X" links added under the homepage's inline Pricing,
+   Price Today, Contact and Location sections, pointing at each section's
+   own dedicated route. */
+.section-cta { margin-top: 24px; }
+.store-location-actions { margin-top: 14px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.store-location-actions .store-directions-btn { margin-top: 0; }
+
+/* ============ LATEST NEWS (homepage preview) ============ */
+.latest-news {
+  background: radial-gradient(ellipse 55% 45% at 85% 10%, rgba(212,175,55,.07), transparent 55%), var(--emerald-deep);
+  padding: 130px 0;
+  position: relative;
+  overflow: hidden;
+}
+.latest-news-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+.latest-news-card {
+  display: block;
+  background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015)), var(--emerald-mid);
+  border: 1px solid rgba(212,175,55,.28);
+  border-radius: 3px;
+  overflow: hidden;
+  text-decoration: none;
+  box-shadow: 0 18px 40px -28px rgba(0,0,0,.65);
+  transition: transform .5s var(--ease), box-shadow .5s var(--ease), border-color .5s var(--ease);
+}
+.latest-news-card:hover { transform: translateY(-4px); border-color: var(--gold-light); box-shadow: 0 26px 50px -26px rgba(0,0,0,.7); }
+.latest-news-poster { aspect-ratio: 16 / 10; overflow: hidden; background: var(--emerald-mid); }
+.latest-news-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.latest-news-poster-fallback { width: 100%; height: 100%; background: radial-gradient(circle at 50% 40%, var(--gold-deep), var(--emerald-mid) 75%); }
+.latest-news-body { padding: 24px 26px 28px; }
+.latest-news-date { font-family: var(--label); font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); }
+.latest-news-body h3 { font-size: 18px; color: var(--ivory); margin-top: 10px; line-height: 1.4; }
+.latest-news-body p { margin-top: 10px; font-size: 13.5px; color: var(--gray); font-weight: 300; line-height: 1.6; }
+.latest-news-readmore { display: inline-block; margin-top: 16px; font-family: var(--label); font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gold-light); }
+@media (max-width: 900px) { .latest-news-grid { grid-template-columns: 1fr; } }
 .store-map {
   position: relative; border-radius: 4px; overflow: hidden;
   border: 1px solid rgba(212,175,55,.28);
