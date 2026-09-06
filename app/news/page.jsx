@@ -36,8 +36,17 @@ function formatDate(dateStr) {
 async function getPublishedNews() {
   const db = getAdminDb();
   if (!db) return [];
-  const snap = await db.collection("news").where("published", "==", true).orderBy("date", "desc").get();
-  return snap.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
+  try {
+    const snap = await db.collection("news").where("published", "==", true).orderBy("date", "desc").get();
+    return snap.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
+  } catch (err) {
+    // Most likely cause: the composite index for published+date hasn't
+    // finished building yet (Firestore throws FAILED_PRECONDITION with a
+    // console link until it does) — degrade to an empty list rather than
+    // 500ing the whole page.
+    console.error("news: published query failed", err);
+    return [];
+  }
 }
 
 export default async function NewsPage() {

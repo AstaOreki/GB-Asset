@@ -24,7 +24,13 @@ function formatDate(dateStr) {
 async function getArticleBySlug(slug) {
   const db = getAdminDb();
   if (!db) return null;
-  const snap = await db.collection("news").where("slug", "==", slug).limit(1).get();
+  let snap;
+  try {
+    snap = await db.collection("news").where("slug", "==", slug).limit(1).get();
+  } catch (err) {
+    console.error("news: slug lookup failed", err);
+    return null;
+  }
   if (snap.empty) return null;
   const doc = snap.docs[0];
   return { docId: doc.id, ...doc.data() };
