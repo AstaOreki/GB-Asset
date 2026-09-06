@@ -195,6 +195,40 @@ body::after {
 .hbadge b { display: block; font-family: var(--label); font-size: 11px; letter-spacing: 1.5px; color: var(--ivory); font-weight: 600; }
 .hbadge span { display: block; font-size: 11.5px; color: var(--gray-soft); margin-top: 5px; }
 
+/* ============ HERO WHATSAPP CTA ============ */
+/* Scrolls to #consultation-form (see ContactSection.jsx) instead of opening
+   WhatsApp — scroll-margin-top there compensates for the fixed header so
+   the "Request a Private Consultation" heading isn't hidden underneath it. */
+.hero-whatsapp-cta {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-top: 44px; padding: 8px 20px;
+  text-decoration: none; cursor: pointer;
+  position: relative; z-index: 2;
+}
+.hero-whatsapp-icon {
+  width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #2fd366, #22b355);
+  border: 1px solid rgba(212,175,55,.5);
+  box-shadow: 0 0 0 4px rgba(212,175,55,.12), 0 10px 24px -12px rgba(0,0,0,.6);
+  transition: transform .4s var(--ease), box-shadow .4s var(--ease), border-color .4s var(--ease);
+}
+.hero-whatsapp-icon svg { width: 28px; height: 28px; fill: #fff; }
+.hero-whatsapp-cta:hover .hero-whatsapp-icon,
+.hero-whatsapp-cta:focus-visible .hero-whatsapp-icon {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 7px rgba(212,175,55,.18), 0 18px 30px -16px rgba(11,30,23,.4);
+  border-color: var(--gold-light);
+}
+.hero-whatsapp-label {
+  font-family: var(--label); font-size: 12px; letter-spacing: 1px; font-weight: 600;
+  color: var(--gold-light);
+  transition: color .3s var(--ease);
+}
+.hero-whatsapp-cta:hover .hero-whatsapp-label,
+.hero-whatsapp-cta:focus-visible .hero-whatsapp-label { color: var(--ivory); }
+@media (max-width: 640px) { .hero-whatsapp-cta { margin-top: 36px; } .hero-whatsapp-icon { width: 56px; height: 56px; } .hero-whatsapp-icon svg { width: 24px; height: 24px; } }
+
 .scroll-cue {
   position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -852,6 +886,10 @@ body::after {
   text-align: center;
   max-width: 640px; margin: 0 auto;
 }
+/* Compensates for the fixed header when the hero WhatsApp CTA (or anything
+   else) jumps straight to this heading via #consultation-form — without
+   this the heading lands right at the viewport top, hidden under #siteHeader. */
+.consult-intro { scroll-margin-top: 120px; }
 .consult-intro .eyebrow { color: var(--gold-light); }
 .consult-intro h2 { font-size: clamp(28px,3.4vw,42px); color: var(--ivory); margin-top: 14px; }
 .consult-intro p { margin-top: 20px; color: var(--gray-soft); font-size: 15px; font-weight: 300; }

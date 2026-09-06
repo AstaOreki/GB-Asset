@@ -54,7 +54,7 @@ export default function ContactSection({ showPageLink = false }) {
   return (
     <section className="consult" id="contact">
       <div className="wrap consult-inner">
-        <div className="consult-intro reveal">
+        <div className="consult-intro reveal" id="consultation-form">
           <div className="eyebrow">We Buy Your Gold</div>
           <h2>Request a Private Consultation</h2>
           <p>
