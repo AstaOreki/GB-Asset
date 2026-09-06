@@ -3,6 +3,7 @@ import StorefrontHeader from "../../../components/StorefrontHeader";
 import FullFooter from "../../../components/FullFooter";
 import RevealOnScroll from "../../../components/RevealOnScroll";
 import { getAdminDb } from "../../../lib/firebaseAdmin";
+import "../../page.css";
 import "../news.css";
 
 // Same reasoning as app/news/page.jsx — always read Firestore fresh so an

@@ -453,7 +453,11 @@ nav.nav-links a:hover::after, nav.nav-links a.active::after { transform: scaleX(
   border-bottom: 1px solid rgba(212, 175, 55, .18);
   transition: max-height .4s var(--ease);
 }
-.mobile-nav-drawer.open { max-height: 520px; }
+/* A fixed 520px cap clipped the bottom nav items off-screen with no way to
+   reach them (confirmed: content runs ~660px with all 9 nav items + the
+   auth link, on an 812px-tall phone). Cap at the viewport height instead
+   and let it scroll internally if content still runs taller than that. */
+.mobile-nav-drawer.open { max-height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .mobile-nav-drawer nav {
   display: flex; flex-direction: column;
   padding: 88px 22px 24px;

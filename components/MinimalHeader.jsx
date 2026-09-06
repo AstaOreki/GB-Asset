@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useScrollProgress } from "../hooks/useScrollProgress";
 
+// About Us and Services used to be homepage sections (#heritage/#services)
+// but moved to their own routes — those two hashes no longer exist
+// anywhere, so they're real hrefs now like the other dedicated pages.
 const NAV_ITEMS = [
   { label: "Home", hash: "#top" },
   { label: "Pricing", hash: "#pricing" },
-  { label: "About Us", hash: "#heritage" },
-  { label: "Services", hash: "#services" },
+  { label: "About Us", href: "/about" },
+  { label: "Services", href: "/services" },
   { label: "Featured Products", hash: "#products" },
   { label: "Contact Us", hash: "#contact" },
   { label: "Location", hash: "#location" },
@@ -45,7 +48,7 @@ export default function MinimalHeader() {
           </Link>
           <nav className="nav-links">
             {NAV_ITEMS.map((item) => (
-              <Link key={item.hash} href={`/${item.hash}`}>
+              <Link key={item.label} href={item.href || `/${item.hash}`}>
                 {item.label}
               </Link>
             ))}
@@ -78,7 +81,7 @@ export default function MinimalHeader() {
       <div className={`mobile-nav-drawer${menuOpen ? " open" : ""}`}>
         <nav onClick={() => setMenuOpen(false)}>
           {NAV_ITEMS.map((item) => (
-            <Link key={item.hash} href={`/${item.hash}`}>
+            <Link key={item.label} href={item.href || `/${item.hash}`}>
               {item.label}
             </Link>
           ))}

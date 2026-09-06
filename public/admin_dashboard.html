@@ -2836,7 +2836,10 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         document.getElementById('news-slug-preview').textContent = 'this-slug';
         document.getElementById('news-editing-label').textContent = 'New article.';
         document.getElementById('news-new-article-btn').classList.add('hidden');
-        document.getElementById('news-field-date').value = new Date().toISOString().slice(0, 10);
+        // GBA.priceHistory.todayKey() rather than new Date().toISOString() —
+        // the latter is a UTC date, which reads a day behind between
+        // midnight and 8am Malaysia time (see gba-firebase.js's toMY()).
+        document.getElementById('news-field-date').value = GBA.priceHistory.todayKey();
     }
 
     function loadNewsIntoForm(docId) {
@@ -2845,6 +2848,7 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
         ui.newsEditingDocId = docId;
         ui.newsSlugTouched = true; // editing an existing article should never silently rewrite its slug
         ui.newsPosterFile = null;
+        document.getElementById('news-field-poster').value = ''; // clear any unsaved file picked for a different article
         document.getElementById('news-field-title').value = n.title || '';
         document.getElementById('news-field-slug').value = n.slug || '';
         document.getElementById('news-slug-preview').textContent = n.slug || 'this-slug';
@@ -2929,10 +2933,11 @@ Repeat daily at 9:00 AM (Asia/Kuala_Lumpur) after each send
                 posterUrl = body.url;
             }
             btn.textContent = 'Saving…';
+            const wasEditing = !!ui.newsEditingDocId;
             const data = { title, slug, date, category, excerpt, content, published, posterUrl };
             const ref = await GBA.news.save(data, ui.newsEditingDocId);
             if (!ui.newsEditingDocId && ref && ref.id) ui.newsEditingDocId = ref.id;
-            addLog(adminActor, ui.newsEditingDocId ? 'News Article Saved' : 'News Article Created', title, 'SUCCESS');
+            addLog(adminActor, wasEditing ? 'News Article Saved' : 'News Article Created', title, 'SUCCESS');
             showToast('Article saved.');
             resetNewsForm();
         } catch (err) {
